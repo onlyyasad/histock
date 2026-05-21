@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if grep -iE "^co-authored-by:" "$1" > /dev/null 2>&1; then
+  echo ""
+  echo "COMMIT REJECTED: Co-authored-by trailers are not used in this project."
+  echo ""
+  exit 1
+fi
+
+npx --no -- commitlint --edit "$1"
