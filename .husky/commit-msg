@@ -7,4 +7,4 @@ if grep -iE "^co-authored-by:" "$1" > /dev/null 2>&1; then
   exit 1
 fi
 
-npx --no -- commitlint --edit "$1"
+pnpm commitlint --edit "$1"
