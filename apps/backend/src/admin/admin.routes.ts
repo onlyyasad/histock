@@ -206,4 +206,19 @@ router.get('/inquiries/:id/stream', (req, res) => {
     .catch(() => {})
 })
 
+// ── Demo reseed (dev only) ───────────────────────────────────────────────────
+
+router.post('/demo/reseed', async (_req, res, next) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Not available in production' })
+  }
+  try {
+    const { demoSeedQueue } = await import('../jobs/demoSeeder')
+    await demoSeedQueue.add('manual-reseed', {}, { jobId: `manual-${Date.now()}` })
+    res.json({ ok: true, message: 'Reseed job queued' })
+  } catch (err) {
+    next(err)
+  }
+})
+
 export { router as adminRoutes }
