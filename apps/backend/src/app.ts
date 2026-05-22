@@ -1,12 +1,19 @@
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
+import { Decimal } from '@prisma/client/runtime/library'
 import config from './config'
 import { sessionMiddleware } from './app/middlewares/session'
 import { passport } from './app/modules/auth/passport'
 import router from './app/routes'
 
 const app = express()
+
+// Convert Prisma Decimal objects to JS numbers in all JSON responses.
+// Decimal fields are stored as NUMERIC(12,2) — serialize as number, not string.
+app.set('json replacer', (_key: string, value: unknown) =>
+  value instanceof Decimal ? value.toNumber() : value,
+)
 
 app.use(helmet())
 app.use(cors({ origin: config.cors_origin, credentials: true }))

@@ -1,6 +1,7 @@
 import request from 'supertest'
 import app from '../../../../app'
 import { prismaAdmin } from '../../../../prisma/client'
+import { redis } from '../../../../shared/redis/client'
 
 // These tests hit the real database (port 5433 via .env).
 // A real DB is required — we do NOT mock Prisma.
@@ -9,10 +10,19 @@ const TEST_EMAIL = `auth-test-${Date.now()}@example.com`
 const TEST_PASSWORD = 'testpassword123'
 const BUSINESS_NAME = 'Auth Test Shop'
 
+beforeAll(async () => {
+  // Clear rate limit keys so tests are not affected by prior runs
+  const keys = await redis.keys('login_attempts:*')
+  const fpKeys = await redis.keys('forgot_pw_attempts:*')
+  const allKeys = [...keys, ...fpKeys]
+  if (allKeys.length > 0) await redis.del(...allKeys)
+})
+
 afterAll(async () => {
   // Clean up test data
   await prismaAdmin.user.deleteMany({ where: { email: TEST_EMAIL } })
   await prismaAdmin.$disconnect()
+  await redis.quit()
 })
 
 describe('POST /api/v1/auth/register', () => {
