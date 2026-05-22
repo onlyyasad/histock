@@ -1,8 +1,5 @@
-export default function DashboardPage() {
-  return (
-    <main className="p-8">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-      <p className="text-gray-500 mt-2">Your order snapshot will appear here.</p>
-    </main>
-  )
+import { DashboardPage } from '@/features/dashboard/DashboardPage'
+
+export default function Page() {
+  return <DashboardPage />
 }
