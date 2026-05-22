@@ -6,6 +6,8 @@ import config from './config'
 import { sessionMiddleware } from './app/middlewares/session'
 import { passport } from './app/modules/auth/passport'
 import router from './app/routes'
+import { adminRoutes } from './admin/admin.routes'
+import { stripeWebhookRoutes } from './webhooks/stripe.routes'
 
 const app = express()
 
@@ -17,6 +19,10 @@ app.set('json replacer', (_key: string, value: unknown) =>
 
 app.use(helmet())
 app.use(cors({ origin: config.cors_origin, credentials: true }))
+
+// Stripe webhook must receive raw body — mount BEFORE express.json()
+app.use('/api/webhooks', stripeWebhookRoutes)
+
 app.use(express.json())
 app.use(sessionMiddleware)
 app.use(passport.initialize())
@@ -27,5 +33,6 @@ app.get('/health', (_req, res) => {
 })
 
 app.use('/api/v1', router)
+app.use('/api/v1/admin', adminRoutes)
 
 export default app
