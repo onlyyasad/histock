@@ -16,6 +16,13 @@ router.use(auditMiddleware)
 const businessService = new AdminBusinessService()
 const inquiryService = new InquiryService()
 
+// ── Me ──────────────────────────────────────────────────────────────────────
+
+router.get('/me', (req, res) => {
+  const user = req.user as { id: string; name: string; email: string }
+  res.json({ id: user.id, name: user.name, email: user.email, role: 'platform_admin' })
+})
+
 // ── Businesses ──────────────────────────────────────────────────────────────
 
 router.get('/businesses', async (req, res, next) => {
