@@ -6,6 +6,31 @@ type ScopedPrisma = ReturnType<typeof prismaWithScope>
 export class ProductsService {
   constructor(private prisma: ScopedPrisma) {}
 
+  getById(productId: string) {
+    return this.prisma.product.findFirst({
+      where: { id: productId },
+      include: {
+        variants: {
+          where: { deletedAt: null },
+          select: { id: true, name: true, price: true, currentStock: true, isActive: true },
+        },
+        costEntries: {
+          orderBy: { entryDate: 'desc' },
+          select: {
+            id: true,
+            entryDate: true,
+            lotQuantity: true,
+            remainingQty: true,
+            totalCost: true,
+            costPerUnit: true,
+            idempotencyKey: true,
+            createdAt: true,
+          },
+        },
+      },
+    })
+  }
+
   listProducts() {
     return this.prisma.product.findMany({
       include: {

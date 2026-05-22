@@ -16,6 +16,17 @@ function getService(req: Express.Request & { user?: unknown }) {
   return new ProductsService(prismaWithScope(user.businessId))
 }
 
+// GET /api/v1/products/:id
+router.get('/:id', requireSeller, async (req, res, next) => {
+  try {
+    const product = await getService(req).getById(req.params.id as string)
+    if (!product) return res.status(404).json({ error: 'Not found' })
+    res.json(product)
+  } catch (err) {
+    next(err)
+  }
+})
+
 // GET /api/v1/products
 router.get('/', requireSeller, async (req, res, next) => {
   try {
