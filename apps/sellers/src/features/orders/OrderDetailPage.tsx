@@ -5,6 +5,8 @@ import { useGetOrderQuery, useConfirmCodPaymentMutation } from './store/ordersAp
 import { OrderStatusBadge } from './components/OrderStatusBadge'
 import { StatusUpdateButton } from './components/StatusUpdateButton'
 import { formatOrderNumber } from './NewOrderPage'
+import { InvoiceDownloadButton } from '@/features/invoices/InvoiceDownloadButton'
+import { PrintableInvoice } from '@/features/invoices/PrintableInvoice'
 
 const NEXT_STATUSES: Record<string, Array<{ toStatus: string; label: string; variant: 'primary' | 'danger' | 'secondary' }>> = {
   pending: [
@@ -56,15 +58,56 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
 
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold">{formatOrderNumber(order.orderNumber)}</h1>
           <p className="text-gray-500 text-sm mt-1">
             {new Date(order.createdAt).toLocaleString('en-BD')}
           </p>
         </div>
-        <OrderStatusBadge status={order.status} />
+        <div className="flex items-center gap-3">
+          <InvoiceDownloadButton
+            data={{
+              orderNumber: order.orderNumber,
+              createdAt: order.createdAt,
+              sellerName: 'HiStock Seller',
+              customerName: order.customer.name,
+              customerPhone: order.customer.phone,
+              items: order.items.map((item) => ({
+                productNameSnapshot: item.productNameSnapshot,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                totalPrice: item.totalPrice,
+              })),
+              subtotal: order.subtotal,
+              deliveryFee: order.deliveryFee,
+              total: order.total,
+              paymentMethod: order.paymentMethod,
+            }}
+          />
+          <OrderStatusBadge status={order.status} />
+        </div>
       </div>
+
+      <PrintableInvoice
+        data={{
+          orderNumber: order.orderNumber,
+          createdAt: order.createdAt,
+          sellerName: 'HiStock Seller',
+          customerName: order.customer.name,
+          customerPhone: order.customer.phone,
+          items: order.items.map((item) => ({
+            productNameSnapshot: item.productNameSnapshot,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.totalPrice,
+          })),
+          subtotal: order.subtotal,
+          deliveryFee: order.deliveryFee,
+          total: order.total,
+          paymentMethod: order.paymentMethod,
+        }}
+      />
 
       <div className="bg-white rounded-lg border p-5 space-y-2">
         <h2 className="font-semibold">Customer</h2>
