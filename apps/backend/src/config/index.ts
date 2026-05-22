@@ -10,9 +10,9 @@ dotenv.config({
 
 export default {
   env: process.env.NODE_ENV,
-  port: process.env.PORT || 4000,
-  database_url: process.env.DATABASE_URL,
-  cors_origin: (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',').map(s => s.trim()),
+  port: parseInt(process.env.PORT ?? '4000', 10),
+  database_url: process.env.DATABASE_URL!,
+  cors_origin: (process.env.CORS_ORIGIN || 'http://localhost:3000').split(',').map((s) => s.trim()),
   session: {
     secret: process.env.SESSION_SECRET || 'dev-secret',
   },
@@ -23,8 +23,9 @@ export default {
     secret_key: process.env.STRIPE_SECRET_KEY,
     webhook_secret: process.env.STRIPE_WEBHOOK_SECRET,
   },
-  admin: {
-    email: process.env.ADMIN_EMAIL,
-    password_hash: process.env.ADMIN_PASSWORD_HASH,
+  resend: {
+    apiKey: process.env.RESEND_API_KEY ?? '',
+    fromAddress: process.env.RESEND_FROM_ADDRESS ?? 'noreply@histock.app',
   },
+  frontend_url: process.env.FRONTEND_URL ?? 'http://localhost:3000',
 }
