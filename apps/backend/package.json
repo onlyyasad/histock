@@ -2,6 +2,9 @@
   "name": "@histock/backend",
   "version": "0.0.1",
   "private": true,
+  "prisma": {
+    "seed": "tsx src/seed/index.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",

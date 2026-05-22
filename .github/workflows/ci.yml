@@ -62,6 +62,9 @@ jobs:
       - name: Run database migrations
         run: pnpm --filter backend exec prisma migrate deploy
 
+      - name: Seed database
+        run: pnpm --filter backend exec prisma db seed
+
       - name: Lint
         run: pnpm turbo lint
 
