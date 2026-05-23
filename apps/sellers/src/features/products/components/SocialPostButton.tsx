@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import { useAiQuota } from '../hooks/useAiQuota'
 
 interface Props {
   productName: string
@@ -19,6 +20,7 @@ interface Props {
 type Platform = 'whatsapp' | 'facebook'
 
 export function SocialPostButton({ productName, price }: Props) {
+  const { quota } = useAiQuota()
   const [open, setOpen] = useState(false)
   const [platform, setPlatform] = useState<Platform>('facebook')
   const [status, setStatus] = useState<'idle' | 'queued' | 'done' | 'error'>('idle')
@@ -108,9 +110,24 @@ export function SocialPostButton({ productName, price }: Props) {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={handleOpen}>
-        <span className="mr-1.5">📣</span>
-        Create Post
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleOpen}
+        disabled={quota?.limit === 0}
+        title={quota?.limit === 0 ? 'Upgrade to Growth plan to use AI features' : undefined}
+      >
+        {quota?.limit === 0 ? (
+          <>
+            <span className="mr-1.5">🔒</span>
+            Upgrade to use AI
+          </>
+        ) : (
+          <>
+            <span className="mr-1.5">📣</span>
+            Create Post
+          </>
+        )}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>

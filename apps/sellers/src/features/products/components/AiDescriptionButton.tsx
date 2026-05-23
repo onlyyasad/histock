@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
+import { useAiQuota } from '../hooks/useAiQuota'
 
 interface Props {
   productName: string
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function AiDescriptionButton({ productName, category, onGenerated }: Props) {
+  const { quota, loading: quotaLoading } = useAiQuota()
   const [status, setStatus] = useState<'idle' | 'queued' | 'done' | 'error'>('idle')
   const [jobId, setJobId] = useState<string | null>(null)
 
@@ -82,13 +84,19 @@ export function AiDescriptionButton({ productName, category, onGenerated }: Prop
     <button
       type="button"
       onClick={handleGenerate}
-      disabled={status === 'queued'}
+      disabled={quotaLoading || status === 'queued' || quota?.limit === 0}
+      title={quota?.limit === 0 ? 'Upgrade to Growth plan to use AI features' : undefined}
       className="flex items-center gap-2 text-sm border rounded px-3 py-1.5 hover:bg-purple-50 hover:border-purple-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       {status === 'queued' ? (
         <>
           <span className="animate-spin inline-block">⟳</span>
           Generating...
+        </>
+      ) : quota?.limit === 0 ? (
+        <>
+          <span>🔒</span>
+          Upgrade to use AI
         </>
       ) : (
         <>
