@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useGetMeQuery } from '@/store/authApi'
 import { useAppDispatch } from '@/store/hooks'
 import { setUser, clearUser, setLoading } from '@/features/auth/store/authSlice'
+import { ImpersonationBanner } from '@/features/auth/components/ImpersonationBanner'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -34,5 +35,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!user) return null
 
-  return <div>{children}</div>
+  return (
+    <div>
+      {user.isImpersonated && user.impersonationExpiresAt && (
+        <ImpersonationBanner expiresAt={user.impersonationExpiresAt} />
+      )}
+      {children}
+    </div>
+  )
 }

@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { requireSeller, requireRole } from '../../middlewares/auth'
-import { prismaWithScope } from '../../../prisma/client'
+import { prismaAdmin, prismaWithScope } from '../../../prisma/client'
 import { ProductsService } from './products.service'
 import {
   CreateProductSchema,
@@ -28,10 +28,48 @@ router.get('/:id', requireSeller, async (req, res, next) => {
 })
 
 // GET /api/v1/products
+// Returns products with avg margin % derived from delivered order allocations.
+// Two queries: one ORM list + one SQL aggregate — merged in memory.
 router.get('/', requireSeller, async (req, res, next) => {
   try {
-    const products = await getService(req).listProducts()
-    res.json(products)
+    const user = req.user as { businessId: string }
+    const businessId = user.businessId
+
+    const [products, margins] = await Promise.all([
+      getService(req).listProducts(),
+      // Single aggregate: revenue and COGS per product across all delivered orders
+      prismaAdmin.$queryRaw<
+        Array<{ product_id: string; revenue: string; cogs: string }>
+      >`
+        SELECT
+          oi.product_id,
+          SUM(oi.total_price)::text                    AS revenue,
+          COALESCE(SUM(oca.total_cost), 0)::text       AS cogs
+        FROM order_items oi
+        JOIN orders o ON o.id = oi.order_id
+        LEFT JOIN order_cost_allocations oca ON oca.order_item_id = oi.id
+        WHERE o.business_id = ${businessId}::uuid
+          AND o.status = 'delivered'
+          AND o.deleted_at IS NULL
+        GROUP BY oi.product_id
+      `,
+    ])
+
+    const marginMap = new Map(
+      margins.map((m) => {
+        const revenue = Number(m.revenue)
+        const cogs = Number(m.cogs)
+        const margin = revenue > 0 ? Math.round(((revenue - cogs) / revenue) * 10000) / 100 : null
+        return [m.product_id, margin]
+      }),
+    )
+
+    const result = products.map((p) => ({
+      ...p,
+      avgMarginPct: marginMap.get(p.id) ?? null,
+    }))
+
+    res.json(result)
   } catch (err) {
     next(err)
   }

@@ -25,6 +25,13 @@ export const requireSeller: RequestHandler = async (req, res, next) => {
       }
     }
   }
+  // Expire impersonation sessions that have passed their time limit
+  const session = req.session as unknown as Record<string, unknown>
+  const impersonation = session.impersonation as { expiresAt?: string } | undefined
+  if (impersonation?.expiresAt && new Date(impersonation.expiresAt) < new Date()) {
+    req.session.destroy(() => {})
+    return res.status(401).json({ error: 'Impersonation session expired' })
+  }
   next()
 }
 

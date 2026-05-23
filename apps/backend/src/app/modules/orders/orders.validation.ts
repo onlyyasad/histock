@@ -37,3 +37,7 @@ export const UpdateOrderMetadataSchema = z.object({
   notes: z.string().max(1000).nullable().optional(),
   tags: z.array(z.string().max(50)).max(10).optional(),
 })
+
+export const AddOrderNoteSchema = z.object({
+  content: z.string().min(1).max(2000),
+})

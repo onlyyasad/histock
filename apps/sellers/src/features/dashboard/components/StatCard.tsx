@@ -1,3 +1,6 @@
+import { Card, CardContent } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
+
 interface StatCardProps {
   label: string
   value: string | number
@@ -6,17 +9,19 @@ interface StatCardProps {
 }
 
 export function StatCard({ label, value, subtext, variant = 'default' }: StatCardProps) {
-  const variantClasses = {
-    default: 'bg-white',
-    warning: 'bg-amber-50 border-amber-200',
-    danger: 'bg-red-50 border-red-200',
-  }
-
   return (
-    <div className={`rounded-lg border p-5 shadow-sm ${variantClasses[variant]}`}>
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="text-3xl font-bold mt-1">{value}</p>
-      {subtext && <p className="text-xs text-gray-400 mt-1">{subtext}</p>}
-    </div>
+    <Card
+      className={cn(
+        'shadow-sm',
+        variant === 'warning' && 'bg-amber-50 border-amber-200',
+        variant === 'danger' && 'bg-red-50 border-red-200',
+      )}
+    >
+      <CardContent className="p-5">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-3xl font-bold mt-1">{value}</p>
+        {subtext && <p className="text-xs text-muted-foreground mt-1">{subtext}</p>}
+      </CardContent>
+    </Card>
   )
 }

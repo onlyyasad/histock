@@ -1,5 +1,8 @@
 'use client'
 
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
 interface Props {
   from: string
   to: string
@@ -20,30 +23,31 @@ function daysAgo(n: number): string {
 
 export function DateRangePicker({ from, to, onChange }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2">
       {PRESETS.map((p) => (
-        <button
+        <Button
           key={p.days}
           type="button"
+          variant="outline"
+          size="sm"
           onClick={() => onChange({ from: daysAgo(p.days), to: new Date().toISOString().slice(0, 10) })}
-          className="text-sm px-3 py-1.5 border rounded-full hover:bg-gray-50"
         >
           {p.label}
-        </button>
+        </Button>
       ))}
-      <div className="flex items-center gap-2">
-        <input
+      <div className="flex items-center gap-2 ml-1">
+        <Input
           type="date"
           value={from}
           onChange={(e) => onChange({ from: e.target.value, to })}
-          className="border rounded px-2 py-1.5 text-sm"
+          className="w-36 h-8 text-sm"
         />
-        <span className="text-gray-400">–</span>
-        <input
+        <span className="text-muted-foreground text-sm">–</span>
+        <Input
           type="date"
           value={to}
           onChange={(e) => onChange({ from, to: e.target.value })}
-          className="border rounded px-2 py-1.5 text-sm"
+          className="w-36 h-8 text-sm"
         />
       </div>
     </div>

@@ -3,6 +3,17 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useUpdateOrderStatusMutation } from '../store/ordersApi'
+import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface Props {
   orderId: string
@@ -12,21 +23,15 @@ interface Props {
   variant?: 'primary' | 'danger' | 'secondary'
 }
 
-export function StatusUpdateButton({
-  orderId,
-  currentStatus,
-  toStatus,
-  label,
-  variant = 'primary',
-}: Props) {
+export function StatusUpdateButton({ orderId, currentStatus, toStatus, label, variant = 'primary' }: Props) {
   const [updateStatus, { isLoading }] = useUpdateOrderStatusMutation()
-  const [showConfirm, setShowConfirm] = useState(false)
+  const [open, setOpen] = useState(false)
 
-  const handleClick = async () => {
+  const handleConfirm = async () => {
     try {
       await updateStatus({ id: orderId, status: toStatus }).unwrap()
       toast.success(`Order updated to: ${toStatus.replace(/_/g, ' ')}`)
-      setShowConfirm(false)
+      setOpen(false)
     } catch (err: unknown) {
       const e = err as { status?: number; data?: { error?: string } }
       const isReAttemptAllocFail =
@@ -43,48 +48,31 @@ export function StatusUpdateButton({
     }
   }
 
-  const classes = {
-    primary: 'bg-indigo-600 text-white',
-    danger: 'bg-red-600 text-white',
-    secondary: 'bg-gray-100 text-gray-700 border',
-  }
+  const btnVariant = variant === 'primary' ? 'default' : variant === 'danger' ? 'destructive' : 'outline'
 
   return (
     <>
-      <button
-        onClick={() => setShowConfirm(true)}
-        className={`px-4 py-2 rounded text-sm font-medium ${classes[variant]}`}
-        disabled={isLoading}
-      >
+      <Button variant={btnVariant} size="sm" onClick={() => setOpen(true)} disabled={isLoading}>
         {label}
-      </button>
+      </Button>
 
-      {showConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
-            <h3 className="font-semibold mb-2">Confirm Status Change</h3>
-            <p className="text-sm text-gray-500 mb-4">
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
+            <AlertDialogDescription>
               Move order from <strong>{currentStatus.replace(/_/g, ' ')}</strong> to{' '}
               <strong>{toStatus.replace(/_/g, ' ')}</strong>?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={handleClick}
-                disabled={isLoading}
-                className="flex-1 bg-blue-600 text-white py-2 rounded text-sm"
-              >
-                {isLoading ? 'Updating...' : 'Confirm'}
-              </button>
-              <button
-                onClick={() => setShowConfirm(false)}
-                className="flex-1 border py-2 rounded text-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirm} disabled={isLoading}>
+              {isLoading ? 'Updating...' : 'Confirm'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

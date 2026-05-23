@@ -107,6 +107,7 @@ model Business {
   auditLogs            AdminAuditLog[]
   supportTickets       SupportTicket[]
   impersonationTokens  ImpersonationToken[]
+  rolePermissions      RolePermission[]
 
   @@map("businesses")
 }
@@ -646,6 +647,23 @@ model ImpersonationToken {
   @@index([businessId])
   @@index([expiresAt])
   @@map("impersonation_tokens")
+}
+
+// ─── Permissions ─────────────────────────────────────────────────────────────
+
+model RolePermission {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  role       UserRole
+  permission String
+  granted    Boolean  @default(true)
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  business Business @relation(fields: [businessId], references: [id])
+
+  @@unique([businessId, role, permission])
+  @@index([businessId])
+  @@map("role_permissions")
 }
 
 // ─── AI ──────────────────────────────────────────────────────────────────────
