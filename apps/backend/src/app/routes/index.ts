@@ -7,6 +7,7 @@ import { financialsRoutes } from '../modules/financials/financials.routes'
 import { teamRoutes } from '../modules/team/team.routes'
 import { exportsRoutes } from '../modules/exports/exports.routes'
 import { schedulesRoutes } from '../modules/schedules/schedules.routes'
+import { settingsRoutes } from '../modules/settings/settings.routes'
 import { demoGuard } from '../middlewares/demoGuard'
 
 const router = Router()
@@ -20,6 +21,7 @@ router.use('/orders', ordersRoutes)
 router.use('/team', teamRoutes)
 router.use('/exports', exportsRoutes)
 router.use('/schedules', schedulesRoutes)
+router.use('/settings', settingsRoutes)
 router.use('/', financialsRoutes)
 
 export default router
