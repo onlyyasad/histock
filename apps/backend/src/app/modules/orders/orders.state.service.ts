@@ -1,6 +1,7 @@
 import type { OrderStatus, PrismaClient } from '@prisma/client'
 import { OrderCostService } from '../products/cost.service'
 import { CustomersService } from '../customers/customers.service'
+import { emailQueue } from '../../../jobs/emailQueue'
 
 // OrderStateService is the ONLY place where order status changes.
 // No direct prisma.order.update({ data: { status } }) in route handlers — enforced by ESLint.
@@ -45,10 +46,10 @@ export class OrderStateService {
   }): Promise<void> {
     const { orderId, businessId, toStatus, reason, userId } = params
 
-    await (this.prisma as PrismaClient).$transaction(async (tx) => {
+    const emailPayload = await (this.prisma as PrismaClient).$transaction(async (tx) => {
       const order = await tx.order.findFirst({
         where: { id: orderId, businessId, deletedAt: null },
-        include: { items: true },
+        include: { items: true, customer: { select: { email: true, name: true } } },
       })
 
       if (!order) throw Object.assign(new Error('Order not found'), { status: 404 })
@@ -119,6 +120,29 @@ export class OrderStateService {
           },
         })
       }
+
+      return {
+        orderNumber: order.orderNumber,
+        customerEmail: order.customer.email,
+        customerName: order.customer.name,
+      }
     })
+
+    const notifiableStatuses: OrderStatus[] = [
+      'processing', 'packed', 'handover_to_courier', 'delivered', 'delivery_failed', 'cancelled',
+    ]
+    const { orderNumber, customerEmail, customerName } = emailPayload
+    if (notifiableStatuses.includes(toStatus) && customerEmail) {
+      emailQueue
+        .add('order_status', {
+          type: 'order_status',
+          orderId,
+          orderNumber,
+          newStatus: toStatus,
+          recipientEmail: customerEmail,
+          recipientName: customerName,
+        })
+        .catch((err: Error) => console.error('[email] queue error:', err.message))
+    }
   }
 }

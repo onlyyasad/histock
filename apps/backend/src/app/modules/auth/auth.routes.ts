@@ -131,6 +131,8 @@ router.post('/logout', requireSeller, (req, res, next) => {
 router.get('/me', requireSeller, (req, res) => {
   const user = req.user as Record<string, unknown>
   const business = user.business as Record<string, unknown> | null
+  const session = req.session as unknown as Record<string, unknown>
+  const impersonation = session.impersonation as { adminId?: string; expiresAt?: string } | undefined
   res.json({
     id: user.id,
     email: user.email,
@@ -139,6 +141,9 @@ router.get('/me', requireSeller, (req, res) => {
     businessId: user.businessId,
     businessName: business?.name ?? null,
     isDemo: business?.isDemo ?? false,
+    isImpersonated: !!impersonation,
+    impersonatedBy: impersonation?.adminId ?? null,
+    impersonationExpiresAt: impersonation?.expiresAt ?? null,
   })
 })
 
@@ -223,6 +228,73 @@ router.post('/reset-password', async (req, res, next) => {
   } catch (err) {
     next(err)
   }
+})
+
+// POST /api/v1/auth/impersonate — seller app consumes a one-time impersonation token
+router.post('/impersonate', async (req, res, next) => {
+  try {
+    const { token } = req.body
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ error: 'token required' })
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+
+    const record = await prismaAdmin.impersonationToken.findFirst({
+      where: { token: tokenHash, usedAt: null, expiresAt: { gt: new Date() } },
+      include: { business: { select: { id: true, name: true, isDemo: true } } },
+    })
+
+    if (!record) {
+      return res.status(401).json({ error: 'Invalid or expired impersonation token' })
+    }
+
+    await prismaAdmin.impersonationToken.update({
+      where: { id: record.id },
+      data: { usedAt: new Date() },
+    })
+
+    const owner = await prismaAdmin.user.findFirst({
+      where: { businessId: record.businessId, role: 'owner', deletedAt: null },
+      include: { business: { select: { id: true, name: true, isDemo: true } } },
+    })
+
+    if (!owner) {
+      return res.status(404).json({ error: 'No owner found for this business' })
+    }
+
+    req.login(owner, (err) => {
+      if (err) return next(err)
+      ;(req.session as unknown as Record<string, unknown>).impersonation = {
+        adminId: record.adminId,
+        expiresAt: record.expiresAt.toISOString(),
+      }
+      res.json({
+        id: owner.id,
+        email: owner.email,
+        name: owner.name,
+        role: owner.role,
+        businessId: owner.businessId,
+        businessName: record.business.name,
+        isImpersonated: true,
+        impersonatedBy: record.adminId,
+        impersonationExpiresAt: record.expiresAt.toISOString(),
+      })
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// POST /api/v1/auth/impersonate/end — end impersonation session
+router.post('/impersonate/end', requireSeller, (req, res, next) => {
+  req.logout((err) => {
+    if (err) return next(err)
+    req.session.destroy(() => {
+      res.clearCookie('connect.sid')
+      res.json({ ok: true })
+    })
+  })
 })
 
 export { router as authRoutes }

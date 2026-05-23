@@ -1,42 +1,58 @@
 import type { CostEntry } from '../store/productsApi'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { cn } from '@/lib/utils'
 
 export function LotHistoryTable({ entries }: { entries: CostEntry[] }) {
   if (entries.length === 0) {
     return (
-      <p className="text-sm text-gray-400">
+      <p className="text-sm text-muted-foreground">
         No purchase history yet. Log a purchase to track cost.
       </p>
     )
   }
 
   return (
-    <table className="w-full text-sm">
-      <thead className="text-left text-gray-500 border-b">
-        <tr>
-          <th className="pb-2">Date</th>
-          <th className="pb-2 text-right">Qty</th>
-          <th className="pb-2 text-right">Remaining</th>
-          <th className="pb-2 text-right">Total Cost</th>
-          <th className="pb-2 text-right">Per Unit</th>
-        </tr>
-      </thead>
-      <tbody>
-        {entries.map((entry) => (
-          <tr key={entry.id} className="border-b">
-            <td className="py-2">{new Date(entry.entryDate).toLocaleDateString()}</td>
-            <td className="py-2 text-right tabular-nums">{entry.lotQuantity}</td>
-            <td
-              className={`py-2 text-right tabular-nums ${
-                entry.remainingQty === 0 ? 'text-gray-300' : ''
-              }`}
-            >
-              {entry.remainingQty}
-            </td>
-            <td className="py-2 text-right tabular-nums">৳{Number(entry.totalCost).toFixed(2)}</td>
-            <td className="py-2 text-right tabular-nums">৳{Number(entry.costPerUnit).toFixed(2)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead className="text-right">Qty</TableHead>
+            <TableHead className="text-right">Remaining</TableHead>
+            <TableHead className="text-right">Total Cost</TableHead>
+            <TableHead className="text-right">Per Unit</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {entries.map((entry) => (
+            <TableRow key={entry.id}>
+              <TableCell>{new Date(entry.entryDate).toLocaleDateString()}</TableCell>
+              <TableCell className="text-right tabular-nums">{entry.lotQuantity}</TableCell>
+              <TableCell
+                className={cn(
+                  'text-right tabular-nums',
+                  entry.remainingQty === 0 && 'text-muted-foreground/40',
+                )}
+              >
+                {entry.remainingQty}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                ৳{Number(entry.totalCost).toFixed(2)}
+              </TableCell>
+              <TableCell className="text-right tabular-nums">
+                ৳{Number(entry.costPerUnit).toFixed(2)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   )
 }

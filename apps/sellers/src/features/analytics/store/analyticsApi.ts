@@ -4,9 +4,12 @@ export interface PnlData {
   from: string
   to: string
   revenue: number
-  cost: number
+  cogs: number
+  deliveryFees: number
+  refunds: number
   profit: number
   margin: number
+  orderCount: number
   statusBreakdown: Array<{ status: string; count: number; total: number }>
 }
 

@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { Router } from 'express'
 import { z } from 'zod'
 import type { InquiryStatus, SubscriptionStatus } from '@prisma/client'
@@ -204,6 +205,33 @@ router.get('/inquiries/:id/stream', (req, res) => {
       if (inquiry && !closed) res.write(`event: init\ndata: ${JSON.stringify(inquiry)}\n\n`)
     })
     .catch(() => {})
+})
+
+// ── Impersonation ────────────────────────────────────────────────────────────
+
+router.post('/impersonate/:businessId', async (req, res, next) => {
+  try {
+    const admin = req.user as { id: string; isDemo?: boolean }
+    if (admin.isDemo) return res.status(403).json({ error: 'Demo admin cannot impersonate' })
+
+    const business = await prismaAdmin.business.findUnique({
+      where: { id: req.params.businessId as string },
+      select: { id: true },
+    })
+    if (!business) return res.status(404).json({ error: 'Business not found' })
+
+    const rawToken = crypto.randomBytes(32).toString('hex')
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000)
+
+    await prismaAdmin.impersonationToken.create({
+      data: { token: tokenHash, adminId: admin.id, businessId: business.id, expiresAt },
+    })
+
+    res.json({ token: rawToken, expiresAt })
+  } catch (err) {
+    next(err)
+  }
 })
 
 // ── Demo reseed (dev only) ───────────────────────────────────────────────────

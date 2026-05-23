@@ -7,6 +7,10 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { useRegisterMutation } from '@/store/authApi'
 import { registerFormSchema, type RegisterFormValues } from './schemas/authFormSchemas'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
 export function RegisterPage() {
   const router = useRouter()
@@ -32,94 +36,77 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow">
-      <div>
-        <h1 className="text-2xl font-bold">Create your account</h1>
-        <p className="text-sm text-gray-500 mt-1">14-day free trial, no credit card required.</p>
-      </div>
+    <Card className="w-full max-w-md shadow">
+      <CardHeader>
+        <CardTitle className="text-2xl">Create your account</CardTitle>
+        <CardDescription>14-day free trial, no credit card required.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="businessName">Business name</Label>
+            <Input
+              id="businessName"
+              type="text"
+              {...form.register('businessName')}
+              placeholder="My Shop"
+            />
+            {form.formState.errors.businessName && (
+              <p className="text-destructive text-sm">{form.formState.errors.businessName.message}</p>
+            )}
+          </div>
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label htmlFor="businessName" className="block text-sm font-medium mb-1">
-            Business name
-          </label>
-          <input
-            id="businessName"
-            type="text"
-            {...form.register('businessName')}
-            className="w-full border rounded px-3 py-2"
-            placeholder="My Shop"
-          />
-          {form.formState.errors.businessName && (
-            <p className="text-red-500 text-sm mt-1">
-              {form.formState.errors.businessName.message}
-            </p>
-          )}
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Your name</Label>
+            <Input
+              id="name"
+              type="text"
+              {...form.register('name')}
+              autoComplete="name"
+            />
+            {form.formState.errors.name && (
+              <p className="text-destructive text-sm">{form.formState.errors.name.message}</p>
+            )}
+          </div>
 
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium mb-1">
-            Your name
-          </label>
-          <input
-            id="name"
-            type="text"
-            {...form.register('name')}
-            className="w-full border rounded px-3 py-2"
-            autoComplete="name"
-          />
-          {form.formState.errors.name && (
-            <p className="text-red-500 text-sm mt-1">{form.formState.errors.name.message}</p>
-          )}
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              {...form.register('email')}
+              autoComplete="email"
+            />
+            {form.formState.errors.email && (
+              <p className="text-destructive text-sm">{form.formState.errors.email.message}</p>
+            )}
+          </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            {...form.register('email')}
-            className="w-full border rounded px-3 py-2"
-            autoComplete="email"
-          />
-          {form.formState.errors.email && (
-            <p className="text-red-500 text-sm mt-1">{form.formState.errors.email.message}</p>
-          )}
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              {...form.register('password')}
+              autoComplete="new-password"
+            />
+            {form.formState.errors.password && (
+              <p className="text-destructive text-sm">{form.formState.errors.password.message}</p>
+            )}
+          </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            {...form.register('password')}
-            className="w-full border rounded px-3 py-2"
-            autoComplete="new-password"
-          />
-          {form.formState.errors.password && (
-            <p className="text-red-500 text-sm mt-1">{form.formState.errors.password.message}</p>
-          )}
-        </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Creating account...' : 'Create account'}
+          </Button>
+        </form>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-indigo-600 text-white py-2 rounded font-medium disabled:opacity-50"
-        >
-          {isLoading ? 'Creating account...' : 'Create account'}
-        </button>
-      </form>
-
-      <p className="text-center text-sm">
-        Already have an account?{' '}
-        <Link href="/login" className="text-indigo-600 hover:underline">
-          Sign in
-        </Link>
-      </p>
-    </div>
+        <p className="text-center text-sm mt-4">
+          Already have an account?{' '}
+          <Link href="/login" className="text-primary hover:underline">
+            Sign in
+          </Link>
+        </p>
+      </CardContent>
+    </Card>
   )
 }

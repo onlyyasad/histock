@@ -1,0 +1,295 @@
+'use client'
+
+import { useState, useCallback } from 'react'
+import { toast } from 'sonner'
+import { parseFile, type ParsedRow } from './utils/parseFile'
+import {
+  guessColumnMapping,
+  matchRowsToOrders,
+  type ColumnMapping,
+  type MatchResult,
+  type UnmatchedRow,
+} from './utils/matchOrders'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+type Step = 'upload' | 'map' | 'preview' | 'done'
+
+interface Courier {
+  id: string
+  name: string
+}
+
+export function RemittanceImportPage() {
+  const [step, setStep] = useState<Step>('upload')
+  const [fileName, setFileName] = useState('')
+  const [headers, setHeaders] = useState<string[]>([])
+  const [rows, setRows] = useState<ParsedRow[]>([])
+  const [mapping, setMapping] = useState<ColumnMapping>({ orderNumberCol: null, amountCol: null })
+  const [confidence, setConfidence] = useState(0)
+  const [matched, setMatched] = useState<MatchResult[]>([])
+  const [unmatched, setUnmatched] = useState<UnmatchedRow[]>([])
+  const [couriers, setCouriers] = useState<Courier[]>([])
+  const [courierId, setCourierId] = useState('')
+  const [batchName, setBatchName] = useState('')
+  const [isImporting, setIsImporting] = useState(false)
+
+  const handleFile = useCallback(async (file: File) => {
+    try {
+      const { headers: h, rows: r } = await parseFile(file)
+      setFileName(file.name)
+      setHeaders(h)
+      setRows(r)
+      const { mapping: m, confidence: c } = guessColumnMapping(h)
+      setMapping(m)
+      setConfidence(c)
+      setStep('map')
+    } catch (err: unknown) {
+      toast.error((err as Error).message)
+    }
+  }, [])
+
+  const handleColumnConfirm = async () => {
+    const [ordersRes, couriersRes] = await Promise.all([
+      fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/orders?paymentMethod=cod&status=handover_to_courier&limit=1000`,
+        { credentials: 'include' },
+      ),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/couriers`, { credentials: 'include' }),
+    ])
+
+    const orders: Array<{ id: string; orderNumber: number }> = await ordersRes.json()
+    const courierList: Courier[] = await couriersRes.json()
+
+    const { matched: m, unmatched: u } = matchRowsToOrders(rows, mapping, orders)
+    setMatched(m)
+    setUnmatched(u)
+    setCouriers(courierList)
+    if (courierList.length > 0) setCourierId(courierList[0].id)
+    setBatchName(`Remittance ${new Date().toLocaleDateString('en-BD')}`)
+    setStep('preview')
+  }
+
+  const handleImport = async () => {
+    if (matched.length === 0 || !courierId) return
+    setIsImporting(true)
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/remittances/import`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courierId,
+          batchName,
+          fileName,
+          orders: matched.map((m) => ({ orderId: m.orderId, codAmount: m.codAmount })),
+          unmatchedCount: unmatched.length,
+        }),
+      })
+      if (!res.ok) throw new Error('Import failed')
+      toast.success(`Remittance batch created — ${matched.length} orders`)
+      setStep('done')
+    } catch {
+      toast.error('Failed to create remittance batch')
+    } finally {
+      setIsImporting(false)
+    }
+  }
+
+  const confidenceColor =
+    confidence >= 70 ? 'text-green-600' : confidence >= 40 ? 'text-yellow-600' : 'text-destructive'
+
+  return (
+    <div className="max-w-2xl mx-auto p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Import COD Remittance</h1>
+
+      {step === 'upload' && (
+        <div
+          className="border-2 border-dashed rounded-lg p-10 text-center hover:bg-muted/30 transition-colors cursor-pointer"
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault()
+            const f = e.dataTransfer.files[0]
+            if (f) handleFile(f)
+          }}
+        >
+          <input
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            className="hidden"
+            id="file-input"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) handleFile(f)
+            }}
+          />
+          <label htmlFor="file-input" className="cursor-pointer block">
+            <p className="text-lg text-muted-foreground">Drop courier CSV or XLSX here</p>
+            <p className="text-sm text-muted-foreground/60 mt-2">or click to browse</p>
+            <p className="text-xs text-muted-foreground/40 mt-4">
+              Supports Pathao, REDX, eCourier, SA Paribahan formats
+            </p>
+          </label>
+        </div>
+      )}
+
+      {step === 'map' && (
+        <Card>
+          <CardContent className="pt-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium">Auto-detection confidence:</span>
+              <span className={`text-sm font-bold ${confidenceColor}`}>{confidence}%</span>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label>Column containing order number</Label>
+                <Select
+                  value={mapping.orderNumberCol ?? ''}
+                  onValueChange={(v) => setMapping((m) => ({ ...m, orderNumberCol: v || null }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select column..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {headers.map((h) => (
+                      <SelectItem key={h} value={h}>{h}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Column containing COD amount</Label>
+                <Select
+                  value={mapping.amountCol ?? ''}
+                  onValueChange={(v) => setMapping((m) => ({ ...m, amountCol: v || null }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select column..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {headers.map((h) => (
+                      <SelectItem key={h} value={h}>{h}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {rows.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Preview — first row: {Object.entries(rows[0]).slice(0, 4).map(([k, v]) => `${k}: ${v}`).join(' · ')}
+              </p>
+            )}
+
+            <Button
+              onClick={handleColumnConfirm}
+              disabled={!mapping.orderNumberCol || !mapping.amountCol}
+            >
+              Continue
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 'preview' && (
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">
+              {matched.length} matched
+            </Badge>
+            {unmatched.length > 0 && (
+              <Badge variant="destructive">{unmatched.length} unmatched</Badge>
+            )}
+          </div>
+
+          <Card>
+            <CardContent className="p-0">
+              <div className="max-h-48 overflow-y-auto divide-y">
+                {matched.map((r) => (
+                  <div key={r.orderId} className="flex justify-between text-sm px-4 py-2">
+                    <span className="font-mono">ORD-{String(r.orderNumber).padStart(6, '0')}</span>
+                    <span className="tabular-nums">৳{r.codAmount.toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {unmatched.length > 0 && (
+            <Card className="border-destructive/30">
+              <CardContent className="p-0">
+                <p className="text-sm font-medium text-destructive px-4 pt-3 pb-2">Unmatched rows:</p>
+                <div className="max-h-32 overflow-y-auto divide-y divide-destructive/10">
+                  {unmatched.map((r, i) => (
+                    <div key={i} className="flex justify-between text-sm px-4 py-2">
+                      <span>{r.rawOrderNumber}</span>
+                      <span className="text-destructive/60 text-xs">{r.reason}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          <Separator />
+
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label>Courier</Label>
+              <Select value={courierId} onValueChange={(v) => { if (v) setCourierId(v) }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select courier..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {couriers.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label>Batch name</Label>
+              <Input
+                value={batchName}
+                onChange={(e) => setBatchName(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={handleImport}
+            disabled={isImporting || matched.length === 0 || !courierId}
+            className="w-full"
+          >
+            {isImporting ? 'Importing...' : `Create Batch — ${matched.length} Orders`}
+          </Button>
+        </div>
+      )}
+
+      {step === 'done' && (
+        <div className="text-center py-10 space-y-3">
+          <p className="text-3xl">✓</p>
+          <p className="font-semibold">Remittance batch created</p>
+          <a
+            href="/analytics/remittance"
+            className="text-primary hover:underline text-sm block"
+          >
+            View in Remittance Tracker
+          </a>
+        </div>
+      )}
+    </div>
+  )
+}
