@@ -11,6 +11,7 @@ export default tseslint.config(
       '**/.next/**',
       '**/.turbo/**',
       '**/*.config.cjs',
+      '**/routeTree.gen.ts',
     ],
   },
   js.configs.recommended,
@@ -24,7 +25,16 @@ export default tseslint.config(
       },
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression[callee.object.property.name='order'][callee.property.name='update'] ObjectExpression > Property[key.name='data'] > ObjectExpression > Property[key.name='status']",
+          message:
+            "Use OrderStateService.transition() instead of prisma.order.update({ data: { status } }). See phase-1/06-backend-orders.md.",
+        },
+      ],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-console': 'warn',
     },

@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, staging]
+  push:
+    branches: [main, staging]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: histock
+          POSTGRES_PASSWORD: histock
+          POSTGRES_DB: histock_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U histock"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://histock:histock@localhost:5432/histock_test
+      REDIS_URL: redis://localhost:6379
+      SESSION_SECRET: ci-session-secret-min-32-chars-xxxxxxxxx
+      NODE_ENV: test
+      PORT: 4000
+      CORS_ORIGIN: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Generate Prisma client
+        run: pnpm --filter backend exec prisma generate
+
+      - name: Run database migrations
+        run: pnpm --filter backend exec prisma migrate deploy
+
+      - name: Seed database
+        run: pnpm --filter backend exec prisma db seed
+
+      - name: Lint
+        run: pnpm turbo lint
+
+      - name: Typecheck
+        run: pnpm turbo typecheck
+
+      - name: Test
+        run: pnpm turbo test
