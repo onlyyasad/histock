@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useGetCustomersQuery } from './store/customersApi'
+import { ExportButton } from '@/features/exports/ExportButton'
 
 export function CustomersListPage() {
   const [search, setSearch] = useState('')
@@ -12,12 +13,15 @@ export function CustomersListPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Customers</h1>
-        <Link
-          href="/customers/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium"
-        >
-          + New Customer
-        </Link>
+        <div className="flex items-center gap-2">
+          <ExportButton endpoint="/api/v1/exports/customers" label="Export CSV" filename="customers.csv" />
+          <Link
+            href="/customers/new"
+            className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium"
+          >
+            + New Customer
+          </Link>
+        </div>
       </div>
 
       <div className="mb-4">

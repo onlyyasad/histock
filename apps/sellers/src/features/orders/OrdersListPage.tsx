@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useGetOrdersQuery } from './store/ordersApi'
 import { OrderStatusBadge } from './components/OrderStatusBadge'
 import { formatOrderNumber } from './NewOrderPage'
+import { ExportButton } from '@/features/exports/ExportButton'
 
 export function OrdersListPage() {
   const { data: orders, isLoading, isError } = useGetOrdersQuery({})
@@ -26,12 +27,15 @@ export function OrdersListPage() {
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Orders</h1>
-        <Link
-          href="/orders/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium"
-        >
-          + New Order
-        </Link>
+        <div className="flex items-center gap-2">
+          <ExportButton endpoint="/api/v1/exports/orders" label="Export CSV" filename="orders.csv" />
+          <Link
+            href="/orders/new"
+            className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium"
+          >
+            + New Order
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-lg border divide-y">

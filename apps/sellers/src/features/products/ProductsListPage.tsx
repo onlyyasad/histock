@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useGetProductsQuery } from './store/productsApi'
+import { ExportButton } from '@/features/exports/ExportButton'
 
 export function ProductsListPage() {
   const [search, setSearch] = useState('')
@@ -16,12 +17,15 @@ export function ProductsListPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Products</h1>
-        <Link
-          href="/products/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium"
-        >
-          + New Product
-        </Link>
+        <div className="flex items-center gap-2">
+          <ExportButton endpoint="/api/v1/exports/products" label="Export CSV" filename="products.csv" />
+          <Link
+            href="/products/new"
+            className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium"
+          >
+            + New Product
+          </Link>
+        </div>
       </div>
 
       <div className="flex gap-3 mb-4">
