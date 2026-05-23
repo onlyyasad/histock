@@ -17,10 +17,25 @@ const InvoiceDocumentDynamic = dynamic(
 
 interface Props {
   data: InvoiceData
+  // When locale is 'bn', react-pdf cannot shape Bangla text correctly (no HarfBuzz).
+  // Fallback: window.print() lets the browser OS renderer handle shaping.
+  locale?: 'en' | 'bn'
 }
 
-export function InvoiceDownloadButton({ data }: Props) {
+export function InvoiceDownloadButton({ data, locale = 'en' }: Props) {
   const filename = `invoice-ORD-${String(data.orderNumber).padStart(6, '0')}.pdf`
+
+  if (locale === 'bn') {
+    return (
+      <button
+        type="button"
+        onClick={() => window.print()}
+        className="bg-gray-800 text-white rounded px-4 py-2 text-sm"
+      >
+        ইনভয়েস প্রিন্ট করুন
+      </button>
+    )
+  }
 
   return (
     <Suspense

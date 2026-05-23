@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useCreateProductMutation } from './store/productsApi'
+import { AiDescriptionButton } from './components/AiDescriptionButton'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -90,7 +91,16 @@ export function NewProductPage() {
         </div>
 
         <div className="space-y-1">
-          <Label htmlFor="np-desc">Description (optional)</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="np-desc">Description (optional)</Label>
+            <AiDescriptionButton
+              productName={form.watch('name')}
+              onGenerated={(text, isFallback) => {
+                form.setValue('description', text)
+                if (!isFallback) toast.success('AI description generated')
+              }}
+            />
+          </div>
           <Textarea
             id="np-desc"
             {...form.register('description')}

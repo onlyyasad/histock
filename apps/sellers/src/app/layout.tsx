@@ -15,6 +15,12 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: 'HiStock — Sales Management',
   description: 'The back-office for social commerce sellers',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'HiStock',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -52,7 +52,7 @@ export function StatusUpdateButton({ orderId, currentStatus, toStatus, label, va
 
   return (
     <>
-      <Button variant={btnVariant} size="sm" onClick={() => setOpen(true)} disabled={isLoading}>
+      <Button variant={btnVariant} size="sm" className="min-h-[44px]" onClick={() => setOpen(true)} disabled={isLoading}>
         {label}
       </Button>
 
