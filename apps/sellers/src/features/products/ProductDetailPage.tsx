@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useGetProductQuery } from './store/productsApi'
 import { LogPurchaseForm } from './components/LogPurchaseForm'
 import { LotHistoryTable } from './components/LotHistoryTable'
+import { SocialPostButton } from './components/SocialPostButton'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -29,14 +30,16 @@ export function ProductDetailPage({ productId }: { productId: string }) {
             <p className="text-muted-foreground text-sm mt-1">{product.description}</p>
           )}
         </div>
-        <Button
-          variant={showLogForm ? 'outline' : 'default'}
-          size="sm"
-          onClick={() => setShowLogForm((v) => !v)}
-          className="shrink-0"
-        >
-          {showLogForm ? 'Cancel' : 'Log Purchase'}
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          <SocialPostButton productName={product.name} price={product.price} />
+          <Button
+            variant={showLogForm ? 'outline' : 'default'}
+            size="sm"
+            onClick={() => setShowLogForm((v) => !v)}
+          >
+            {showLogForm ? 'Cancel' : 'Log Purchase'}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
