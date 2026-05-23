@@ -7,6 +7,7 @@ import {
   CreateOrderSchema,
   UpdateOrderStatusSchema,
   UpdateOrderMetadataSchema,
+  AddOrderNoteSchema,
 } from './orders.validation'
 
 const router = Router()
@@ -155,6 +156,33 @@ router.get('/:id/cost-breakdown', requireSeller, async (req, res, next) => {
           ? 'No cost data — log a purchase for this product to enable COGS tracking'
           : null,
     })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// POST /api/v1/orders/:id/notes — append-only order note; GET is covered by getById()
+router.post('/:id/notes', requireSeller, async (req, res, next) => {
+  try {
+    const user = req.user as { businessId: string; id: string }
+    const businessId = user.businessId
+    const orderId = req.params.id as string
+
+    const parsed = AddOrderNoteSchema.safeParse(req.body)
+    if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
+
+    const order = await prismaWithScope(businessId).order.findFirst({
+      where: { id: orderId },
+      select: { id: true },
+    })
+    if (!order) return res.status(404).json({ error: 'Not found' })
+
+    const note = await prismaAdmin.orderNote.create({
+      data: { orderId, businessId, userId: user.id, content: parsed.data.content },
+      include: { user: { select: { id: true, name: true } } },
+    })
+
+    res.status(201).json(note)
   } catch (err) {
     next(err)
   }

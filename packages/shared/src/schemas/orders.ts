@@ -80,6 +80,16 @@ export const OrderResponseSchema = z.object({
       variantNameSnapshot: z.string().nullable(),
     }),
   ),
+  orderNotes: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        content: z.string(),
+        createdAt: z.string().datetime(),
+        user: z.object({ id: z.string().uuid(), name: z.string() }),
+      }),
+    )
+    .optional(),
 })
 
 export type OrderStatus = z.infer<typeof OrderStatusSchema>

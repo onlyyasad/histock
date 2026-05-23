@@ -8,6 +8,7 @@ import { formatOrderNumber } from './NewOrderPage'
 import { InvoiceDownloadButton } from '@/features/invoices/InvoiceDownloadButton'
 import { PrintableInvoice } from '@/features/invoices/PrintableInvoice'
 import { CostBreakdownPanel } from './components/CostBreakdownPanel'
+import { OrderNotesPanel } from './components/OrderNotesPanel'
 
 const NEXT_STATUSES: Record<string, Array<{ toStatus: string; label: string; variant: 'primary' | 'danger' | 'secondary' }>> = {
   pending: [
@@ -170,6 +171,8 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
           ))}
         </div>
       )}
+
+      <OrderNotesPanel orderId={orderId} notes={order.orderNotes ?? []} />
 
       <CostBreakdownPanel orderId={orderId} />
     </div>

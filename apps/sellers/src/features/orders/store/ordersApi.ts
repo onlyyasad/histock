@@ -61,6 +61,14 @@ export const ordersApi = apiSlice.injectEndpoints({
       query: (id) => `/orders/${id}/cost-breakdown`,
       providesTags: (_result, _error, id) => [{ type: 'Order', id }],
     }),
+
+    addOrderNote: builder.mutation<
+      { id: string; content: string; createdAt: string; user: { id: string; name: string } },
+      { orderId: string; content: string }
+    >({
+      query: ({ orderId, content }) => ({ url: `/orders/${orderId}/notes`, method: 'POST', body: { content } }),
+      invalidatesTags: (_result, _error, { orderId }) => [{ type: 'Order', id: orderId }],
+    }),
   }),
 })
 
@@ -73,4 +81,5 @@ export const {
   useConfirmCodPaymentMutation,
   useDeleteOrderMutation,
   useGetOrderCostBreakdownQuery,
+  useAddOrderNoteMutation,
 } = ordersApi
