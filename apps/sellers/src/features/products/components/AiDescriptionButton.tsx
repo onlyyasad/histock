@@ -86,7 +86,7 @@ export function AiDescriptionButton({ productName, category, onGenerated }: Prop
       onClick={handleGenerate}
       disabled={quotaLoading || status === 'queued' || quota?.limit === 0}
       title={quota?.limit === 0 ? 'Upgrade to Growth plan to use AI features' : undefined}
-      className="flex items-center gap-2 text-sm border rounded px-3 py-1.5 hover:bg-purple-50 hover:border-purple-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="flex items-center gap-2 text-sm border rounded px-3 py-1.5 min-h-[44px] hover:bg-purple-50 hover:border-purple-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
       {status === 'queued' ? (
         <>
