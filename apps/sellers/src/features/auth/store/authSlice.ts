@@ -9,6 +9,9 @@ export interface AuthUser {
   businessId: string
   businessName: string
   isDemo: boolean
+  isImpersonated?: boolean
+  impersonatedBy?: string | null
+  impersonationExpiresAt?: string | null
 }
 
 interface AuthState {

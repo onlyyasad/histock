@@ -22,7 +22,22 @@ export const authApi = apiSlice.injectEndpoints({
       query: () => ({ url: '/auth/logout', method: 'POST' }),
       invalidatesTags: ['Auth'],
     }),
+    startImpersonation: builder.mutation<AuthUser, { token: string }>({
+      query: (body) => ({ url: '/auth/impersonate', method: 'POST', body }),
+      invalidatesTags: ['Auth'],
+    }),
+    endImpersonation: builder.mutation<{ ok: boolean }, void>({
+      query: () => ({ url: '/auth/impersonate/end', method: 'POST' }),
+      invalidatesTags: ['Auth'],
+    }),
   }),
 })
 
-export const { useGetMeQuery, useLoginMutation, useRegisterMutation, useLogoutMutation } = authApi
+export const {
+  useGetMeQuery,
+  useLoginMutation,
+  useRegisterMutation,
+  useLogoutMutation,
+  useStartImpersonationMutation,
+  useEndImpersonationMutation,
+} = authApi
