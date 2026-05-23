@@ -110,6 +110,56 @@ router.delete('/:id', requireSeller, requireRole('owner', 'manager'), async (req
   }
 })
 
+// GET /api/v1/orders/:id/cost-breakdown — per-order COGS and margin
+router.get('/:id/cost-breakdown', requireSeller, async (req, res, next) => {
+  try {
+    const user = req.user as { businessId: string }
+    const businessId = user.businessId
+    const orderId = req.params.id as string
+
+    const order = await prismaWithScope(businessId).order.findFirst({
+      where: { id: orderId },
+      select: { total: true, deliveryFee: true, status: true },
+    })
+    if (!order) return res.status(404).json({ error: 'Not found' })
+
+    // OrderCostAllocation has no businessId — filter through order relation
+    const allocations = await prismaAdmin.orderCostAllocation.findMany({
+      where: {
+        orderItem: { order: { id: orderId, businessId, deletedAt: null } },
+      },
+      include: {
+        costEntry: { include: { product: { select: { name: true } } } },
+        orderItem: { select: { quantity: true } },
+      },
+    })
+
+    const totalCost = allocations.reduce((sum, a) => sum + Number(a.totalCost), 0)
+    const revenue = Number(order.total) - Number(order.deliveryFee)
+    const profit = Number((revenue - totalCost).toFixed(2))
+    const margin = revenue > 0 ? Math.round((profit / revenue) * 10000) / 100 : 0
+
+    res.json({
+      totalRevenue: Number(revenue.toFixed(2)),
+      totalCost: Number(totalCost.toFixed(2)),
+      profit,
+      margin,
+      allocations: allocations.map((a) => ({
+        productName: a.costEntry.product.name,
+        quantity: a.orderItem.quantity,
+        costPerUnit: Number(a.costEntry.costPerUnit),
+        totalCost: Number(a.totalCost),
+      })),
+      note:
+        allocations.length === 0
+          ? 'No cost data — log a purchase for this product to enable COGS tracking'
+          : null,
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
 // PATCH /api/v1/orders/:id/payment — COD payment confirmation (delivered only)
 router.patch('/:id/payment', requireSeller, async (req, res, next) => {
   try {

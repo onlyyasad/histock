@@ -46,6 +46,21 @@ export const ordersApi = apiSlice.injectEndpoints({
       query: (id) => ({ url: `/orders/${id}`, method: 'DELETE' }),
       invalidatesTags: ['Order', 'Dashboard'],
     }),
+
+    getOrderCostBreakdown: builder.query<
+      {
+        totalRevenue: number
+        totalCost: number
+        profit: number
+        margin: number
+        allocations: Array<{ productName: string; quantity: number; costPerUnit: number; totalCost: number }>
+        note: string | null
+      },
+      string
+    >({
+      query: (id) => `/orders/${id}/cost-breakdown`,
+      providesTags: (_result, _error, id) => [{ type: 'Order', id }],
+    }),
   }),
 })
 
@@ -57,4 +72,5 @@ export const {
   useUpdateOrderMetadataMutation,
   useConfirmCodPaymentMutation,
   useDeleteOrderMutation,
+  useGetOrderCostBreakdownQuery,
 } = ordersApi
