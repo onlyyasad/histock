@@ -2,6 +2,7 @@
 
 // CSS-only print fallback. Hidden by default (print:block via Tailwind).
 // Triggers browser print dialog when window.print() is called.
+// When locale='bn', the browser OS renderer handles Bangla shaping — react-pdf cannot.
 
 import type { InvoiceData } from './InvoiceDocument'
 
@@ -9,13 +10,20 @@ function fmt(amount: number) {
   return `BDT ${Number(amount).toFixed(2)}`
 }
 
-export function PrintableInvoice({ data }: { data: InvoiceData }) {
+export function PrintableInvoice({ data, locale = 'en' }: { data: InvoiceData; locale?: 'en' | 'bn' }) {
   const orderNum = `ORD-${String(data.orderNumber).padStart(6, '0')}`
+  // Noto Sans Bengali / Hind Siliguri render Bangla correctly in the browser.
+  // For English, Arial is sufficient.
+  const fontFamily =
+    locale === 'bn'
+      ? "'Noto Sans Bengali', 'Hind Siliguri', Arial, sans-serif"
+      : 'Arial, sans-serif'
 
   return (
     <div
       className="hidden print:block"
-      style={{ fontFamily: 'Arial, sans-serif', maxWidth: 700, margin: '0 auto', padding: 40 }}
+      lang={locale === 'bn' ? 'bn' : undefined}
+      style={{ fontFamily, maxWidth: 700, margin: '0 auto', padding: 40 }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 32 }}>
         <h1 style={{ fontSize: 24, margin: 0 }}>{data.sellerName}</h1>

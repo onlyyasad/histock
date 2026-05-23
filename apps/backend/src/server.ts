@@ -3,6 +3,7 @@ import config from './config'
 import { scheduleDemoSeed, demoSeedWorker } from './jobs/demoSeeder'
 import { emailWorker } from './jobs/emailQueue'
 import { scheduleWorker } from './jobs/scheduleQueue'
+import { aiWorker } from './jobs/aiQueue'
 
 /* eslint-disable no-console */
 async function bootstrap() {
@@ -18,6 +19,7 @@ async function bootstrap() {
   void demoSeedWorker
   void emailWorker
   void scheduleWorker
+  void aiWorker
 }
 
 bootstrap().catch(console.error)

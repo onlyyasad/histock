@@ -128,3 +128,12 @@
     @apply font-sans;
   }
 }
+
+/* Mobile tap target enforcement — 44px minimum per WCAG 2.5.5 */
+@media (pointer: coarse) {
+  button:not([data-no-min-tap]),
+  [role="button"]:not([data-no-min-tap]),
+  a:not([data-no-min-tap]) {
+    min-height: 44px;
+  }
+}

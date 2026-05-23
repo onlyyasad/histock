@@ -10,6 +10,7 @@ import { schedulesRoutes } from '../modules/schedules/schedules.routes'
 import { settingsRoutes } from '../modules/settings/settings.routes'
 import { supportRoutes } from '../modules/support/support.routes'
 import { demoGuard } from '../middlewares/demoGuard'
+import aiRoutes from '../../ai/routes'
 
 const router = Router()
 
@@ -24,6 +25,7 @@ router.use('/exports', exportsRoutes)
 router.use('/schedules', schedulesRoutes)
 router.use('/settings', settingsRoutes)
 router.use('/support', supportRoutes)
+router.use('/ai', aiRoutes)
 router.use('/', financialsRoutes)
 
 export default router
