@@ -51,27 +51,42 @@ export function ProductsListPage() {
             <th className="pb-2">SKU</th>
             <th className="pb-2">Price</th>
             <th className="pb-2 text-right">In Stock</th>
+            <th className="pb-2 text-right">Avg Margin</th>
           </tr>
         </thead>
         <tbody>
-          {products?.map((p) => (
-            <tr key={p.id} className="border-b hover:bg-gray-50">
-              <td className="py-3">
-                <Link href={`/products/${p.id}`} className="font-medium hover:underline">
-                  {p.name}
-                </Link>
-              </td>
-              <td className="py-3 text-gray-400">{p.sku ?? '—'}</td>
-              <td className="py-3 tabular-nums">৳{p.price.toFixed(2)}</td>
-              <td
-                className={`py-3 text-right tabular-nums ${
-                  p.currentStock <= 5 ? 'text-red-600 font-medium' : ''
-                }`}
-              >
-                {p.currentStock}
-              </td>
-            </tr>
-          ))}
+          {products?.map((p) => {
+            const margin = (p as unknown as { avgMarginPct: number | null }).avgMarginPct
+            return (
+              <tr key={p.id} className="border-b hover:bg-gray-50">
+                <td className="py-3">
+                  <Link href={`/products/${p.id}`} className="font-medium hover:underline">
+                    {p.name}
+                  </Link>
+                </td>
+                <td className="py-3 text-gray-400">{p.sku ?? '—'}</td>
+                <td className="py-3 tabular-nums">৳{p.price.toFixed(2)}</td>
+                <td
+                  className={`py-3 text-right tabular-nums ${
+                    p.currentStock <= 5 ? 'text-red-600 font-medium' : ''
+                  }`}
+                >
+                  {p.currentStock}
+                </td>
+                <td
+                  className={`py-3 text-right tabular-nums text-sm ${
+                    margin === null
+                      ? 'text-gray-300'
+                      : margin < 10
+                        ? 'text-red-500 font-medium'
+                        : 'text-green-600 font-medium'
+                  }`}
+                >
+                  {margin !== null ? `${margin.toFixed(1)}%` : '—'}
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>
