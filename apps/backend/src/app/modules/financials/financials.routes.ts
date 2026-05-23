@@ -1,6 +1,7 @@
 import { Router } from 'express'
+import { z } from 'zod'
 import { requireSeller } from '../../middlewares/auth'
-import { prismaWithScope } from '../../../prisma/client'
+import { prismaAdmin, prismaWithScope } from '../../../prisma/client'
 import { DashboardService } from './financials.dashboard.service'
 import { AnalyticsService } from './financials.analytics.service'
 import { RemittanceService, CreateRemittanceSchema } from './financials.remittance.service'
@@ -80,6 +81,75 @@ router.post('/remittances', requireSeller, async (req, res, next) => {
     if (err instanceof Error && 'status' in err) {
       return res.status(err.status as number).json({ error: err.message })
     }
+    next(err)
+  }
+})
+
+// GET /api/v1/couriers — list all active couriers (used in remittance import picker)
+router.get('/couriers', requireSeller, async (_req, res, next) => {
+  try {
+    const couriers = await prismaAdmin.courier.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    })
+    res.json(couriers)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// POST /api/v1/remittances/import — create batch from CSV-matched orders with per-order amounts
+router.post('/remittances/import', requireSeller, async (req, res, next) => {
+  try {
+    const businessId = getBusinessId(req)
+
+    const parsed = z
+      .object({
+        courierId: z.string().uuid(),
+        batchName: z.string().min(1).max(200),
+        fileName: z.string().min(1),
+        orders: z
+          .array(z.object({ orderId: z.string().uuid(), codAmount: z.number().positive() }))
+          .min(1),
+        unmatchedCount: z.number().int().min(0).default(0),
+      })
+      .safeParse(req.body)
+
+    if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
+
+    const { courierId, batchName, fileName, orders, unmatchedCount } = parsed.data
+    const totalCodAmount = orders.reduce((sum, o) => sum + o.codAmount, 0)
+
+    const remittance = await prismaAdmin.$transaction(async (tx) => {
+      const batch = await tx.remittance.create({
+        data: {
+          businessId,
+          courierId,
+          batchName,
+          totalCodAmount,
+          totalOrders: orders.length,
+          orders: {
+            create: orders.map((o) => ({ orderId: o.orderId, codAmount: o.codAmount })),
+          },
+        },
+        include: { courier: { select: { id: true, name: true } } },
+      })
+
+      await tx.remittanceImport.create({
+        data: {
+          businessId,
+          fileName,
+          matchedCount: orders.length,
+          unmatchedCount,
+        },
+      })
+
+      return batch
+    })
+
+    res.status(201).json(remittance)
+  } catch (err) {
     next(err)
   }
 })
