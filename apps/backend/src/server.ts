@@ -2,6 +2,7 @@ import app from './app'
 import config from './config'
 import { scheduleDemoSeed, demoSeedWorker } from './jobs/demoSeeder'
 import { emailWorker } from './jobs/emailQueue'
+import { scheduleWorker } from './jobs/scheduleQueue'
 
 /* eslint-disable no-console */
 async function bootstrap() {
@@ -16,6 +17,7 @@ async function bootstrap() {
   // Keep references to prevent GC
   void demoSeedWorker
   void emailWorker
+  void scheduleWorker
 }
 
 bootstrap().catch(console.error)

@@ -66,6 +66,12 @@ export function DashboardPage() {
           value={data.lowStockProducts}
           variant={data.lowStockProducts > 0 ? 'warning' : 'default'}
         />
+        <StatCard
+          label="Overdue Reminders"
+          value={data.overdueSchedules ?? 0}
+          variant={(data.overdueSchedules ?? 0) > 0 ? 'danger' : 'default'}
+          subtext={(data.overdueSchedules ?? 0) > 0 ? 'Action needed' : undefined}
+        />
       </div>
 
       <Card>

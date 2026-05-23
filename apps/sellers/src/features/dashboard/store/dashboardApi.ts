@@ -8,6 +8,7 @@ export interface DashboardSnapshot {
   deliveryFailed: number
   todayRevenue: number
   lowStockProducts: number
+  overdueSchedules: number
 }
 
 export const dashboardApi = apiSlice.injectEndpoints({

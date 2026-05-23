@@ -43,9 +43,14 @@ export class DashboardService {
 
     const row = result[0]
 
-    const lowStockCount = await prismaAdmin.product.count({
-      where: { businessId, deletedAt: null, isActive: true, currentStock: { lt: 5 } },
-    })
+    const [lowStockCount, overdueSchedules] = await Promise.all([
+      prismaAdmin.product.count({
+        where: { businessId, deletedAt: null, isActive: true, currentStock: { lt: 5 } },
+      }),
+      prismaAdmin.schedule.count({
+        where: { businessId, isDone: false, scheduledAt: { lt: new Date() } },
+      }),
+    ])
 
     return {
       todayOrders: Number(row.total_orders),
@@ -55,6 +60,7 @@ export class DashboardService {
       deliveryFailed: Number(row.failed_orders),
       todayRevenue: Number(row.today_revenue),
       lowStockProducts: lowStockCount,
+      overdueSchedules,
     }
   }
 }

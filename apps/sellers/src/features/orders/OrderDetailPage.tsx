@@ -9,6 +9,7 @@ import { InvoiceDownloadButton } from '@/features/invoices/InvoiceDownloadButton
 import { PrintableInvoice } from '@/features/invoices/PrintableInvoice'
 import { CostBreakdownPanel } from './components/CostBreakdownPanel'
 import { OrderNotesPanel } from './components/OrderNotesPanel'
+import { SchedulePanel } from './components/SchedulePanel'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -188,6 +189,8 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
       )}
 
       <OrderNotesPanel orderId={orderId} notes={order.orderNotes ?? []} />
+
+      <SchedulePanel orderId={orderId} />
 
       <CostBreakdownPanel orderId={orderId} />
     </div>
