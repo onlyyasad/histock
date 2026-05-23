@@ -2,6 +2,9 @@
   "name": "@histock/backend",
   "version": "0.0.1",
   "private": true,
+  "prisma": {
+    "seed": "tsx src/seed/index.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
@@ -10,7 +13,8 @@
     "lint": "eslint .",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx src/seed/index.ts",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests --forceExit",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@histock/shared": "workspace:*",
@@ -27,6 +31,8 @@
     "morgan": "^1.10.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
+    "resend": "^6.12.3",
+    "stripe": "^22.1.1",
     "zod": "^3.24.4"
   },
   "devDependencies": {
