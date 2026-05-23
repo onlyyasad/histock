@@ -1,8 +1,8 @@
 import { Document, Page, Text, View, Font, StyleSheet } from '@react-pdf/renderer'
 
-// SPIKE RESULT: TBD — run /dev/bangla-font-spike and update this comment.
-// Pass criteria: ক্ষ renders as a joined ligature, vowel marks attach to base consonants.
-// Fail criteria: disconnected characters, floating marks, or □ boxes.
+// SPIKE RESULT: FAIL — @react-pdf/renderer v4 uses PDFKit with no text shaping engine
+// (no HarfBuzz, no bidi, no Indic GSUB/GPOS). Bangla conjuncts (e.g., ক্ষ) render as
+// disconnected glyphs. Fallback: window.print() via PrintableInvoice (OS renderer shapes correctly).
 
 Font.register({
   family: 'HindSiliguri',
