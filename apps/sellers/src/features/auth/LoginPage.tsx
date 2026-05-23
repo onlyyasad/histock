@@ -8,6 +8,10 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { useLoginMutation } from '@/store/authApi'
 import { loginFormSchema, type LoginFormValues } from './schemas/authFormSchemas'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
 export function LoginPage() {
   const router = useRouter()
@@ -40,62 +44,56 @@ export function LoginPage() {
   }
 
   return (
-    <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow">
-      <h1 className="text-2xl font-bold">Sign In</h1>
-
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            {...form.register('email')}
-            className="w-full border rounded px-3 py-2"
-            autoComplete="email"
-          />
-          {form.formState.errors.email && (
-            <p className="text-red-500 text-sm mt-1">{form.formState.errors.email.message}</p>
-          )}
-        </div>
-
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label htmlFor="password" className="text-sm font-medium">
-              Password
-            </label>
-            <Link href="/forgot-password" className="text-xs text-indigo-600 hover:underline">
-              Forgot password?
-            </Link>
+    <Card className="w-full max-w-md shadow">
+      <CardHeader>
+        <CardTitle className="text-2xl">Sign In</CardTitle>
+        <CardDescription>Enter your credentials to access your dashboard</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              {...form.register('email')}
+              autoComplete="email"
+            />
+            {form.formState.errors.email && (
+              <p className="text-destructive text-sm">{form.formState.errors.email.message}</p>
+            )}
           </div>
-          <input
-            id="password"
-            type="password"
-            {...form.register('password')}
-            className="w-full border rounded px-3 py-2"
-            autoComplete="current-password"
-          />
-          {form.formState.errors.password && (
-            <p className="text-red-500 text-sm mt-1">{form.formState.errors.password.message}</p>
-          )}
-        </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-indigo-600 text-white py-2 rounded font-medium disabled:opacity-50"
-        >
-          {isLoading ? 'Signing in...' : 'Sign In'}
-        </button>
-      </form>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link href="/forgot-password" className="text-xs text-primary hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+            <Input
+              id="password"
+              type="password"
+              {...form.register('password')}
+              autoComplete="current-password"
+            />
+            {form.formState.errors.password && (
+              <p className="text-destructive text-sm">{form.formState.errors.password.message}</p>
+            )}
+          </div>
 
-      <p className="text-center text-sm">
-        No account?{' '}
-        <Link href="/register" className="text-indigo-600 hover:underline">
-          Register
-        </Link>
-      </p>
-    </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Signing in...' : 'Sign In'}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm mt-4">
+          No account?{' '}
+          <Link href="/register" className="text-primary hover:underline">
+            Register
+          </Link>
+        </p>
+      </CardContent>
+    </Card>
   )
 }

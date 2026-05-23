@@ -2,6 +2,7 @@
 
 import { useGetDashboardQuery } from './store/dashboardApi'
 import { StatCard } from './components/StatCard'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 function formatMoney(amount: number): string {
   return new Intl.NumberFormat('en-BD', {
@@ -22,7 +23,7 @@ export function DashboardPage() {
       <div className="p-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
           {Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="h-24 bg-gray-100 rounded-lg" />
+            <div key={i} className="h-24 bg-muted rounded-lg" />
           ))}
         </div>
       </div>
@@ -31,7 +32,7 @@ export function DashboardPage() {
 
   if (isError || !data) {
     return (
-      <div className="p-6 text-red-600">
+      <div className="p-6 text-destructive">
         Could not load dashboard. Check your connection and try again.
       </div>
     )
@@ -41,7 +42,7 @@ export function DashboardPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Today&apos;s Snapshot</h1>
-        <p className="text-sm text-gray-400">Auto-refreshes every 30s</p>
+        <p className="text-sm text-muted-foreground">Auto-refreshes every 30s</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -67,10 +68,14 @@ export function DashboardPage() {
         />
       </div>
 
-      <div className="bg-white rounded-lg border p-5">
-        <h2 className="font-semibold mb-4">Recent Orders</h2>
-        <p className="text-sm text-gray-400">Coming in phase 1.11 — orders frontend.</p>
-      </div>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Recent Orders</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Coming in phase 1.11 — orders frontend.</p>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import app from './app'
 import config from './config'
 import { scheduleDemoSeed, demoSeedWorker } from './jobs/demoSeeder'
+import { emailWorker } from './jobs/emailQueue'
 
 /* eslint-disable no-console */
 async function bootstrap() {
@@ -12,8 +13,9 @@ async function bootstrap() {
   // Schedule nightly demo data reseed (BullMQ deduplicates on restart)
   scheduleDemoSeed().catch(console.error)
 
-  // Keep reference to prevent GC
+  // Keep references to prevent GC
   void demoSeedWorker
+  void emailWorker
 }
 
 bootstrap().catch(console.error)

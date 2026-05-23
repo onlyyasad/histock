@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useAddOrderNoteMutation } from '../store/ordersApi'
 import type { OrderResponse } from '@histock/shared'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
+import { Button } from '@/components/ui/button'
 
 interface Props {
   orderId: string
@@ -27,39 +30,38 @@ export function OrderNotesPanel({ orderId, notes }: Props) {
   }
 
   return (
-    <div className="bg-white border rounded-lg p-4 space-y-3">
-      <h3 className="font-semibold text-sm">Notes</h3>
+    <Card>
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-sm font-semibold">Notes</CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4 space-y-3">
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {notes.length === 0 && (
+            <p className="text-sm text-muted-foreground">No notes yet</p>
+          )}
+          {notes.map((n) => (
+            <div key={n.id} className="bg-muted/50 rounded-md p-3 text-sm">
+              <p className="whitespace-pre-wrap">{n.content}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {n.user.name} · {new Date(n.createdAt).toLocaleString('en-BD')}
+              </p>
+            </div>
+          ))}
+        </div>
 
-      <div className="space-y-2 max-h-64 overflow-y-auto">
-        {notes.length === 0 && (
-          <p className="text-sm text-gray-400">No notes yet</p>
-        )}
-        {notes.map((n) => (
-          <div key={n.id} className="bg-gray-50 rounded p-3 text-sm">
-            <p className="whitespace-pre-wrap">{n.content}</p>
-            <p className="text-xs text-gray-400 mt-1">
-              {n.user.name} · {new Date(n.createdAt).toLocaleString('en-BD')}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <form onSubmit={handleSubmit} className="flex gap-2 items-end">
-        <textarea
-          rows={2}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Add a note..."
-          className="flex-1 border rounded px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-gray-400"
-        />
-        <button
-          type="submit"
-          disabled={isLoading || !text.trim()}
-          className="bg-gray-800 text-white px-4 py-2 rounded text-sm disabled:opacity-40"
-        >
-          Add
-        </button>
-      </form>
-    </div>
+        <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+          <Textarea
+            rows={2}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Add a note..."
+            className="flex-1 resize-none"
+          />
+          <Button type="submit" variant="outline" size="sm" disabled={isLoading || !text.trim()}>
+            Add
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

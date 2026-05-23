@@ -7,6 +7,10 @@ import { z } from 'zod'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { useCreateProductMutation } from './store/productsApi'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 
 const schema = z.object({
   name: z.string().min(1, 'Name required').max(300),
@@ -44,64 +48,60 @@ export function NewProductPage() {
 
   return (
     <div className="max-w-lg mx-auto p-6">
-      <Link href="/products" className="text-sm text-gray-400 hover:underline mb-4 block">
+      <Link href="/products" className="text-sm text-muted-foreground hover:underline mb-4 block">
         ← Products
       </Link>
       <h1 className="text-2xl font-bold mb-6">New Product</h1>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Name *</label>
-          <input
+        <div className="space-y-1">
+          <Label htmlFor="np-name">Name *</Label>
+          <Input
+            id="np-name"
             {...form.register('name')}
             placeholder="Product name"
-            className="w-full border rounded px-3 py-2 text-sm"
           />
           {form.formState.errors.name && (
-            <p className="text-red-500 text-xs mt-1">{form.formState.errors.name.message}</p>
+            <p className="text-destructive text-xs">{form.formState.errors.name.message}</p>
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">SKU (optional)</label>
-          <input
+        <div className="space-y-1">
+          <Label htmlFor="np-sku">SKU (optional)</Label>
+          <Input
+            id="np-sku"
             {...form.register('sku')}
             placeholder="e.g. PROD-001"
-            className="w-full border rounded px-3 py-2 text-sm"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Selling Price (৳)</label>
-          <input
+        <div className="space-y-1">
+          <Label htmlFor="np-price">Selling Price (৳)</Label>
+          <Input
+            id="np-price"
             {...form.register('price')}
             type="number"
             min="0"
             step="0.01"
-            className="w-full border rounded px-3 py-2 text-sm"
           />
           {form.formState.errors.price && (
-            <p className="text-red-500 text-xs mt-1">{form.formState.errors.price.message}</p>
+            <p className="text-destructive text-xs">{form.formState.errors.price.message}</p>
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Description (optional)</label>
-          <textarea
+        <div className="space-y-1">
+          <Label htmlFor="np-desc">Description (optional)</Label>
+          <Textarea
+            id="np-desc"
             {...form.register('description')}
             rows={3}
             placeholder="Optional product notes"
-            className="w-full border rounded px-3 py-2 text-sm"
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-blue-600 text-white py-2 rounded font-medium disabled:opacity-50"
-        >
+        <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? 'Creating...' : 'Create Product'}
-        </button>
+        </Button>
       </form>
     </div>
   )

@@ -13,20 +13,57 @@ function getResend(): Resend {
   return _resend
 }
 
-export async function sendPasswordResetEmail(email: string, resetUrl: string) {
+async function sendEmail(to: string, subject: string, html: string) {
   if (!config.resend.apiKey) {
-    // Dev fallback: log the reset URL instead of sending
-    console.warn(`[DEV] Password reset link for ${email}: ${resetUrl}`)
+    console.warn(`[email:dev] to=${to} subject="${subject}"`)
     return
   }
-  await getResend().emails.send({
-    from: config.resend.fromAddress,
-    to: email,
-    subject: 'Reset your password',
-    html: `
-      <p>You requested a password reset. Click the link below within 1 hour:</p>
-      <p><a href="${resetUrl}">${resetUrl}</a></p>
-      <p>If you didn't request this, ignore this email — your password won't change.</p>
-    `,
-  })
+  await getResend().emails.send({ from: config.resend.fromAddress, to, subject, html })
+}
+
+export async function sendPasswordResetEmail(email: string, resetUrl: string) {
+  await sendEmail(
+    email,
+    'Reset your password',
+    `<p>You requested a password reset. Click the link below within 1 hour:</p>
+     <p><a href="${resetUrl}">${resetUrl}</a></p>
+     <p>If you didn't request this, ignore this email — your password won't change.</p>`,
+  )
+}
+
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  processing: 'is being processed',
+  packed: 'has been packed and is ready for pickup',
+  handover_to_courier: 'has been handed to the courier',
+  delivered: 'has been delivered',
+  delivery_failed: 'could not be delivered — we will re-attempt',
+  cancelled: 'has been cancelled',
+  refunded: 'has been refunded',
+}
+
+export async function sendOrderStatusEmail(
+  email: string,
+  name: string,
+  orderNumber: number,
+  newStatus: string,
+) {
+  const label = ORDER_STATUS_LABELS[newStatus] ?? `status changed to ${newStatus}`
+  const orderRef = `ORD-${String(orderNumber).padStart(6, '0')}`
+  await sendEmail(
+    email,
+    `Order ${orderRef} update`,
+    `<p>Hi ${name},</p>
+     <p>Your order <strong>${orderRef}</strong> ${label}.</p>
+     <p>Questions? Reply to this email and we'll get back to you.</p>`,
+  )
+}
+
+export async function sendTrialExpiryEmail(email: string, name: string, daysLeft: number) {
+  await sendEmail(
+    email,
+    `Your free trial expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`,
+    `<p>Hi ${name},</p>
+     <p>Your HiStock free trial ends in <strong>${daysLeft} day${daysLeft === 1 ? '' : 's'}</strong>.</p>
+     <p>Upgrade to a paid plan to keep your data and keep managing orders.</p>`,
+  )
 }

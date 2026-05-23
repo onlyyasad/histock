@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Download } from 'lucide-react'
 
 interface Props {
   endpoint: string
@@ -45,12 +47,9 @@ export function ExportButton({ endpoint, label, filename, params }: Props) {
   }
 
   return (
-    <button
-      onClick={handleExport}
-      disabled={downloading}
-      className="border rounded px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
-    >
+    <Button variant="outline" size="sm" onClick={handleExport} disabled={downloading}>
+      <Download className="h-4 w-4 mr-1" />
       {downloading ? 'Exporting...' : label}
-    </button>
+    </Button>
   )
 }

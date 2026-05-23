@@ -1,6 +1,8 @@
 'use client'
 
 import { useGetOrderCostBreakdownQuery } from '../store/ordersApi'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 
 function fmt(amount: number) {
   return `৳${amount.toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -15,14 +17,13 @@ export function CostBreakdownPanel({ orderId }: Props) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border rounded-lg p-4 animate-pulse">
-        <div className="h-4 bg-gray-100 rounded w-1/3 mb-3" />
-        <div className="space-y-2">
-          {[1, 2].map((i) => (
-            <div key={i} className="h-4 bg-gray-100 rounded" />
-          ))}
-        </div>
-      </div>
+      <Card className="animate-pulse">
+        <CardContent className="p-4 space-y-2">
+          <div className="h-4 bg-muted rounded w-1/3" />
+          <div className="h-4 bg-muted rounded" />
+          <div className="h-4 bg-muted rounded" />
+        </CardContent>
+      </Card>
     )
   }
 
@@ -31,42 +32,45 @@ export function CostBreakdownPanel({ orderId }: Props) {
   const isPositive = data.profit >= 0
 
   return (
-    <div className="bg-white border rounded-lg p-4 space-y-3">
-      <h3 className="font-semibold text-sm">Cost Breakdown</h3>
+    <Card>
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-sm font-semibold">Cost Breakdown</CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4 space-y-3">
+        {data.note && <p className="text-xs text-muted-foreground italic">{data.note}</p>}
 
-      {data.note && <p className="text-xs text-gray-400 italic">{data.note}</p>}
+        {data.allocations.length > 0 && (
+          <div className="space-y-1">
+            {data.allocations.map((a, i) => (
+              <div key={i} className="flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {a.productName} × {a.quantity}
+                </span>
+                <span className="tabular-nums">{fmt(a.totalCost)}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
-      {data.allocations.length > 0 && (
-        <div className="space-y-1">
-          {data.allocations.map((a, i) => (
-            <div key={i} className="flex justify-between text-sm">
-              <span className="text-gray-500">
-                {a.productName} × {a.quantity}
-              </span>
-              <span className="tabular-nums">{fmt(a.totalCost)}</span>
-            </div>
-          ))}
-        </div>
-      )}
+        <Separator />
 
-      <div className="border-t pt-3 space-y-1 text-sm">
-        <div className="flex justify-between">
-          <span className="text-gray-500">Revenue (excl. delivery)</span>
-          <span className="tabular-nums">{fmt(data.totalRevenue)}</span>
+        <div className="space-y-1 text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Revenue (excl. delivery)</span>
+            <span className="tabular-nums">{fmt(data.totalRevenue)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">COGS</span>
+            <span className="tabular-nums">{fmt(data.totalCost)}</span>
+          </div>
+          <div className={`flex justify-between font-semibold ${isPositive ? 'text-green-600' : 'text-destructive'}`}>
+            <span>Profit</span>
+            <span className="tabular-nums">
+              {fmt(data.profit)} ({data.margin.toFixed(1)}%)
+            </span>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span className="text-gray-500">COGS</span>
-          <span className="tabular-nums">{fmt(data.totalCost)}</span>
-        </div>
-        <div
-          className={`flex justify-between font-semibold ${isPositive ? 'text-green-600' : 'text-red-600'}`}
-        >
-          <span>Profit</span>
-          <span className="tabular-nums">
-            {fmt(data.profit)} ({data.margin.toFixed(1)}%)
-          </span>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

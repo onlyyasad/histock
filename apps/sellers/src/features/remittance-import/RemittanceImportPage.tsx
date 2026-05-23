@@ -10,6 +10,19 @@ import {
   type MatchResult,
   type UnmatchedRow,
 } from './utils/matchOrders'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 type Step = 'upload' | 'map' | 'preview' | 'done'
 
@@ -94,13 +107,16 @@ export function RemittanceImportPage() {
     }
   }
 
+  const confidenceColor =
+    confidence >= 70 ? 'text-green-600' : confidence >= 40 ? 'text-yellow-600' : 'text-destructive'
+
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <h1 className="text-2xl font-bold">Import COD Remittance</h1>
 
       {step === 'upload' && (
         <div
-          className="border-2 border-dashed rounded-lg p-10 text-center hover:bg-gray-50"
+          className="border-2 border-dashed rounded-lg p-10 text-center hover:bg-muted/30 transition-colors cursor-pointer"
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault()
@@ -119,138 +135,157 @@ export function RemittanceImportPage() {
             }}
           />
           <label htmlFor="file-input" className="cursor-pointer block">
-            <p className="text-lg text-gray-500">Drop courier CSV or XLSX here</p>
-            <p className="text-sm text-gray-400 mt-2">or click to browse</p>
-            <p className="text-xs text-gray-300 mt-4">Supports Pathao, REDX, eCourier, SA Paribahan formats</p>
+            <p className="text-lg text-muted-foreground">Drop courier CSV or XLSX here</p>
+            <p className="text-sm text-muted-foreground/60 mt-2">or click to browse</p>
+            <p className="text-xs text-muted-foreground/40 mt-4">
+              Supports Pathao, REDX, eCourier, SA Paribahan formats
+            </p>
           </label>
         </div>
       )}
 
       {step === 'map' && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium">Auto-detection confidence:</span>
-            <span
-              className={`text-sm font-bold ${
-                confidence >= 70 ? 'text-green-600' : confidence >= 40 ? 'text-yellow-600' : 'text-red-600'
-              }`}
+        <Card>
+          <CardContent className="pt-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium">Auto-detection confidence:</span>
+              <span className={`text-sm font-bold ${confidenceColor}`}>{confidence}%</span>
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label>Column containing order number</Label>
+                <Select
+                  value={mapping.orderNumberCol ?? ''}
+                  onValueChange={(v) => setMapping((m) => ({ ...m, orderNumberCol: v || null }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select column..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {headers.map((h) => (
+                      <SelectItem key={h} value={h}>{h}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>Column containing COD amount</Label>
+                <Select
+                  value={mapping.amountCol ?? ''}
+                  onValueChange={(v) => setMapping((m) => ({ ...m, amountCol: v || null }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select column..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {headers.map((h) => (
+                      <SelectItem key={h} value={h}>{h}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {rows.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Preview — first row: {Object.entries(rows[0]).slice(0, 4).map(([k, v]) => `${k}: ${v}`).join(' · ')}
+              </p>
+            )}
+
+            <Button
+              onClick={handleColumnConfirm}
+              disabled={!mapping.orderNumberCol || !mapping.amountCol}
             >
-              {confidence}%
-            </span>
-          </div>
-
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">Column containing order number</label>
-              <select
-                value={mapping.orderNumberCol ?? ''}
-                onChange={(e) => setMapping((m) => ({ ...m, orderNumberCol: e.target.value || null }))}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">Select column...</option>
-                {headers.map((h) => (
-                  <option key={h} value={h}>{h}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Column containing COD amount</label>
-              <select
-                value={mapping.amountCol ?? ''}
-                onChange={(e) => setMapping((m) => ({ ...m, amountCol: e.target.value || null }))}
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">Select column...</option>
-                {headers.map((h) => (
-                  <option key={h} value={h}>{h}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {rows.length > 0 && (
-            <p className="text-xs text-gray-400">
-              Preview — first row: {Object.entries(rows[0]).slice(0, 4).map(([k, v]) => `${k}: ${v}`).join(' · ')}
-            </p>
-          )}
-
-          <button
-            onClick={handleColumnConfirm}
-            disabled={!mapping.orderNumberCol || !mapping.amountCol}
-            className="bg-blue-600 text-white px-6 py-2 rounded disabled:opacity-50"
-          >
-            Continue
-          </button>
-        </div>
+              Continue
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {step === 'preview' && (
         <div className="space-y-4">
-          <div className="flex gap-4 text-sm">
-            <span className="text-green-600 font-medium">{matched.length} matched</span>
-            <span className="text-red-500">{unmatched.length} unmatched</span>
+          <div className="flex gap-4">
+            <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">
+              {matched.length} matched
+            </Badge>
+            {unmatched.length > 0 && (
+              <Badge variant="destructive">{unmatched.length} unmatched</Badge>
+            )}
           </div>
 
-          <div className="space-y-1 max-h-48 overflow-y-auto">
-            {matched.map((r) => (
-              <div key={r.orderId} className="flex justify-between text-sm bg-green-50 px-3 py-1.5 rounded">
-                <span>ORD-{String(r.orderNumber).padStart(6, '0')}</span>
-                <span>৳{r.codAmount.toFixed(2)}</span>
+          <Card>
+            <CardContent className="p-0">
+              <div className="max-h-48 overflow-y-auto divide-y">
+                {matched.map((r) => (
+                  <div key={r.orderId} className="flex justify-between text-sm px-4 py-2">
+                    <span className="font-mono">ORD-{String(r.orderNumber).padStart(6, '0')}</span>
+                    <span className="tabular-nums">৳{r.codAmount.toFixed(2)}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </CardContent>
+          </Card>
 
           {unmatched.length > 0 && (
-            <div className="space-y-1 max-h-32 overflow-y-auto">
-              <p className="text-sm font-medium text-red-600">Unmatched rows:</p>
-              {unmatched.map((r, i) => (
-                <div key={i} className="flex justify-between text-sm bg-red-50 px-3 py-1.5 rounded">
-                  <span>{r.rawOrderNumber}</span>
-                  <span className="text-red-400 text-xs">{r.reason}</span>
+            <Card className="border-destructive/30">
+              <CardContent className="p-0">
+                <p className="text-sm font-medium text-destructive px-4 pt-3 pb-2">Unmatched rows:</p>
+                <div className="max-h-32 overflow-y-auto divide-y divide-destructive/10">
+                  {unmatched.map((r, i) => (
+                    <div key={i} className="flex justify-between text-sm px-4 py-2">
+                      <span>{r.rawOrderNumber}</span>
+                      <span className="text-destructive/60 text-xs">{r.reason}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </CardContent>
+            </Card>
           )}
 
-          <div className="space-y-3 pt-2 border-t">
-            <div>
-              <label className="block text-sm font-medium mb-1">Courier</label>
-              <select
-                value={courierId}
-                onChange={(e) => setCourierId(e.target.value)}
-                className="w-full border rounded px-3 py-2"
-              >
-                {couriers.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+          <Separator />
+
+          <div className="space-y-3">
+            <div className="space-y-1">
+              <Label>Courier</Label>
+              <Select value={courierId} onValueChange={(v) => { if (v) setCourierId(v) }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select courier..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {couriers.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Batch name</label>
-              <input
-                type="text"
+            <div className="space-y-1">
+              <Label>Batch name</Label>
+              <Input
                 value={batchName}
                 onChange={(e) => setBatchName(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
               />
             </div>
           </div>
 
-          <button
+          <Button
             onClick={handleImport}
             disabled={isImporting || matched.length === 0 || !courierId}
-            className="w-full bg-green-600 text-white py-3 rounded font-medium disabled:opacity-50"
+            className="w-full"
           >
             {isImporting ? 'Importing...' : `Create Batch — ${matched.length} Orders`}
-          </button>
+          </Button>
         </div>
       )}
 
       {step === 'done' && (
-        <div className="text-center py-10">
+        <div className="text-center py-10 space-y-3">
           <p className="text-3xl">✓</p>
-          <p className="font-semibold mt-3">Remittance batch created</p>
-          <a href="/analytics/remittance" className="text-blue-600 hover:underline text-sm mt-2 block">
+          <p className="font-semibold">Remittance batch created</p>
+          <a
+            href="/analytics/remittance"
+            className="text-primary hover:underline text-sm block"
+          >
             View in Remittance Tracker
           </a>
         </div>

@@ -27,7 +27,7 @@ export function AnalyticsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Analytics</h1>
         {isFetching && !isLoading && (
-          <span className="text-xs text-gray-400">Refreshing...</span>
+          <span className="text-xs text-muted-foreground">Refreshing...</span>
         )}
       </div>
 
@@ -36,7 +36,7 @@ export function AnalyticsPage() {
       {isLoading && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 bg-gray-100 animate-pulse rounded-lg" />
+            <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
           ))}
         </div>
       )}

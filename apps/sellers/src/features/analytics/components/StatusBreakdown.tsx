@@ -1,3 +1,5 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
 const STATUS_LABELS: Record<string, string> = {
   pending: 'Pending',
   processing: 'Processing',
@@ -16,30 +18,32 @@ interface Props {
 
 export function StatusBreakdown({ breakdown, totalOrders }: Props) {
   return (
-    <div className="bg-white border rounded-lg p-4">
-      <h3 className="font-semibold mb-4">By Status</h3>
-      <div className="space-y-2">
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-semibold">By Status</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
         {breakdown.map(({ status, count, total }) => {
           const pct = totalOrders > 0 ? Math.round((count / totalOrders) * 100) : 0
           return (
             <div key={status} className="flex items-center gap-3">
-              <div className="w-28 text-sm text-gray-500 shrink-0">
+              <div className="w-28 text-sm text-muted-foreground shrink-0">
                 {STATUS_LABELS[status] ?? status}
               </div>
-              <div className="flex-1 bg-gray-100 rounded-full h-2">
+              <div className="flex-1 bg-muted rounded-full h-2">
                 <div
-                  className="bg-blue-500 h-2 rounded-full"
+                  className="bg-primary h-2 rounded-full"
                   style={{ width: `${pct}%` }}
                 />
               </div>
               <div className="text-sm tabular-nums w-8 text-right">{count}</div>
-              <div className="text-xs text-gray-400 tabular-nums w-24 text-right">
+              <div className="text-xs text-muted-foreground tabular-nums w-24 text-right">
                 ৳{Number(total).toFixed(0)}
               </div>
             </div>
           )
         })}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

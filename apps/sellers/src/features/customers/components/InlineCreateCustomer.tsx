@@ -5,6 +5,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { useCreateCustomerMutation } from '../store/customersApi'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const schema = z.object({
   name: z.string().min(1, 'Name required'),
@@ -36,38 +40,36 @@ export function InlineCreateCustomer({ prefillPhone, onCreated, onCancel }: Prop
   }
 
   return (
-    <div className="border border-blue-200 rounded-lg p-4 bg-blue-50 space-y-3">
-      <p className="text-sm font-medium text-blue-700">Create New Customer</p>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-        <input
-          {...form.register('name')}
-          placeholder="Full name"
-          className="w-full border rounded px-3 py-2 text-sm"
-        />
-        {form.formState.errors.name && (
-          <p className="text-red-500 text-xs">{form.formState.errors.name.message}</p>
-        )}
-        <input
-          {...form.register('phone')}
-          placeholder="Phone number"
-          className="w-full border rounded px-3 py-2 text-sm"
-        />
-        {form.formState.errors.phone && (
-          <p className="text-red-500 text-xs">{form.formState.errors.phone.message}</p>
-        )}
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex-1 bg-blue-600 text-white py-2 rounded text-sm"
-          >
-            {isLoading ? 'Creating...' : 'Create & Use'}
-          </button>
-          <button type="button" onClick={onCancel} className="border rounded py-2 px-4 text-sm">
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
+    <Card className="border-primary/30">
+      <CardHeader className="pb-3 pt-4 px-4">
+        <CardTitle className="text-sm text-primary">Create New Customer</CardTitle>
+      </CardHeader>
+      <CardContent className="px-4 pb-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <div className="space-y-1">
+            <Label htmlFor="ic-name">Full name</Label>
+            <Input id="ic-name" {...form.register('name')} placeholder="Full name" />
+            {form.formState.errors.name && (
+              <p className="text-destructive text-xs">{form.formState.errors.name.message}</p>
+            )}
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="ic-phone">Phone number</Label>
+            <Input id="ic-phone" {...form.register('phone')} placeholder="Phone number" />
+            {form.formState.errors.phone && (
+              <p className="text-destructive text-xs">{form.formState.errors.phone.message}</p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button type="submit" disabled={isLoading} className="flex-1">
+              {isLoading ? 'Creating...' : 'Create & Use'}
+            </Button>
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

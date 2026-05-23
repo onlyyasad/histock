@@ -1,12 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { newOrderFormSchema, type NewOrderFormValues } from './schemas/newOrderFormSchema'
 import { useCreateOrderMutation } from './store/ordersApi'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export function formatOrderNumber(n: number): string {
   return `ORD-${String(n).padStart(6, '0')}`
@@ -83,24 +95,20 @@ export function NewOrderPage() {
       <h1 className="text-2xl font-bold mb-6">New Order</h1>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-1">Customer Phone</label>
+        <div className="space-y-1">
+          <Label>Customer Phone</Label>
           <div className="flex gap-2">
-            <input
+            <Input
               type="tel"
               value={phoneLookup}
               onChange={(e) => setPhoneLookup(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handlePhoneLookup())}
               placeholder="01711234567"
-              className="flex-1 border rounded px-3 py-2"
+              className="flex-1"
             />
-            <button
-              type="button"
-              onClick={handlePhoneLookup}
-              className="px-4 py-2 bg-gray-100 rounded border"
-            >
+            <Button type="button" variant="outline" onClick={handlePhoneLookup}>
               Lookup
-            </button>
+            </Button>
           </div>
           {foundCustomer && (
             <p className="text-sm text-green-600 mt-1">
@@ -108,106 +116,120 @@ export function NewOrderPage() {
             </p>
           )}
           {form.formState.errors.customerId && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-destructive text-sm mt-1">
               {form.formState.errors.customerId.message}
             </p>
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Payment Method</label>
-          <select {...form.register('paymentMethod')} className="w-full border rounded px-3 py-2">
-            <option value="cod">Cash on Delivery (COD)</option>
-            <option value="bkash">bKash</option>
-            <option value="nagad">Nagad</option>
-            <option value="rocket">Rocket</option>
-            <option value="bank_transfer">Bank Transfer</option>
-            <option value="other">Other</option>
-          </select>
+        <div className="space-y-1">
+          <Label>Payment Method</Label>
+          <Controller
+            control={form.control}
+            name="paymentMethod"
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cod">Cash on Delivery (COD)</SelectItem>
+                  <SelectItem value="bkash">bKash</SelectItem>
+                  <SelectItem value="nagad">Nagad</SelectItem>
+                  <SelectItem value="rocket">Rocket</SelectItem>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Items</label>
+          <Label className="mb-2 block">Items</Label>
           <div className="space-y-3">
             {fields.map((field, index) => (
               <div key={field.id} className="flex gap-2 items-start">
-                <input
+                <Input
                   {...form.register(`items.${index}.productId`)}
                   placeholder="Product ID"
-                  className="flex-1 border rounded px-3 py-2 text-sm"
+                  className="flex-1"
                 />
-                <input
+                <Input
                   {...form.register(`items.${index}.quantity`)}
                   type="number"
                   min="1"
                   placeholder="Qty"
-                  className="w-20 border rounded px-3 py-2 text-sm"
+                  className="w-20"
                 />
-                <input
+                <Input
                   {...form.register(`items.${index}.unitPrice`)}
                   type="number"
                   min="0"
                   step="0.01"
                   placeholder="Price (৳)"
-                  className="w-32 border rounded px-3 py-2 text-sm"
+                  className="w-32"
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => remove(index)}
-                  className="text-red-500 text-sm py-2"
+                  className="text-destructive hover:text-destructive"
                 >
                   ✕
-                </button>
+                </Button>
               </div>
             ))}
           </div>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => append({ productId: '', variantId: null, quantity: 1, unitPrice: 0 })}
-            className="mt-2 text-sm text-blue-600 hover:underline"
+            className="mt-2 text-primary"
           >
             + Add Item
-          </button>
+          </Button>
           {form.formState.errors.items && (
-            <p className="text-red-500 text-sm mt-1">
+            <p className="text-destructive text-sm mt-1">
               {form.formState.errors.items.root?.message}
             </p>
           )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Delivery Fee (৳)</label>
-          <input
+        <div className="space-y-1">
+          <Label htmlFor="no-delivery">Delivery Fee (৳)</Label>
+          <Input
+            id="no-delivery"
             {...form.register('deliveryFee')}
             type="number"
             min="0"
             step="0.01"
-            className="w-full border rounded px-3 py-2"
           />
         </div>
 
-        <div className="bg-gray-50 rounded p-4 space-y-1 text-sm">
-          <div className="flex justify-between">
-            <span>Subtotal</span>
-            <span>৳{subtotal.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Delivery</span>
-            <span>৳{deliveryFee.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between font-bold">
-            <span>Total</span>
-            <span>৳{total.toFixed(2)}</span>
-          </div>
-        </div>
+        <Card>
+          <CardContent className="p-4 space-y-1 text-sm">
+            <div className="flex justify-between text-muted-foreground">
+              <span>Subtotal</span>
+              <span>৳{subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-muted-foreground">
+              <span>Delivery</span>
+              <span>৳{deliveryFee.toFixed(2)}</span>
+            </div>
+            <Separator className="my-1" />
+            <div className="flex justify-between font-bold text-base">
+              <span>Total</span>
+              <span>৳{total.toFixed(2)}</span>
+            </div>
+          </CardContent>
+        </Card>
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-blue-600 text-white py-3 rounded font-medium disabled:opacity-50"
-        >
+        <Button type="submit" disabled={isLoading} className="w-full">
           {isLoading ? 'Creating...' : 'Create Order'}
-        </button>
+        </Button>
       </form>
     </div>
   )
