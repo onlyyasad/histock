@@ -70,6 +70,11 @@ export function ProductDetailPage({ productId }: { productId: string }) {
 
       <div>
         <h2 className="font-semibold mb-3">Purchase History</h2>
+        {(product.costEntries ?? []).length === 0 && (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 mb-3">
+            Log a purchase above to track cost of goods and see margin data.
+          </div>
+        )}
         <LotHistoryTable entries={product.costEntries ?? []} />
       </div>
     </div>

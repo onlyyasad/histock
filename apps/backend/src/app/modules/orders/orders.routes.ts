@@ -153,7 +153,9 @@ router.get('/:id/cost-breakdown', requireSeller, async (req, res, next) => {
       })),
       note:
         allocations.length === 0
-          ? 'No cost data — log a purchase for this product to enable COGS tracking'
+          ? order.status === 'delivery_failed'
+            ? 'Cost allocation reversed (delivery failed)'
+            : 'No cost data — log a purchase for this product to enable COGS tracking'
           : null,
     })
   } catch (err) {
