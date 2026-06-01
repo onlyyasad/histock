@@ -1,20 +1,22 @@
+const DEMO_PASSWORD = process.env.DEMO_SEED_PASSWORD ?? 'demo1234'
+
 export const DEMO_OWNER = {
   email: 'owner@demo.histock.app',
-  password: 'Demo@123',
+  password: DEMO_PASSWORD,
   name: 'Demo Owner',
   role: 'owner' as const,
 }
 
 export const DEMO_MANAGER = {
   email: 'manager@demo.histock.app',
-  password: 'Demo@123',
+  password: DEMO_PASSWORD,
   name: 'Demo Manager',
   role: 'manager' as const,
 }
 
 export const DEMO_STAFF = {
   email: 'staff@demo.histock.app',
-  password: 'Demo@123',
+  password: DEMO_PASSWORD,
   name: 'Demo Staff',
   role: 'staff' as const,
 }
