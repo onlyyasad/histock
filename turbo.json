@@ -12,6 +12,9 @@
     },
     "lint": {},
     "typecheck": {},
-    "test": {}
+    "test": {
+      "cache": false,
+      "passThroughEnv": ["DATABASE_URL", "REDIS_URL", "SESSION_SECRET", "NODE_ENV", "PORT", "CORS_ORIGIN"]
+    }
   }
 }
