@@ -1,8 +1,12 @@
+import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 
 // ONE connection pool shared by both clients.
 // Never call `new PrismaClient()` anywhere else in the codebase.
-const _base = new PrismaClient({ errorFormat: 'minimal' })
+const _base = new PrismaClient({
+  errorFormat: 'minimal',
+  datasources: { db: { url: process.env.DATABASE_URL! } },
+})
 
 // prismaAdmin: raw client — no scoping. Use ONLY in:
 //   • src/app/modules/auth/ (login, register, passport strategy)
@@ -20,12 +24,12 @@ export const prismaWithScope = (businessId: string) =>
   _base.$extends({
     query: {
       $allModels: {
-        async findMany({ args, query }: { args: Record<string, unknown>; query: (args: Record<string, unknown>) => Promise<unknown> }) {
-          args.where = { ...(args.where as Record<string, unknown>), businessId, deletedAt: null }
+        async findMany({ args, query }) {
+          args.where = { ...(args.where as object), businessId, deletedAt: null }
           return query(args)
         },
-        async findFirst({ args, query }: { args: Record<string, unknown>; query: (args: Record<string, unknown>) => Promise<unknown> }) {
-          args.where = { ...(args.where as Record<string, unknown>), businessId, deletedAt: null }
+        async findFirst({ args, query }) {
+          args.where = { ...(args.where as object), businessId, deletedAt: null }
           return query(args)
         },
         async findUnique() {
