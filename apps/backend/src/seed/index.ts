@@ -1,6 +1,10 @@
+import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
+import { reseedDemoData } from '../jobs/demoSeedCore'
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient({
+  datasources: { db: { url: process.env.DATABASE_URL! } },
+})
 
 async function main() {
   // ── Couriers (Bangladesh defaults — pre-seeded, not configurable) ──────────
@@ -20,7 +24,6 @@ async function main() {
       create: courier,
     })
   }
-
   console.log('Seed: 6 couriers created')
 
   // ── Subscription plans ─────────────────────────────────────────────────────
@@ -114,10 +117,9 @@ async function main() {
       create: plan,
     })
   }
-
   console.log('Seed: 4 subscription plans created')
 
-  // ── connect-pg-simple sessions table ──────────────────────────────────────
+  // ── sessions table ─────────────────────────────────────────────────────────
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS "session" (
       "sid" varchar NOT NULL COLLATE "default",
@@ -126,13 +128,12 @@ async function main() {
       CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
     )
   `)
-  await prisma.$executeRawUnsafe(`
-    CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire")
-  `)
-
+  await prisma.$executeRawUnsafe(
+    `CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire")`,
+  )
   console.log('Seed: sessions table ready')
 
-  // ── Platform admin account ─────────────────────────────────────────────────
+  // ── Platform admin ─────────────────────────────────────────────────────────
   const adminEmail = process.env.ADMIN_SEED_EMAIL ?? 'admin@histock.app'
   const adminPassword = process.env.ADMIN_SEED_PASSWORD
   if (!adminPassword) {
@@ -153,6 +154,32 @@ async function main() {
     })
     console.log(`Seed: platform_admin created (${adminEmail})`)
   }
+
+  // ── Demo business, users, products, customers, orders ─────────────────────
+  console.log('Seed: running demo reseed...')
+  const businessId = await reseedDemoData()
+  console.log('Seed: demo data ready')
+
+  // ── Demo subscription (permanent active state — not reset nightly) ─────────
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const nextYear = new Date(today)
+  nextYear.setFullYear(nextYear.getFullYear() + 1)
+
+  await prisma.subscription.upsert({
+    where: { businessId },
+    update: {},
+    create: {
+      businessId,
+      planId: 'business',
+      status: 'active',
+      billingCycle: 'monthly',
+      billingAnchorDate: today,
+      currentPeriodStart: today,
+      currentPeriodEnd: nextYear,
+    },
+  })
+  console.log('Seed: demo subscription set (business plan, active, expires in 1yr)')
 }
 
 main()
