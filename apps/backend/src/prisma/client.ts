@@ -1,11 +1,9 @@
-import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 
 // ONE connection pool shared by both clients.
 // Never call `new PrismaClient()` anywhere else in the codebase.
 const _base = new PrismaClient({
   errorFormat: 'minimal',
-  datasources: { db: { url: process.env.DATABASE_URL! } },
 })
 
 // prismaAdmin: raw client — no scoping. Use ONLY in:
