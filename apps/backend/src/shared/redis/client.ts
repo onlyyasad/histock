@@ -3,7 +3,7 @@ import config from '../../config'
 
 export const redis = new Redis(config.redis.url, {
   lazyConnect: true,
-  maxRetriesPerRequest: 3,
+  maxRetriesPerRequest: null,
 })
 
 redis.on('error', (err) => {
