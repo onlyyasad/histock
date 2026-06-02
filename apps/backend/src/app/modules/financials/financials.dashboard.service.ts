@@ -38,7 +38,7 @@ export class DashboardService {
         ), 0)
           AS today_revenue
       FROM orders
-      WHERE business_id = ${businessId}::uuid
+      WHERE business_id = ${businessId}
     `
 
     const row = result[0]
