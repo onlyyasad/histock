@@ -2,20 +2,48 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useGetProductQuery } from './store/productsApi'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { useGetProductQuery, useDeleteProductMutation } from './store/productsApi'
 import { LogPurchaseForm } from './components/LogPurchaseForm'
 import { LotHistoryTable } from './components/LotHistoryTable'
 import { SocialPostButton } from './components/SocialPostButton'
+import { VariantsSection } from './components/VariantsSection'
+import { ProductEditForm } from './components/ProductEditForm'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 
 export function ProductDetailPage({ productId }: { productId: string }) {
+  const router = useRouter()
   const { data: product, isLoading } = useGetProductQuery(productId)
   const [showLogForm, setShowLogForm] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
+  const [deleteProduct, { isLoading: deleting }] = useDeleteProductMutation()
 
   if (isLoading) return <div className="p-6 text-muted-foreground">Loading...</div>
   if (!product) return <div className="p-6 text-destructive">Product not found</div>
+
+  const handleDelete = async () => {
+    try {
+      await deleteProduct(productId).unwrap()
+      toast.success('Product deleted')
+      router.push('/products')
+    } catch {
+      toast.error('Failed to delete product')
+    }
+  }
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
@@ -32,6 +60,13 @@ export function ProductDetailPage({ productId }: { productId: string }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <SocialPostButton productName={product.name} price={product.price} />
+          <Button
+            variant={showEditForm ? 'outline' : 'secondary'}
+            size="sm"
+            onClick={() => setShowEditForm((v) => !v)}
+          >
+            {showEditForm ? 'Cancel edit' : 'Edit'}
+          </Button>
           <Button
             variant={showLogForm ? 'outline' : 'default'}
             size="sm"
@@ -64,6 +99,10 @@ export function ProductDetailPage({ productId }: { productId: string }) {
         </Card>
       </div>
 
+      {showEditForm && (
+        <ProductEditForm product={product} onClose={() => setShowEditForm(false)} />
+      )}
+
       {showLogForm && (
         <LogPurchaseForm
           productId={productId}
@@ -79,6 +118,45 @@ export function ProductDetailPage({ productId }: { productId: string }) {
           </div>
         )}
         <LotHistoryTable entries={product.costEntries ?? []} />
+      </div>
+
+      <VariantsSection
+        productId={productId}
+        variants={(product.variants ?? []).map((v) => ({
+          id: v.id,
+          productId,
+          name: v.name,
+          sku: null,
+          price: v.price,
+          currentStock: v.currentStock,
+          isActive: true,
+        }))}
+      />
+
+      <div className="pt-4 border-t">
+        <AlertDialog>
+          <AlertDialogTrigger render={<Button variant="destructive" size="sm" disabled={deleting} />}>
+            Delete product
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete {product.name}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This product will be soft-deleted and removed from your inventory.
+                Existing orders that include it are not affected.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   )
