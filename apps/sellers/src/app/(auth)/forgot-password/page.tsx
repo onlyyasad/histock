@@ -2,88 +2,98 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { toast } from 'sonner'
+import { useForgotPasswordMutation } from '@/store/authApi'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+const schema = z.object({
+  email: z.string().email('Enter a valid email address'),
+})
+
+type FormValues = z.infer<typeof schema>
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [rateLimited, setRateLimited] = useState(false)
+  const [forgotPassword, { isLoading }] = useForgotPasswordMutation()
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setRateLimited(false)
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: '' },
+  })
+
+  const onSubmit = async (values: FormValues) => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
-      if (res.status === 429) {
-        setRateLimited(true)
-        return
-      }
+      await forgotPassword({ email: values.email }).unwrap()
       setSubmitted(true)
-    } finally {
-      setLoading(false)
+    } catch (err: unknown) {
+      const e = err as { status?: number; data?: { error?: string } }
+      if (e?.status === 429) {
+        toast.error('Too many requests. Please wait an hour before trying again.')
+      } else {
+        setSubmitted(true)
+      }
     }
   }
 
   if (submitted) {
     return (
-      <div className="max-w-md w-full text-center space-y-4 bg-white rounded-lg shadow p-8">
-        <h1 className="text-2xl font-semibold">Check your email</h1>
-        <p className="text-gray-500">
-          If that email is registered, a reset link has been sent. It expires in 1 hour.
-        </p>
-        <Link href="/login" className="text-sm underline">
-          Back to login
-        </Link>
-      </div>
+      <Card className="w-full max-w-md shadow">
+        <CardHeader>
+          <CardTitle className="text-2xl">Check your email</CardTitle>
+          <CardDescription>
+            If that email is registered, a reset link has been sent. It expires in 1 hour.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/login" className="text-sm text-primary hover:underline">
+            Back to login
+          </Link>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-md w-full bg-white rounded-lg shadow p-8 space-y-4"
-    >
-      <h1 className="text-2xl font-semibold">Reset your password</h1>
-      <p className="text-gray-500 text-sm">
-        Enter your email and we&apos;ll send a reset link if the account exists.
-      </p>
+    <Card className="w-full max-w-md shadow">
+      <CardHeader>
+        <CardTitle className="text-2xl">Reset your password</CardTitle>
+        <CardDescription>
+          Enter your email and we&apos;ll send a reset link if the account exists.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="fp-email">Email</Label>
+            <Input
+              id="fp-email"
+              type="email"
+              {...form.register('email')}
+              autoComplete="email"
+              placeholder="you@example.com"
+            />
+            {form.formState.errors.email && (
+              <p className="text-destructive text-sm">{form.formState.errors.email.message}</p>
+            )}
+          </div>
 
-      {rateLimited && (
-        <p role="alert" className="text-red-600 text-sm">
-          Too many requests. Please wait an hour before trying again.
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Sending...' : 'Send reset link'}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm mt-4">
+          <Link href="/login" className="text-primary hover:underline">
+            Back to login
+          </Link>
         </p>
-      )}
-
-      <div>
-        <label htmlFor="forgot-email" className="block text-sm font-medium mb-1">
-          Email
-        </label>
-        <input
-          id="forgot-email"
-          type="email"
-          required
-          placeholder="you@example.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-indigo-600 text-white py-2 rounded font-medium disabled:opacity-50"
-      >
-        {loading ? 'Sending...' : 'Send reset link'}
-      </button>
-      <Link href="/login" className="block text-sm text-center underline">
-        Back to login
-      </Link>
-    </form>
+      </CardContent>
+    </Card>
   )
 }

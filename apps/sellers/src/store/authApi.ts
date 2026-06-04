@@ -22,6 +22,12 @@ export const authApi = apiSlice.injectEndpoints({
       query: () => ({ url: '/auth/logout', method: 'POST' }),
       invalidatesTags: ['Auth'],
     }),
+    forgotPassword: builder.mutation<{ ok: boolean; message: string }, { email: string }>({
+      query: (body) => ({ url: '/auth/forgot-password', method: 'POST', body }),
+    }),
+    resetPassword: builder.mutation<{ ok: boolean; message: string }, { token: string; password: string }>({
+      query: (body) => ({ url: '/auth/reset-password', method: 'POST', body }),
+    }),
     startImpersonation: builder.mutation<AuthUser, { token: string }>({
       query: (body) => ({ url: '/auth/impersonate', method: 'POST', body }),
       invalidatesTags: ['Auth'],
@@ -38,6 +44,8 @@ export const {
   useLoginMutation,
   useRegisterMutation,
   useLogoutMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
   useStartImpersonationMutation,
   useEndImpersonationMutation,
 } = authApi

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Download } from 'lucide-react'
+import { axiosInstance } from '@/lib/axiosInstance'
 
 interface Props {
   endpoint: string
@@ -18,18 +19,11 @@ export function ExportButton({ endpoint, label, filename, params }: Props) {
   const handleExport = async () => {
     setDownloading(true)
     try {
-      const url = new URL(endpoint, process.env.NEXT_PUBLIC_API_URL)
-      if (params) {
-        Object.entries(params).forEach(([k, v]) => {
-          if (v) url.searchParams.set(k, v)
-        })
-      }
-
-      const res = await fetch(url.toString(), { credentials: 'include' })
-      if (!res.ok) throw new Error('Export failed')
-
-      const blob = await res.blob()
-      const objectUrl = URL.createObjectURL(blob)
+      const response = await axiosInstance.get(endpoint, {
+        params,
+        responseType: 'blob',
+      })
+      const objectUrl = URL.createObjectURL(response.data as Blob)
       const a = document.createElement('a')
       a.href = objectUrl
       a.download = filename ?? `export-${new Date().toISOString().slice(0, 10)}.csv`
@@ -37,7 +31,6 @@ export function ExportButton({ endpoint, label, filename, params }: Props) {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(objectUrl)
-
       toast.success('Download started')
     } catch {
       toast.error('Export failed')

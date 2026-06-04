@@ -33,14 +33,20 @@ export function NewProductPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      const product = await createProduct({
+      const result = await createProduct({
         name: values.name,
         sku: values.sku || undefined,
         description: values.description || undefined,
         price: values.price,
       }).unwrap()
-      toast.success('Product created')
-      router.push(`/products/${product.id}`)
+
+      const r = result as typeof result & { warning?: { type: string; used: number; cap: number } }
+      if (r.warning?.type === 'PRODUCT_CAP_NEAR') {
+        toast.warning(`You've used ${r.warning.used} of ${r.warning.cap} products on your plan.`)
+      } else {
+        toast.success('Product created')
+      }
+      router.push(`/products/${r.id}`)
     } catch (err: unknown) {
       const e = err as { data?: { error?: string } }
       toast.error(e?.data?.error ?? 'Failed to create product')

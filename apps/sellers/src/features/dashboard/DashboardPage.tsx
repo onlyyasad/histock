@@ -1,8 +1,14 @@
 'use client'
 
+import Link from 'next/link'
 import { useGetDashboardQuery } from './store/dashboardApi'
+import { useGetOrdersQuery } from '@/features/orders/store/ordersApi'
+import { OrderStatusBadge } from '@/features/orders/components/OrderStatusBadge'
+import { formatOrderNumber } from '@/features/orders/NewOrderPage'
 import { StatCard } from './components/StatCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
+import { fmtMoney } from '@/lib/utils'
 
 function formatMoney(amount: number): string {
   return new Intl.NumberFormat('en-BD', {
@@ -17,6 +23,7 @@ export function DashboardPage() {
     pollingInterval: 30_000,
     refetchOnFocus: true,
   })
+  const { data: recentOrders } = useGetOrdersQuery({ page: 1, limit: 5 })
 
   if (isLoading) {
     return (
@@ -75,11 +82,34 @@ export function DashboardPage() {
       </div>
 
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-base">Recent Orders</CardTitle>
+          <Link href="/orders" className="text-xs text-primary hover:underline">
+            View all
+          </Link>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Coming in phase 1.11 — orders frontend.</p>
+        <CardContent className="p-0">
+          {(!recentOrders || recentOrders.length === 0) && (
+            <p className="text-sm text-muted-foreground px-6 pb-4">No orders yet.</p>
+          )}
+          {recentOrders?.map((order, i) => (
+            <div key={order.id}>
+              {i > 0 && <Separator />}
+              <Link
+                href={`/orders/${order.id}`}
+                className="flex items-center justify-between px-6 py-3 hover:bg-muted/50 transition-colors"
+              >
+                <div>
+                  <p className="text-sm font-medium">{formatOrderNumber(order.orderNumber)}</p>
+                  <p className="text-xs text-muted-foreground">{order.customer.name}</p>
+                </div>
+                <div className="text-right space-y-1">
+                  <OrderStatusBadge status={order.status} />
+                  <p className="text-xs font-medium">৳{fmtMoney(order.total)}</p>
+                </div>
+              </Link>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>

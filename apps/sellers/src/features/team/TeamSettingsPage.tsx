@@ -6,6 +6,7 @@ import {
   useGetTeamMembersQuery,
   useGetTeamInvitesQuery,
   useSendTeamInviteMutation,
+  useUpdateMemberRoleMutation,
   useRemoveTeamMemberMutation,
 } from './store/teamApi'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,6 +32,7 @@ export function TeamSettingsPage() {
   const { data: members, isLoading: loadingMembers } = useGetTeamMembersQuery()
   const { data: invites, isLoading: loadingInvites } = useGetTeamInvitesQuery()
   const [sendInvite, { isLoading: sending }] = useSendTeamInviteMutation()
+  const [updateMemberRole] = useUpdateMemberRoleMutation()
   const [removeMember, { isLoading: removing }] = useRemoveTeamMemberMutation()
 
   const [email, setEmail] = useState('')
@@ -44,8 +46,21 @@ export function TeamSettingsPage() {
       toast.success(`Invite sent to ${email.trim()}`)
       setEmail('')
     } catch (err: unknown) {
-      const msg = (err as { data?: { error?: string } })?.data?.error
-      toast.error(msg ?? 'Failed to send invite')
+      const e = err as { data?: { error?: string; code?: string } }
+      if (e?.data?.code === 'USER_CAP_REACHED') {
+        toast.error('Team seat limit reached. Upgrade your plan to invite more members.')
+      } else {
+        toast.error(e?.data?.error ?? 'Failed to send invite')
+      }
+    }
+  }
+
+  const handleRoleChange = async (userId: string, newRole: 'manager' | 'staff') => {
+    try {
+      await updateMemberRole({ userId, role: newRole }).unwrap()
+      toast.success('Role updated')
+    } catch {
+      toast.error('Failed to update role')
     }
   }
 
@@ -74,25 +89,42 @@ export function TeamSettingsPage() {
           {members?.map((m, i) => (
             <div key={m.id}>
               {i > 0 && <Separator />}
-              <div className="flex items-center justify-between px-6 py-3">
-                <div>
-                  <p className="text-sm font-medium">{m.name}</p>
-                  <p className="text-xs text-muted-foreground">{m.email}</p>
+              <div className="flex items-center justify-between px-6 py-3 gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">{m.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{m.email}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Badge variant="secondary">{ROLE_LABELS[m.role]}</Badge>
-                  {m.role !== 'owner' && (
+
+                {m.role === 'owner' ? (
+                  <Badge variant="secondary">Owner</Badge>
+                ) : (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Select
+                      value={m.role}
+                      onValueChange={(v) => {
+                        if (v) handleRoleChange(m.id, v as 'manager' | 'staff')
+                      }}
+                    >
+                      <SelectTrigger className="h-8 w-28 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="staff">Staff</SelectItem>
+                      </SelectContent>
+                    </Select>
+
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleRemove(m.id, m.name)}
                       disabled={removing}
-                      className="text-destructive hover:text-destructive text-xs h-auto py-1"
+                      className="text-destructive hover:text-destructive text-xs h-auto py-1 px-2"
                     >
                       Remove
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -141,7 +173,7 @@ export function TeamSettingsPage() {
                 required
                 className="flex-1"
               />
-              <Select value={role} onValueChange={(v) => setRole(v as 'manager' | 'staff')}>
+              <Select value={role} onValueChange={(v) => { if (v) setRole(v as 'manager' | 'staff') }}>
                 <SelectTrigger className="w-36">
                   <SelectValue />
                 </SelectTrigger>

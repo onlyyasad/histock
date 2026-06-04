@@ -1,6 +1,6 @@
 import { apiSlice } from '@/store/apiSlice'
 
-interface TeamMember {
+export interface TeamMember {
   id: string
   name: string
   email: string
@@ -36,6 +36,18 @@ export const teamApi = apiSlice.injectEndpoints({
       invalidatesTags: ['Team'],
     }),
 
+    updateMemberRole: builder.mutation<
+      TeamMember,
+      { userId: string; role: 'manager' | 'staff' }
+    >({
+      query: ({ userId, role }) => ({
+        url: `/team/members/${userId}/role`,
+        method: 'PATCH',
+        body: { role },
+      }),
+      invalidatesTags: ['Team'],
+    }),
+
     removeTeamMember: builder.mutation<{ ok: boolean }, string>({
       query: (userId) => ({ url: `/team/members/${userId}`, method: 'DELETE' }),
       invalidatesTags: ['Team'],
@@ -47,5 +59,6 @@ export const {
   useGetTeamMembersQuery,
   useGetTeamInvitesQuery,
   useSendTeamInviteMutation,
+  useUpdateMemberRoleMutation,
   useRemoveTeamMemberMutation,
 } = teamApi

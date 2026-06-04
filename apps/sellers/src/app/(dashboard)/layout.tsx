@@ -1,22 +1,44 @@
 'use client'
 
 import { useEffect } from 'react'
-import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useGetMeQuery } from '@/store/authApi'
 import { useAppDispatch } from '@/store/hooks'
 import { setUser, clearUser, setLoading } from '@/features/auth/store/authSlice'
 import { ImpersonationBanner } from '@/features/auth/components/ImpersonationBanner'
 import { ServiceWorkerRegistrar } from './components/ServiceWorkerRegistrar'
-import { cn } from '@/lib/utils'
+import { AppSidebar } from '@/components/AppSidebar'
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from '@/components/ui/sidebar'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+} from '@/components/ui/breadcrumb'
+import { Separator } from '@/components/ui/separator'
 
-const NAV_ITEMS = [
-  { href: '/dashboard', icon: '📊', label: 'Dashboard' },
-  { href: '/orders', icon: '📦', label: 'Orders' },
-  { href: '/products', icon: '🛍️', label: 'Products' },
-  { href: '/customers', icon: '👤', label: 'Customers' },
-  { href: '/analytics', icon: '📈', label: 'Analytics' },
-]
+const PAGE_TITLES: Record<string, string> = {
+  '/dashboard': 'Dashboard',
+  '/orders': 'Orders',
+  '/products': 'Products',
+  '/customers': 'Customers',
+  '/analytics': 'Analytics',
+  '/team': 'Team',
+  '/settings': 'Settings',
+  '/support': 'Support',
+  '/remittance': 'Remittance',
+}
+
+function getPageTitle(pathname: string): string {
+  for (const [prefix, title] of Object.entries(PAGE_TITLES)) {
+    if (pathname === prefix || pathname.startsWith(prefix + '/')) return title
+  }
+  return 'HiStock'
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -40,7 +62,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Loading...</p>
+        <p className="text-muted-foreground">Loading...</p>
       </div>
     )
   }
@@ -48,37 +70,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!user) return null
 
   return (
-    <div className="min-h-screen">
+    <>
       {user.isImpersonated && user.impersonationExpiresAt && (
         <ImpersonationBanner expiresAt={user.impersonationExpiresAt} />
       )}
-
-      {/* Main content — padded bottom on mobile for bottom nav */}
-      <main className="pb-16 md:pb-0">
-        {children}
-      </main>
-
-      {/* Mobile bottom navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t flex z-50">
-        {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + '/')
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex-1 flex flex-col items-center justify-center min-h-[56px] text-xs gap-0.5',
-                active ? 'text-gray-900 font-medium' : 'text-gray-400',
-              )}
-            >
-              <span className="text-xl leading-none">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          )
-        })}
-      </nav>
-
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <header className="flex h-14 items-center gap-2 border-b px-4 sticky top-0 bg-background z-10">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="h-4" />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{getPageTitle(pathname)}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </header>
+          <main className="flex-1">
+            {children}
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
       <ServiceWorkerRegistrar />
-    </div>
+    </>
   )
 }
