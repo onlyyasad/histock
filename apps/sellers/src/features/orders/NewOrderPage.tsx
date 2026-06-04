@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { newOrderFormSchema, type NewOrderFormValues } from './schemas/newOrderFormSchema'
 import { useCreateOrderMutation } from './store/ordersApi'
+import { fmtMoney } from '@/lib/utils'
 import { useGetProductsQuery } from '@/features/products/store/productsApi'
 import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
 import { useLazyLookupCustomerQuery } from '@/features/customers/store/customersApi'
@@ -226,7 +227,7 @@ export function NewOrderPage() {
                           <SelectContent>
                             {products.map((p) => (
                               <SelectItem key={p.id} value={p.id}>
-                                {p.name} — ৳{p.price.toFixed(2)}
+                                {p.name} — ৳{fmtMoney(p.price)}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -255,7 +256,7 @@ export function NewOrderPage() {
                             <SelectContent>
                               {variants.map((v) => (
                                 <SelectItem key={v.id} value={v.id}>
-                                  {v.name} — ৳{v.price.toFixed(2)}
+                                  {v.name} — ৳{fmtMoney(v.price)}
                                 </SelectItem>
                               ))}
                             </SelectContent>

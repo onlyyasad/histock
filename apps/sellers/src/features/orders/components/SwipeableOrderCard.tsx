@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react'
 import Link from 'next/link'
 import { useUpdateOrderStatusMutation } from '../store/ordersApi'
+import { fmtMoney } from '@/lib/utils'
 import { OrderStatusBadge } from './OrderStatusBadge'
 import { formatOrderNumber } from '../NewOrderPage'
 import { toast } from 'sonner'
@@ -105,7 +106,7 @@ export function SwipeableOrderCard({ orderId, orderNumber, customerName, status,
         </div>
         <div className="text-right space-y-1">
           <OrderStatusBadge status={status} />
-          <p className="text-sm font-medium">৳{total.toFixed(2)}</p>
+          <p className="text-sm font-medium">৳{fmtMoney(total)}</p>
         </div>
       </Link>
     </div>

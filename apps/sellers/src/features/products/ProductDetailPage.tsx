@@ -12,7 +12,7 @@ import { VariantsSection } from './components/VariantsSection'
 import { ProductEditForm } from './components/ProductEditForm'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn, fmtMoney } from '@/lib/utils'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -94,7 +94,7 @@ export function ProductDetailPage({ productId }: { productId: string }) {
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Selling Price</p>
-            <p className="text-2xl font-bold">৳{product.price.toFixed(2)}</p>
+            <p className="text-2xl font-bold">৳{fmtMoney(product.price)}</p>
           </CardContent>
         </Card>
       </div>

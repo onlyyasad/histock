@@ -51,7 +51,7 @@ export function SocialPostButton({ productName, price }: Props) {
         payload: {
           productName,
           platform,
-          price: price != null ? `৳${price.toFixed(2)}` : '',
+          price: price != null ? `৳${Number(price).toFixed(2)}` : '',
         },
       }).unwrap()
       setJobId(id)

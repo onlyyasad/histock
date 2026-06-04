@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useCreateVariantMutation } from '../store/productsApi'
 import type { Variant } from '../store/productsApi'
+import { fmtMoney } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -75,7 +76,7 @@ export function VariantsSection({ productId, variants }: Props) {
                 {v.sku && <p className="text-xs text-muted-foreground">SKU: {v.sku}</p>}
               </div>
               <div className="text-right">
-                <p className="font-medium tabular-nums">৳{v.price.toFixed(2)}</p>
+                <p className="font-medium tabular-nums">৳{fmtMoney(v.price)}</p>
                 <p className={`text-xs ${v.currentStock <= 5 ? 'text-destructive' : 'text-muted-foreground'}`}>
                   {v.currentStock} in stock
                 </p>

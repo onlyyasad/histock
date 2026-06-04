@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cn } from '@/lib/utils'
+import { cn, fmtMoney } from '@/lib/utils'
 
 export function ProductsListPage() {
   const [search, setSearch] = useState('')
@@ -80,7 +80,7 @@ export function ProductsListPage() {
                     </Link>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{p.sku ?? '—'}</TableCell>
-                  <TableCell className="tabular-nums">৳{p.price.toFixed(2)}</TableCell>
+                  <TableCell className="tabular-nums">৳{fmtMoney(p.price)}</TableCell>
                   <TableCell
                     className={cn(
                       'text-right tabular-nums',

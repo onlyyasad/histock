@@ -1,6 +1,7 @@
 'use client'
 
 import { toast } from 'sonner'
+import { fmtMoney } from '@/lib/utils'
 import { useGetOrderQuery, useConfirmCodPaymentMutation } from './store/ordersApi'
 import { OrderMetadataPanel } from './components/OrderMetadataPanel'
 import { OrderStatusBadge } from './components/OrderStatusBadge'
@@ -148,7 +149,7 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
                     {item.variantNameSnapshot && ` — ${item.variantNameSnapshot}`}
                     {' '}×{item.quantity}
                   </span>
-                  <span>৳{item.totalPrice.toFixed(2)}</span>
+                  <span>৳{fmtMoney(item.totalPrice)}</span>
                 </div>
               </div>
             ))}
@@ -156,13 +157,13 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
           <Separator className="my-2" />
           <div className="space-y-1 text-sm">
             <div className="flex justify-between text-muted-foreground">
-              <span>Subtotal</span><span>৳{order.subtotal.toFixed(2)}</span>
+              <span>Subtotal</span><span>৳{fmtMoney(order.subtotal)}</span>
             </div>
             <div className="flex justify-between text-muted-foreground">
-              <span>Delivery</span><span>৳{order.deliveryFee.toFixed(2)}</span>
+              <span>Delivery</span><span>৳{fmtMoney(order.deliveryFee)}</span>
             </div>
             <div className="flex justify-between font-bold text-base">
-              <span>Total</span><span>৳{order.total.toFixed(2)}</span>
+              <span>Total</span><span>৳{fmtMoney(order.total)}</span>
             </div>
           </div>
         </CardContent>

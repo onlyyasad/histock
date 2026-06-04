@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { cn } from '@/lib/utils'
+import { cn, fmtMoney } from '@/lib/utils'
 
 const ORDER_STATUSES = [
   { value: '__all__', label: 'All statuses' },
@@ -189,7 +189,7 @@ export function OrdersListPage() {
               </div>
               <div className="text-right space-y-1">
                 <OrderStatusBadge status={order.status} />
-                <p className="text-sm font-medium">৳{order.total.toFixed(2)}</p>
+                <p className="text-sm font-medium">৳{fmtMoney(order.total)}</p>
               </div>
             </Link>
           </div>

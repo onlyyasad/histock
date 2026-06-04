@@ -7,7 +7,7 @@ import { ExportButton } from '@/features/exports/ExportButton'
 import { buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+import { cn, fmtMoney } from '@/lib/utils'
 
 export function CustomersListPage() {
   const [search, setSearch] = useState('')
@@ -54,7 +54,7 @@ export function CustomersListPage() {
               <p className="text-sm text-muted-foreground">{c.phone}</p>
             </div>
             <div className="text-right text-sm">
-              <p className="font-medium">৳{c.totalSpent.toFixed(2)}</p>
+              <p className="font-medium">৳{fmtMoney(c.totalSpent)}</p>
               <p className="text-muted-foreground">{c.totalOrders} orders</p>
             </div>
           </Link>

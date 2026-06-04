@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { fmtMoney } from '@/lib/utils'
 
 function formatOrderNumber(n: number) {
   return `ORD-${String(n).padStart(6, '0')}`
@@ -177,7 +178,7 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Total Spent</p>
-            <p className="text-xl font-bold">৳{customer.totalSpent.toFixed(2)}</p>
+            <p className="text-xl font-bold">৳{fmtMoney(customer.totalSpent)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -201,7 +202,7 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
             >
               <span className="font-mono">{formatOrderNumber(order.orderNumber)}</span>
               <span className="text-muted-foreground">{order.status.replace(/_/g, ' ')}</span>
-              <span className="font-medium">৳{order.total.toFixed(2)}</span>
+              <span className="font-medium">৳{fmtMoney(order.total)}</span>
             </Link>
           ))}
           {customer.orders.length === 0 && (

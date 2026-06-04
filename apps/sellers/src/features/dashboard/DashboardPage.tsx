@@ -8,6 +8,7 @@ import { formatOrderNumber } from '@/features/orders/NewOrderPage'
 import { StatCard } from './components/StatCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { fmtMoney } from '@/lib/utils'
 
 function formatMoney(amount: number): string {
   return new Intl.NumberFormat('en-BD', {
@@ -104,7 +105,7 @@ export function DashboardPage() {
                 </div>
                 <div className="text-right space-y-1">
                   <OrderStatusBadge status={order.status} />
-                  <p className="text-xs font-medium">৳{order.total.toFixed(2)}</p>
+                  <p className="text-xs font-medium">৳{fmtMoney(order.total)}</p>
                 </div>
               </Link>
             </div>
