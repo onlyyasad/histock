@@ -77,6 +77,41 @@ export const customersApi = apiSlice.injectEndpoints({
       invalidatesTags: (_result, _error, { customerId }) => [{ type: 'Customer', id: customerId }],
     }),
 
+    updateAddress: builder.mutation<
+      CustomerAddress,
+      {
+        customerId: string
+        addressId: string
+        label?: string
+        addressLine?: string
+        district?: string | null
+        division?: string | null
+        isDefault?: boolean
+      }
+    >({
+      query: ({ customerId, addressId, ...body }) => ({
+        url: `/customers/${customerId}/addresses/${addressId}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (_result, _error, { customerId }) => [
+        { type: 'Customer', id: customerId },
+      ],
+    }),
+
+    deleteAddress: builder.mutation<
+      { ok: boolean },
+      { customerId: string; addressId: string }
+    >({
+      query: ({ customerId, addressId }) => ({
+        url: `/customers/${customerId}/addresses/${addressId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (_result, _error, { customerId }) => [
+        { type: 'Customer', id: customerId },
+      ],
+    }),
+
     flagCustomer: builder.mutation<unknown, { id: string; reason: string }>({
       query: ({ id, reason }) => ({
         url: `/customers/${id}/flag`,
@@ -104,6 +139,8 @@ export const {
   useUpdateCustomerMutation,
   useDeleteCustomerMutation,
   useAddAddressMutation,
+  useUpdateAddressMutation,
+  useDeleteAddressMutation,
   useFlagCustomerMutation,
   useUnflagCustomerMutation,
   useLazyLookupCustomerQuery,
