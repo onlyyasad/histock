@@ -82,9 +82,12 @@ router.post('/', requireSeller, requireRole('owner', 'manager'), async (req, res
     if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
 
     const user = req.user as { businessId: string }
-    const product = await getService(req).createProduct(user.businessId, parsed.data)
-    res.status(201).json(product)
-  } catch (err) {
+    const { product, warning } = await getService(req).createProduct(user.businessId, parsed.data)
+    res.status(201).json({ ...product, warning: warning ?? null })
+  } catch (err: unknown) {
+    if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'PRODUCT_CAP_REACHED') {
+      return res.status(402).json({ error: err.message, code: 'PRODUCT_CAP_REACHED' })
+    }
     next(err)
   }
 })

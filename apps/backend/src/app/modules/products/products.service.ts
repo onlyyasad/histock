@@ -43,13 +43,43 @@ export class ProductsService {
     })
   }
 
-  createProduct(
+  private async checkProductCap(
+    businessId: string,
+  ): Promise<{ type: 'PRODUCT_CAP_NEAR'; used: number; cap: number } | null> {
+    const sub = await prismaAdmin.subscription.findUnique({
+      where: { businessId },
+      include: { plan: { select: { maxProducts: true } } },
+    })
+    const cap = sub?.plan.maxProducts ?? null
+    if (cap === null) return null
+
+    const used = await prismaAdmin.product.count({
+      where: { businessId, deletedAt: null, isArchived: false },
+    })
+
+    if (used >= cap) {
+      throw Object.assign(
+        new Error(`Product limit reached (${cap}). Upgrade your plan to add more products.`),
+        { status: 402, code: 'PRODUCT_CAP_REACHED' },
+      )
+    }
+
+    if (used >= Math.floor(cap * 0.8)) {
+      return { type: 'PRODUCT_CAP_NEAR' as const, used, cap }
+    }
+
+    return null
+  }
+
+  async createProduct(
     businessId: string,
     data: { name: string; sku?: string; description?: string; price: number },
   ) {
-    return this.prisma.product.create({
+    const warning = await this.checkProductCap(businessId)
+    const product = await this.prisma.product.create({
       data: { ...data, businessId },
     })
+    return { product, warning }
   }
 
   updateProduct(
