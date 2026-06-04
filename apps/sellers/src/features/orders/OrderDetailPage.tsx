@@ -2,6 +2,7 @@
 
 import { toast } from 'sonner'
 import { useGetOrderQuery, useConfirmCodPaymentMutation } from './store/ordersApi'
+import { OrderMetadataPanel } from './components/OrderMetadataPanel'
 import { OrderStatusBadge } from './components/OrderStatusBadge'
 import { StatusUpdateButton } from './components/StatusUpdateButton'
 import { formatOrderNumber } from './NewOrderPage'
@@ -124,6 +125,13 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
           <p className="text-sm text-muted-foreground">{order.customer.phone}</p>
         </CardContent>
       </Card>
+
+      <OrderMetadataPanel
+        orderId={orderId}
+        currentCourierId={order.courier?.id ?? null}
+        currentTags={order.tags ?? []}
+        currentNotes={order.notes ?? null}
+      />
 
       <Card>
         <CardHeader className="pb-2 pt-4 px-5">
