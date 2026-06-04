@@ -111,17 +111,57 @@ export class ProductsService {
     })
   }
 
-  createVariant(
+  private async checkSkuCap(
+    businessId: string,
+  ): Promise<{ type: 'SKU_CAP_NEAR'; used: number; cap: number } | null> {
+    const sub = await prismaAdmin.subscription.findUnique({
+      where: { businessId },
+      include: { plan: { select: { maxSkus: true } } },
+    })
+    const cap = sub?.plan.maxSkus ?? null
+    if (cap === null) return null
+
+    const [variantCount, noVariantProductCount] = await Promise.all([
+      prismaAdmin.productVariant.count({
+        where: { businessId, deletedAt: null },
+      }),
+      prismaAdmin.product.count({
+        where: {
+          businessId,
+          deletedAt: null,
+          isArchived: false,
+          variants: { none: { deletedAt: null } },
+        },
+      }),
+    ])
+    const used = variantCount + noVariantProductCount
+
+    if (used >= cap) {
+      throw Object.assign(
+        new Error(`SKU limit reached (${cap}). Upgrade your plan to add more variants.`),
+        { status: 402, code: 'SKU_CAP_REACHED' },
+      )
+    }
+
+    if (used >= Math.floor(cap * 0.8)) {
+      return { type: 'SKU_CAP_NEAR' as const, used, cap }
+    }
+
+    return null
+  }
+
+  async createVariant(
     businessId: string,
     productId: string,
     data: { name: string; sku?: string; price: number },
   ) {
-    return this.prisma.product.findFirst({ where: { id: productId } }).then((p) => {
-      if (!p) throw Object.assign(new Error('Product not found'), { status: 404 })
-      return (this.prisma as unknown as typeof prismaAdmin).productVariant.create({
-        data: { ...data, businessId, productId },
-      })
+    const warning = await this.checkSkuCap(businessId)
+    const p = await this.prisma.product.findFirst({ where: { id: productId } })
+    if (!p) throw Object.assign(new Error('Product not found'), { status: 404 })
+    const variant = await (this.prisma as unknown as typeof prismaAdmin).productVariant.create({
+      data: { ...data, businessId, productId },
     })
+    return { variant, warning }
   }
 
   async createCostEntry(

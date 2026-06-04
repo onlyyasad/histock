@@ -129,10 +129,17 @@ router.post(
       if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
 
       const user = req.user as { businessId: string }
-      const variant = await getService(req).createVariant(user.businessId, req.params.id as string, parsed.data)
-      res.status(201).json(variant)
+      const { variant, warning } = await getService(req).createVariant(
+        user.businessId,
+        req.params.id as string,
+        parsed.data,
+      )
+      res.status(201).json({ ...variant, warning: warning ?? null })
     } catch (err: unknown) {
-      if (err instanceof Error && 'status' in err && err.status === 404) {
+      if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'SKU_CAP_REACHED') {
+        return res.status(402).json({ error: err.message, code: 'SKU_CAP_REACHED' })
+      }
+      if (err instanceof Error && 'status' in err && (err as { status: number }).status === 404) {
         return res.status(404).json({ error: 'Product not found' })
       }
       next(err)
