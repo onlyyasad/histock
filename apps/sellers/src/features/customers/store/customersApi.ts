@@ -90,6 +90,10 @@ export const customersApi = apiSlice.injectEndpoints({
       query: (id) => ({ url: `/customers/${id}/flag`, method: 'DELETE' }),
       invalidatesTags: (_result, _error, id) => [{ type: 'Customer', id }, 'Customer'],
     }),
+
+    lookupCustomer: builder.query<CustomerSummary | null, string>({
+      query: (phone) => ({ url: '/customers/lookup', params: { phone } }),
+    }),
   }),
 })
 
@@ -102,4 +106,5 @@ export const {
   useAddAddressMutation,
   useFlagCustomerMutation,
   useUnflagCustomerMutation,
+  useLazyLookupCustomerQuery,
 } = customersApi

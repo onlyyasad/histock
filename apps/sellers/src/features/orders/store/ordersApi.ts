@@ -5,7 +5,7 @@ export const ordersApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getOrders: builder.query<
       OrderResponse[],
-      { status?: string; courierId?: string; paymentMethod?: string; from?: string; to?: string; page?: number }
+      { status?: string; courierId?: string; paymentMethod?: string; from?: string; to?: string; page?: number; limit?: number }
     >({
       query: (params) => ({ url: '/orders', params }),
       providesTags: (result) =>
@@ -74,6 +74,7 @@ export const ordersApi = apiSlice.injectEndpoints({
 
 export const {
   useGetOrdersQuery,
+  useLazyGetOrdersQuery,
   useGetOrderQuery,
   useCreateOrderMutation,
   useUpdateOrderStatusMutation,

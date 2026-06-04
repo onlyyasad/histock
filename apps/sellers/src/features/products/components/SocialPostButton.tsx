@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { useAiQuota } from '../hooks/useAiQuota'
+import { useGetAiUsageQuery, useGenerateAiMutation, useGetAiResultQuery } from '@/store/aiApi'
 
 interface Props {
   productName: string
@@ -20,79 +20,44 @@ interface Props {
 type Platform = 'whatsapp' | 'facebook'
 
 export function SocialPostButton({ productName, price }: Props) {
-  const { quota } = useAiQuota()
+  const { data: quota } = useGetAiUsageQuery()
+  const [generateAi] = useGenerateAiMutation()
   const [open, setOpen] = useState(false)
   const [platform, setPlatform] = useState<Platform>('facebook')
-  const [status, setStatus] = useState<'idle' | 'queued' | 'done' | 'error'>('idle')
   const [jobId, setJobId] = useState<string | null>(null)
   const [generatedText, setGeneratedText] = useState<string | null>(null)
 
-  const handleResult = useCallback((text: string, isFallback: boolean) => {
-    setGeneratedText(text)
-    setStatus('done')
+  const { data: pollResult } = useGetAiResultQuery(jobId ?? '', {
+    skip: !jobId,
+    pollingInterval: 2_000,
+  })
+
+  if (pollResult?.status === 'done' && jobId) {
     setJobId(null)
-    if (isFallback) {
+    if (pollResult.fallback) {
       toast.warning('AI unavailable — using a template post instead')
     }
-  }, [])
+    setGeneratedText(pollResult.text ?? '')
+  }
 
-  useEffect(() => {
-    if (!jobId || status !== 'queued') return
-
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/result/${jobId}`,
-          { credentials: 'include' },
-        )
-        const data = await res.json()
-
-        if (data.status === 'done') {
-          clearInterval(interval)
-          handleResult(data.text, data.fallback)
-        }
-      } catch {
-        clearInterval(interval)
-        setStatus('error')
-        toast.error('Failed to fetch AI result')
-      }
-    }, 2_000)
-
-    return () => clearInterval(interval)
-  }, [jobId, status, handleResult])
+  const isPolling = !!jobId && pollResult?.status !== 'done'
 
   const handleGenerate = async () => {
     if (!productName.trim()) return
-
     setGeneratedText(null)
-    setStatus('queued')
-
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/generate`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'social_post',
-          payload: {
-            productName,
-            platform,
-            price: price != null ? `৳${price.toFixed(2)}` : undefined,
-          },
-        }),
-      })
-      const data = await res.json()
-
-      if (!res.ok) {
-        toast.error(data.error ?? 'AI generation failed')
-        setStatus('idle')
-        return
-      }
-
-      setJobId(data.jobId)
-    } catch {
-      toast.error('Request failed')
-      setStatus('idle')
+      const { jobId: id } = await generateAi({
+        type: 'social_post',
+        payload: {
+          productName,
+          platform,
+          price: price != null ? `৳${price.toFixed(2)}` : '',
+        },
+      }).unwrap()
+      setJobId(id)
+    } catch (err: unknown) {
+      const e = err as { data?: { error?: string } }
+      toast.error(e?.data?.error ?? 'AI generation failed')
     }
   }
 
@@ -104,8 +69,8 @@ export function SocialPostButton({ productName, price }: Props) {
 
   const handleOpen = () => {
     setOpen(true)
-    setStatus('idle')
     setGeneratedText(null)
+    setJobId(null)
   }
 
   return (
@@ -118,15 +83,9 @@ export function SocialPostButton({ productName, price }: Props) {
         title={quota?.limit === 0 ? 'Upgrade to Growth plan to use AI features' : undefined}
       >
         {quota?.limit === 0 ? (
-          <>
-            <span className="mr-1.5">🔒</span>
-            Upgrade to use AI
-          </>
+          <><span className="mr-1.5">🔒</span>Upgrade to use AI</>
         ) : (
-          <>
-            <span className="mr-1.5">📣</span>
-            Create Post
-          </>
+          <><span className="mr-1.5">📣</span>Create Post</>
         )}
       </Button>
 
@@ -134,13 +93,10 @@ export function SocialPostButton({ productName, price }: Props) {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Create Social Post</DialogTitle>
-            <DialogDescription>
-              Generate a caption for {productName}
-            </DialogDescription>
+            <DialogDescription>Generate a caption for {productName}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Platform toggle */}
             <div className="flex gap-2">
               {(['facebook', 'whatsapp'] as Platform[]).map((p) => (
                 <button
@@ -149,7 +105,7 @@ export function SocialPostButton({ productName, price }: Props) {
                   onClick={() => {
                     setPlatform(p)
                     setGeneratedText(null)
-                    setStatus('idle')
+                    setJobId(null)
                   }}
                   className={`flex-1 rounded border px-3 py-1.5 text-sm transition-colors ${
                     platform === p
@@ -162,27 +118,19 @@ export function SocialPostButton({ productName, price }: Props) {
               ))}
             </div>
 
-            {/* Generate button */}
             <button
               type="button"
               onClick={handleGenerate}
-              disabled={status === 'queued'}
+              disabled={isPolling}
               className="w-full flex items-center justify-center gap-2 rounded border px-4 py-2 text-sm font-medium hover:bg-purple-50 hover:border-purple-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {status === 'queued' ? (
-                <>
-                  <span className="animate-spin inline-block">⟳</span>
-                  Generating...
-                </>
+              {isPolling ? (
+                <><span className="animate-spin inline-block">⟳</span>Generating...</>
               ) : (
-                <>
-                  <span>✨</span>
-                  {generatedText ? 'Regenerate' : 'Generate Caption'}
-                </>
+                <><span>✨</span>{generatedText ? 'Regenerate' : 'Generate Caption'}</>
               )}
             </button>
 
-            {/* Result */}
             {generatedText && (
               <div className="rounded-md border bg-muted/40 p-3 space-y-2">
                 <p className="text-sm whitespace-pre-wrap">{generatedText}</p>

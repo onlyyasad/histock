@@ -18,7 +18,7 @@ export function CustomersListPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Customers</h1>
         <div className="flex items-center gap-2">
-          <ExportButton endpoint="/api/v1/exports/customers" label="Export CSV" filename="customers.csv" />
+          <ExportButton endpoint="/exports/customers" label="Export CSV" filename="customers.csv" />
           <Link href="/customers/new" className={cn(buttonVariants({ size: 'sm' }))}>
             + New Customer
           </Link>

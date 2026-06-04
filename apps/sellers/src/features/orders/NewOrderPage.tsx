@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { newOrderFormSchema, type NewOrderFormValues } from './schemas/newOrderFormSchema'
 import { useCreateOrderMutation } from './store/ordersApi'
+import { useLazyLookupCustomerQuery } from '@/features/customers/store/customersApi'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ export function formatOrderNumber(n: number): string {
 export function NewOrderPage() {
   const router = useRouter()
   const [createOrder, { isLoading }] = useCreateOrderMutation()
+  const [lookupCustomer] = useLazyLookupCustomerQuery()
   const [phoneLookup, setPhoneLookup] = useState('')
   const [foundCustomer, setFoundCustomer] = useState<{
     id: string
@@ -50,15 +52,11 @@ export function NewOrderPage() {
   const handlePhoneLookup = async () => {
     if (!phoneLookup) return
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/customers/lookup?phone=${encodeURIComponent(phoneLookup)}`,
-        { credentials: 'include' },
-      )
-      if (!res.ok) {
+      const customer = await lookupCustomer(phoneLookup).unwrap()
+      if (!customer) {
         toast.info('Customer not found — check the phone number')
         return
       }
-      const customer = (await res.json()) as { id: string; name: string; phone: string }
       setFoundCustomer(customer)
       form.setValue('customerId', customer.id)
       toast.success(`Found: ${customer.name}`)

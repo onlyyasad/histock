@@ -33,7 +33,7 @@ export function OrdersListPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Orders</h1>
         <div className="flex items-center gap-2">
-          <ExportButton endpoint="/api/v1/exports/orders" label="Export CSV" filename="orders.csv" />
+          <ExportButton endpoint="/exports/orders" label="Export CSV" filename="orders.csv" />
           <Link href="/orders/new" className={cn(buttonVariants({ size: 'sm' }), 'min-h-[44px]')}>
             + New Order
           </Link>

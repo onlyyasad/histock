@@ -30,7 +30,7 @@ export function ProductsListPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Products</h1>
         <div className="flex items-center gap-2">
-          <ExportButton endpoint="/api/v1/exports/products" label="Export CSV" filename="products.csv" />
+          <ExportButton endpoint="/exports/products" label="Export CSV" filename="products.csv" />
           <Link href="/products/new" className={cn(buttonVariants({ size: 'sm' }))}>
             + New Product
           </Link>
