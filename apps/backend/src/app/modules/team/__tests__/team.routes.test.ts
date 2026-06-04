@@ -69,10 +69,22 @@ describe('POST /api/v1/team/invites', () => {
   })
 
   it('returns 402 when seat limit reached (starter: maxUsers = 1)', async () => {
-    // Starter plan maxUsers = 1. Business already has 1 user (the owner).
+    // Registration creates businesses on growth trial (maxUsers = 3).
+    // Downgrade to starter (maxUsers = 1) so the 1 existing owner fills the cap.
+    await prismaAdmin.subscription.update({
+      where: { businessId },
+      data: { planId: 'starter' },
+    })
+
     const res = await ownerAgent
       .post('/api/v1/team/invites')
       .send({ email: `cap-test-${Date.now()}@test.com`, role: 'staff' })
+
+    // Restore to growth before asserting so subsequent tests have the right plan.
+    await prismaAdmin.subscription.update({
+      where: { businessId },
+      data: { planId: 'growth' },
+    })
 
     expect(res.status).toBe(402)
     expect(res.body.code).toBe('USER_CAP_REACHED')
