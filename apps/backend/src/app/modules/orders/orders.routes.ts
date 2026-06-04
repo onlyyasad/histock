@@ -54,10 +54,10 @@ router.post('/', requireSeller, async (req, res, next) => {
     if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
 
     const user = req.user as { businessId: string; id: string }
-    const order = await getService(req).create(user.businessId, user.id, parsed.data as never)
-    res.status(201).json(order)
+    const { order, warning } = await getService(req).create(user.businessId, user.id, parsed.data as never)
+    res.status(201).json({ ...order, warning: warning ?? null })
   } catch (err: unknown) {
-    if (err instanceof Error && 'code' in err && err.code === 'ORDER_CAP_REACHED') {
+    if (err instanceof Error && 'code' in err && (err as { code: string }).code === 'ORDER_CAP_REACHED') {
       return res.status(402).json({ error: err.message, code: 'ORDER_CAP_REACHED' })
     }
     next(err)
