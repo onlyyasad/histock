@@ -82,6 +82,81 @@ router.patch('/businesses/:id/is-demo', async (req, res, next) => {
   }
 })
 
+// ── Subscription Payments ────────────────────────────────────────────────────
+
+// GET /api/v1/admin/businesses/:id/payments
+router.get('/businesses/:id/payments', async (req, res, next) => {
+  try {
+    const payments = await prismaAdmin.subscriptionPayment.findMany({
+      where: { businessId: req.params.id as string },
+      orderBy: { createdAt: 'desc' },
+    })
+    res.json(payments)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// POST /api/v1/admin/businesses/:id/payments
+// Records a manual payment (bKash / bank transfer) and activates the subscription.
+router.post('/businesses/:id/payments', async (req, res, next) => {
+  try {
+    const schema = z.object({
+      planId: z.string().min(1),
+      amountPaid: z.number().positive(),
+      paymentMethod: z.string().min(1),
+      paymentRef: z.string().optional(),
+      periodStart: z.string().datetime(),
+      periodEnd: z.string().datetime(),
+      notes: z.string().optional(),
+    })
+    const parsed = schema.safeParse(req.body)
+    if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
+
+    const business = await prismaAdmin.business.findUnique({
+      where: { id: req.params.id as string },
+      include: { subscription: true },
+    })
+    if (!business) return res.status(404).json({ error: 'Business not found' })
+    if (!business.subscription) return res.status(404).json({ error: 'No subscription found for this business' })
+
+    const admin = req.user as { id: string }
+
+    const payment = await prismaAdmin.$transaction(async (tx) => {
+      const p = await tx.subscriptionPayment.create({
+        data: {
+          businessId: business.id,
+          subscriptionId: business.subscription!.id,
+          planId: parsed.data.planId,
+          amountPaid: parsed.data.amountPaid,
+          paymentMethod: parsed.data.paymentMethod,
+          paymentRef: parsed.data.paymentRef ?? null,
+          periodStart: new Date(parsed.data.periodStart),
+          periodEnd: new Date(parsed.data.periodEnd),
+          confirmedBy: admin.id,
+          notes: parsed.data.notes ?? null,
+        },
+      })
+
+      await tx.subscription.update({
+        where: { businessId: business.id },
+        data: {
+          planId: parsed.data.planId,
+          status: 'active',
+          currentPeriodStart: new Date(parsed.data.periodStart),
+          currentPeriodEnd: new Date(parsed.data.periodEnd),
+        },
+      })
+
+      return p
+    })
+
+    res.status(201).json(payment)
+  } catch (err) {
+    next(err)
+  }
+})
+
 // ── Subscription Plans ───────────────────────────────────────────────────────
 
 router.get('/subscription-plans', async (_req, res, next) => {
