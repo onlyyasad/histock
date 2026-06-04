@@ -56,6 +56,24 @@ router.post('/invites', requireSeller, requireRole('owner', 'manager'), async (r
     })
     if (existing) return res.status(409).json({ error: 'User with this email already in your team' })
 
+    // Seat cap: check before creating invite
+    const sub = await prismaAdmin.subscription.findUnique({
+      where: { businessId: user.businessId },
+      include: { plan: { select: { maxUsers: true } } },
+    })
+    const userCap = sub?.plan.maxUsers ?? null
+    if (userCap !== null) {
+      const activeCount = await prismaAdmin.user.count({
+        where: { businessId: user.businessId, deletedAt: null },
+      })
+      if (activeCount >= userCap) {
+        return res.status(402).json({
+          error: `Team member limit reached (${userCap}). Upgrade your plan to invite more members.`,
+          code: 'USER_CAP_REACHED',
+        })
+      }
+    }
+
     const token = crypto.randomUUID()
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
