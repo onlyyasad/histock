@@ -7,6 +7,11 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { newOrderFormSchema, type NewOrderFormValues } from './schemas/newOrderFormSchema'
 import { useCreateOrderMutation } from './store/ordersApi'
+import { fmtMoney } from '@/lib/utils'
+import { useGetProductsQuery } from '@/features/products/store/productsApi'
+import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
+import { useLazyLookupCustomerQuery } from '@/features/customers/store/customersApi'
+import { InlineCreateCustomer } from '@/features/customers/components/InlineCreateCustomer'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -27,12 +32,15 @@ export function formatOrderNumber(n: number): string {
 export function NewOrderPage() {
   const router = useRouter()
   const [createOrder, { isLoading }] = useCreateOrderMutation()
+  const { data: products = [] } = useGetProductsQuery({})
+  const { data: couriers = [] } = useGetCouriersQuery()
+  const [lookupCustomer] = useLazyLookupCustomerQuery()
+
   const [phoneLookup, setPhoneLookup] = useState('')
   const [foundCustomer, setFoundCustomer] = useState<{
-    id: string
-    name: string
-    phone: string
+    id: string; name: string; phone: string
   } | null>(null)
+  const [showInlineCreate, setShowInlineCreate] = useState(false)
 
   const form = useForm<NewOrderFormValues>({
     resolver: zodResolver(newOrderFormSchema),
@@ -50,16 +58,14 @@ export function NewOrderPage() {
   const handlePhoneLookup = async () => {
     if (!phoneLookup) return
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/customers/lookup?phone=${encodeURIComponent(phoneLookup)}`,
-        { credentials: 'include' },
-      )
-      if (!res.ok) {
-        toast.info('Customer not found — check the phone number')
+      const customer = await lookupCustomer(phoneLookup).unwrap()
+      if (!customer) {
+        toast.info('Customer not found — create them below')
+        setShowInlineCreate(true)
         return
       }
-      const customer = (await res.json()) as { id: string; name: string; phone: string }
       setFoundCustomer(customer)
+      setShowInlineCreate(false)
       form.setValue('customerId', customer.id)
       toast.success(`Found: ${customer.name}`)
     } catch {
@@ -67,11 +73,22 @@ export function NewOrderPage() {
     }
   }
 
+  const handleCustomerCreated = (customer: { id: string; name: string; phone: string }) => {
+    setFoundCustomer(customer)
+    setShowInlineCreate(false)
+    form.setValue('customerId', customer.id)
+  }
+
   const onSubmit = async (values: NewOrderFormValues) => {
     try {
-      const order = await createOrder(values).unwrap()
-      toast.success(`Order ${formatOrderNumber(order.orderNumber)} created`)
-      router.push(`/orders/${order.id}`)
+      const result = await createOrder(values).unwrap()
+      const resultWithWarning = result as typeof result & { warning?: { type: string; used: number; cap: number } }
+      if (resultWithWarning.warning?.type === 'ORDER_CAP_NEAR') {
+        const w = resultWithWarning.warning
+        toast.warning(`You've used ${w.used} of ${w.cap} orders this month.`)
+      }
+      toast.success(`Order ${formatOrderNumber(result.orderNumber)} created`)
+      router.push(`/orders/${result.id}`)
     } catch (err: unknown) {
       const e = err as { data?: { error?: string; code?: string } }
       if (e?.data?.code === 'ORDER_CAP_REACHED') {
@@ -95,7 +112,9 @@ export function NewOrderPage() {
       <h1 className="text-2xl font-bold mb-6">New Order</h1>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-1">
+
+        {/* Customer lookup */}
+        <div className="space-y-2">
           <Label>Customer Phone</Label>
           <div className="flex gap-2">
             <Input
@@ -111,17 +130,49 @@ export function NewOrderPage() {
             </Button>
           </div>
           {foundCustomer && (
-            <p className="text-sm text-green-600 mt-1">
+            <p className="text-sm text-green-600">
               ✓ {foundCustomer.name} — {foundCustomer.phone}
             </p>
           )}
           {form.formState.errors.customerId && (
-            <p className="text-destructive text-sm mt-1">
-              {form.formState.errors.customerId.message}
-            </p>
+            <p className="text-destructive text-sm">{form.formState.errors.customerId.message}</p>
           )}
         </div>
 
+        {showInlineCreate && (
+          <InlineCreateCustomer
+            prefillPhone={phoneLookup}
+            onCreated={handleCustomerCreated}
+            onCancel={() => setShowInlineCreate(false)}
+          />
+        )}
+
+        {/* Courier */}
+        <div className="space-y-1">
+          <Label>Courier (optional)</Label>
+          <Controller
+            control={form.control}
+            name="courierId"
+            render={({ field }) => (
+              <Select
+                value={field.value ?? '__none__'}
+                onValueChange={(v) => field.onChange(v === '__none__' ? null : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Assign courier later" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No courier yet</SelectItem>
+                  {couriers.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
+
+        {/* Payment method */}
         <div className="space-y-1">
           <Label>Payment Method</Label>
           <Controller
@@ -129,9 +180,7 @@ export function NewOrderPage() {
             name="paymentMethod"
             render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cod">Cash on Delivery (COD)</SelectItem>
                   <SelectItem value="bkash">bKash</SelectItem>
@@ -145,42 +194,110 @@ export function NewOrderPage() {
           />
         </div>
 
+        {/* Order items */}
         <div>
           <Label className="mb-2 block">Items</Label>
           <div className="space-y-3">
-            {fields.map((field, index) => (
-              <div key={field.id} className="flex gap-2 items-start">
-                <Input
-                  {...form.register(`items.${index}.productId`)}
-                  placeholder="Product ID"
-                  className="flex-1"
-                />
-                <Input
-                  {...form.register(`items.${index}.quantity`)}
-                  type="number"
-                  min="1"
-                  placeholder="Qty"
-                  className="w-20"
-                />
-                <Input
-                  {...form.register(`items.${index}.unitPrice`)}
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="Price (৳)"
-                  className="w-32"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => remove(index)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  ✕
-                </Button>
-              </div>
-            ))}
+            {fields.map((field, index) => {
+              const selectedProductId = form.watch(`items.${index}.productId`)
+              const selectedProduct = products.find((p) => p.id === selectedProductId)
+              const variants = selectedProduct?.variants ?? []
+
+              return (
+                <Card key={field.id}>
+                  <CardContent className="p-3 space-y-2">
+                    <Controller
+                      control={form.control}
+                      name={`items.${index}.productId`}
+                      render={({ field: f }) => (
+                        <Select
+                          value={f.value || '__none__'}
+                          onValueChange={(v) => {
+                            f.onChange(v === '__none__' ? '' : v)
+                            form.setValue(`items.${index}.variantId`, null)
+                            const prod = products.find((p) => p.id === v)
+                            if (prod) {
+                              form.setValue(`items.${index}.unitPrice`, prod.price)
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select product..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {products.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.name} — ৳{fmtMoney(p.price)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+
+                    {variants.length > 0 && (
+                      <Controller
+                        control={form.control}
+                        name={`items.${index}.variantId`}
+                        render={({ field: f }) => (
+                          <Select
+                            value={f.value ?? '__none__'}
+                            onValueChange={(v) => {
+                              f.onChange(v === '__none__' ? null : v)
+                              const variant = variants.find((vt) => vt.id === v)
+                              if (variant) {
+                                form.setValue(`items.${index}.unitPrice`, variant.price)
+                              }
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select variant..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {variants.map((v) => (
+                                <SelectItem key={v.id} value={v.id}>
+                                  {v.name} — ৳{fmtMoney(v.price)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    )}
+
+                    <div className="flex gap-2 items-center">
+                      <div className="flex-1">
+                        <Input
+                          {...form.register(`items.${index}.quantity`)}
+                          type="number"
+                          min="1"
+                          placeholder="Qty"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Input
+                          {...form.register(`items.${index}.unitPrice`)}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="Unit price (৳)"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => remove(index)}
+                        className="text-destructive hover:text-destructive"
+                        disabled={fields.length === 1}
+                      >
+                        ✕
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
           <Button
             type="button"
@@ -198,31 +315,23 @@ export function NewOrderPage() {
           )}
         </div>
 
+        {/* Delivery fee */}
         <div className="space-y-1">
-          <Label htmlFor="no-delivery">Delivery Fee (৳)</Label>
-          <Input
-            id="no-delivery"
-            {...form.register('deliveryFee')}
-            type="number"
-            min="0"
-            step="0.01"
-          />
+          <Label>Delivery Fee (৳)</Label>
+          <Input {...form.register('deliveryFee')} type="number" min="0" step="0.01" />
         </div>
 
         <Card>
           <CardContent className="p-4 space-y-1 text-sm">
             <div className="flex justify-between text-muted-foreground">
-              <span>Subtotal</span>
-              <span>৳{subtotal.toFixed(2)}</span>
+              <span>Subtotal</span><span>৳{subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-muted-foreground">
-              <span>Delivery</span>
-              <span>৳{deliveryFee.toFixed(2)}</span>
+              <span>Delivery</span><span>৳{deliveryFee.toFixed(2)}</span>
             </div>
             <Separator className="my-1" />
             <div className="flex justify-between font-bold text-base">
-              <span>Total</span>
-              <span>৳{total.toFixed(2)}</span>
+              <span>Total</span><span>৳{total.toFixed(2)}</span>
             </div>
           </CardContent>
         </Card>

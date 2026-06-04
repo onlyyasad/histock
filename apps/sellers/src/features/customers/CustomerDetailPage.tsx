@@ -1,18 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import {
   useGetCustomerQuery,
+  useUpdateCustomerMutation,
   useFlagCustomerMutation,
   useUnflagCustomerMutation,
 } from './store/customersApi'
 import { AddressBook } from './components/AddressBook'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { fmtMoney } from '@/lib/utils'
 
 function formatOrderNumber(n: number) {
   return `ORD-${String(n).padStart(6, '0')}`
@@ -22,8 +25,21 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
   const { data: customer, isLoading } = useGetCustomerQuery(customerId)
   const [flagCustomer, { isLoading: isFlagging }] = useFlagCustomerMutation()
   const [unflagCustomer, { isLoading: isUnflagging }] = useUnflagCustomerMutation()
+  const [updateCustomer, { isLoading: updating }] = useUpdateCustomerMutation()
   const [flagReason, setFlagReason] = useState('')
   const [showFlagForm, setShowFlagForm] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
+  const [editForm, setEditForm] = useState({ name: '', phone: '', email: '' })
+
+  useEffect(() => {
+    if (customer) {
+      setEditForm({
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email ?? '',
+      })
+    }
+  }, [customer])
 
   if (isLoading) return <div className="p-6 text-muted-foreground">Loading...</div>
   if (!customer) return <div className="p-6 text-destructive">Customer not found</div>
@@ -49,6 +65,22 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
     }
   }
 
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      await updateCustomer({
+        id: customerId,
+        name: editForm.name.trim() || undefined,
+        phone: editForm.phone.trim() || undefined,
+        email: editForm.email.trim() || undefined,
+      }).unwrap()
+      toast.success('Customer updated')
+      setShowEdit(false)
+    } catch {
+      toast.error('Failed to update customer')
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <div className="flex items-start justify-between">
@@ -57,7 +89,10 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
           <p className="text-muted-foreground">{customer.phone}</p>
           {customer.email && <p className="text-muted-foreground text-sm">{customer.email}</p>}
         </div>
-        <div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowEdit((v) => !v)}>
+            {showEdit ? 'Cancel' : 'Edit'}
+          </Button>
           {customer.isFlagged ? (
             <div className="text-right space-y-2">
               <Badge variant="destructive">Flagged: {customer.flagReason}</Badge>
@@ -84,6 +119,40 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
         </div>
       </div>
 
+      {showEdit && (
+        <Card>
+          <CardContent className="pt-4 space-y-3">
+            <form onSubmit={handleEdit} className="space-y-3">
+              <div className="space-y-1">
+                <Label>Name</Label>
+                <Input
+                  value={editForm.name}
+                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Phone</Label>
+                <Input
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Email (optional)</Label>
+                <Input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+                />
+              </div>
+              <Button type="submit" size="sm" disabled={updating}>
+                {updating ? 'Saving...' : 'Save changes'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
       {showFlagForm && (
         <Card className="border-destructive/30 bg-destructive/5">
           <CardContent className="pt-4 space-y-3">
@@ -94,19 +163,10 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
               placeholder="e.g. Repeated non-payment"
             />
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleFlag}
-                disabled={isFlagging}
-              >
+              <Button size="sm" variant="destructive" onClick={handleFlag} disabled={isFlagging}>
                 Flag
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowFlagForm(false)}
-              >
+              <Button size="sm" variant="outline" onClick={() => setShowFlagForm(false)}>
                 Cancel
               </Button>
             </div>
@@ -118,7 +178,7 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Total Spent</p>
-            <p className="text-xl font-bold">৳{customer.totalSpent.toFixed(2)}</p>
+            <p className="text-xl font-bold">৳{fmtMoney(customer.totalSpent)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -142,7 +202,7 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
             >
               <span className="font-mono">{formatOrderNumber(order.orderNumber)}</span>
               <span className="text-muted-foreground">{order.status.replace(/_/g, ' ')}</span>
-              <span className="font-medium">৳{order.total.toFixed(2)}</span>
+              <span className="font-medium">৳{fmtMoney(order.total)}</span>
             </Link>
           ))}
           {customer.orders.length === 0 && (

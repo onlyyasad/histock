@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
-import { useAiQuota } from '../hooks/useAiQuota'
+import { useGetAiUsageQuery, useGenerateAiMutation, useGetAiResultQuery } from '@/store/aiApi'
 
 interface Props {
   productName: string
@@ -11,72 +11,44 @@ interface Props {
 }
 
 export function AiDescriptionButton({ productName, category, onGenerated }: Props) {
-  const { quota, loading: quotaLoading } = useAiQuota()
-  const [status, setStatus] = useState<'idle' | 'queued' | 'done' | 'error'>('idle')
+  const { data: quota } = useGetAiUsageQuery()
+  const [generateAi, { isLoading: isQueuing }] = useGenerateAiMutation()
   const [jobId, setJobId] = useState<string | null>(null)
 
-  const handleGenerated = useCallback(onGenerated, [onGenerated])
+  const { data: result } = useGetAiResultQuery(jobId ?? '', {
+    skip: !jobId,
+    pollingInterval: 2_000,
+  })
 
-  // Poll for result while job is queued
-  useEffect(() => {
-    if (!jobId || status !== 'queued') return
+  if (result?.status === 'done' && jobId) {
+    setJobId(null)
+    if (result.fallback) {
+      toast.warning('AI unavailable — using a basic description instead')
+    }
+    onGenerated(result.text ?? '', result.fallback ?? false)
+  }
 
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/result/${jobId}`,
-          { credentials: 'include' },
-        )
-        const data = await res.json()
-
-        if (data.status === 'done') {
-          clearInterval(interval)
-          setStatus('done')
-          setJobId(null)
-          if (data.fallback) {
-            toast.warning('AI unavailable — using a basic description instead')
-          }
-          handleGenerated(data.text, data.fallback)
-        }
-      } catch {
-        clearInterval(interval)
-        setStatus('error')
-        toast.error('Failed to fetch AI result')
-      }
-    }, 2_000)
-
-    return () => clearInterval(interval)
-  }, [jobId, status, handleGenerated])
+  const isPolling = !!jobId && result?.status !== 'done'
+  const disabled = isQueuing || isPolling || quota?.limit === 0
 
   const handleGenerate = async () => {
     if (!productName.trim()) {
       toast.error('Enter a product name first')
       return
     }
-
-    setStatus('queued')
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ai/generate`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'product_description',
-          payload: { productName, category: category ?? 'General' },
-        }),
-      })
-      const data = await res.json()
-
-      if (!res.ok) {
-        toast.error(data.error ?? 'AI generation failed')
-        setStatus('idle')
-        return
+      const { jobId: id } = await generateAi({
+        type: 'product_description',
+        payload: { productName, category: category ?? 'General' },
+      }).unwrap()
+      setJobId(id)
+    } catch (err: unknown) {
+      const e = err as { data?: { error?: string; code?: string } }
+      if (e?.data?.code === 'AI_LIMIT_REACHED') {
+        toast.error(e.data.error ?? 'Daily AI limit reached')
+      } else {
+        toast.error('AI generation failed')
       }
-
-      setJobId(data.jobId)
-    } catch {
-      toast.error('Request failed')
-      setStatus('idle')
     }
   }
 
@@ -84,25 +56,16 @@ export function AiDescriptionButton({ productName, category, onGenerated }: Prop
     <button
       type="button"
       onClick={handleGenerate}
-      disabled={quotaLoading || status === 'queued' || quota?.limit === 0}
+      disabled={disabled}
       title={quota?.limit === 0 ? 'Upgrade to Growth plan to use AI features' : undefined}
       className="flex items-center gap-2 text-sm border rounded px-3 py-1.5 min-h-[44px] hover:bg-purple-50 hover:border-purple-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
     >
-      {status === 'queued' ? (
-        <>
-          <span className="animate-spin inline-block">⟳</span>
-          Generating...
-        </>
+      {isPolling || isQueuing ? (
+        <><span className="animate-spin inline-block">⟳</span>Generating...</>
       ) : quota?.limit === 0 ? (
-        <>
-          <span>🔒</span>
-          Upgrade to use AI
-        </>
+        <><span>🔒</span>Upgrade to use AI</>
       ) : (
-        <>
-          <span>✨</span>
-          Write with AI
-        </>
+        <><span>✨</span>Write with AI</>
       )}
     </button>
   )

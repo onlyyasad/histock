@@ -1,118 +1,116 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import Link from 'next/link'
+import { toast } from 'sonner'
+import { useResetPasswordMutation } from '@/store/authApi'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+const schema = z
+  .object({
+    password: z.string().min(8, 'Password must be at least 8 characters').max(100),
+    confirm: z.string(),
+  })
+  .refine((d) => d.password === d.confirm, {
+    message: 'Passwords do not match',
+    path: ['confirm'],
+  })
+
+type FormValues = z.infer<typeof schema>
 
 function ResetPasswordForm() {
   const params = useSearchParams()
   const router = useRouter()
   const token = params.get('token') ?? ''
-  const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [resetPassword, { isLoading }] = useResetPasswordMutation()
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (password !== confirm) {
-      setError('Passwords do not match')
-      return
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters')
-      return
-    }
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
-      })
-      if (!res.ok) {
-        const body = (await res.json()) as { error?: string }
-        setError(body.error ?? 'Reset failed. The link may have expired.')
-        return
-      }
-      router.push('/login?reset=success')
-    } catch {
-      setError('Network error. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { password: '', confirm: '' },
+  })
 
   if (!token) {
     return (
-      <p className="text-red-600">
-        Invalid reset link. Please request a new one from the{' '}
-        <a href="/forgot-password" className="underline">
-          forgot password page
-        </a>
-        .
-      </p>
+      <Card className="w-full max-w-md shadow">
+        <CardContent className="pt-6">
+          <p className="text-destructive text-sm">
+            Invalid reset link. Please{' '}
+            <Link href="/forgot-password" className="underline text-primary">
+              request a new one
+            </Link>
+            .
+          </p>
+        </CardContent>
+      </Card>
     )
   }
 
+  const onSubmit = async (values: FormValues) => {
+    try {
+      await resetPassword({ token, password: values.password }).unwrap()
+      toast.success('Password updated. Sign in with your new password.')
+      router.push('/login?reset=success')
+    } catch (err: unknown) {
+      const e = err as { data?: { error?: string } }
+      toast.error(e?.data?.error ?? 'Reset failed. The link may have expired.')
+    }
+  }
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-md w-full bg-white rounded-lg shadow p-8 space-y-4"
-    >
-      <h1 className="text-2xl font-semibold">Set a new password</h1>
-      {error && (
-        <p className="text-red-600 text-sm" role="alert">
-          {error}
-        </p>
-      )}
+    <Card className="w-full max-w-md shadow">
+      <CardHeader>
+        <CardTitle className="text-2xl">Set a new password</CardTitle>
+        <CardDescription>Choose a strong password of at least 8 characters.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="rp-password">New password</Label>
+            <Input
+              id="rp-password"
+              type="password"
+              {...form.register('password')}
+              autoComplete="new-password"
+              placeholder="Min 8 characters"
+            />
+            {form.formState.errors.password && (
+              <p className="text-destructive text-sm">{form.formState.errors.password.message}</p>
+            )}
+          </div>
 
-      <div>
-        <label htmlFor="new-password" className="block text-sm font-medium mb-1">
-          New password
-        </label>
-        <input
-          id="new-password"
-          type="password"
-          required
-          placeholder="Min 8 characters"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-          autoComplete="new-password"
-        />
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="rp-confirm">Confirm password</Label>
+            <Input
+              id="rp-confirm"
+              type="password"
+              {...form.register('confirm')}
+              autoComplete="new-password"
+              placeholder="Repeat your password"
+            />
+            {form.formState.errors.confirm && (
+              <p className="text-destructive text-sm">{form.formState.errors.confirm.message}</p>
+            )}
+          </div>
 
-      <div>
-        <label htmlFor="confirm-password" className="block text-sm font-medium mb-1">
-          Confirm new password
-        </label>
-        <input
-          id="confirm-password"
-          type="password"
-          required
-          placeholder="Repeat your new password"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-          autoComplete="new-password"
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-indigo-600 text-white py-2 rounded font-medium disabled:opacity-50"
-      >
-        {loading ? 'Updating...' : 'Set new password'}
-      </button>
-    </form>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? 'Updating...' : 'Set new password'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<p>Loading...</p>}>
+    <Suspense fallback={<p className="text-muted-foreground">Loading...</p>}>
       <ResetPasswordForm />
     </Suspense>
   )

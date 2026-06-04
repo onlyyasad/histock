@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
+import { useSse } from '@/hooks/useSse'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,7 +30,7 @@ function isOverdue(scheduledAt: string) {
 }
 
 export function SchedulePanel({ orderId }: { orderId: string }) {
-  const { data: schedules = [], isLoading } = useGetSchedulesQuery({ orderId })
+  const { data: schedules = [], isLoading, refetch } = useGetSchedulesQuery({ orderId })
   const [createSchedule, { isLoading: creating }] = useCreateScheduleMutation()
   const [markDone] = useMarkScheduleDoneMutation()
   const [deleteSchedule] = useDeleteScheduleMutation()
@@ -37,6 +38,22 @@ export function SchedulePanel({ orderId }: { orderId: string }) {
   const [showForm, setShowForm] = useState(false)
   const [title, setTitle] = useState('')
   const [scheduledAt, setScheduledAt] = useState('')
+
+  const handleSseEvent = useCallback(
+    (type: string, data: unknown) => {
+      if (type === 'reminder_fired') {
+        const d = data as { scheduleId?: string }
+        void refetch()
+        const schedule = schedules.find((s) => s.id === d.scheduleId)
+        if (schedule) {
+          toast.info(`Reminder: ${schedule.title}`)
+        }
+      }
+    },
+    [refetch, schedules],
+  )
+
+  useSse(handleSseEvent)
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()

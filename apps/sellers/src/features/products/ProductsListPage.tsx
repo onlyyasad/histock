@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cn } from '@/lib/utils'
+import { cn, fmtMoney } from '@/lib/utils'
 
 export function ProductsListPage() {
   const [search, setSearch] = useState('')
@@ -30,7 +30,7 @@ export function ProductsListPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Products</h1>
         <div className="flex items-center gap-2">
-          <ExportButton endpoint="/api/v1/exports/products" label="Export CSV" filename="products.csv" />
+          <ExportButton endpoint="/exports/products" label="Export CSV" filename="products.csv" />
           <Link href="/products/new" className={cn(buttonVariants({ size: 'sm' }))}>
             + New Product
           </Link>
@@ -80,7 +80,7 @@ export function ProductsListPage() {
                     </Link>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{p.sku ?? '—'}</TableCell>
-                  <TableCell className="tabular-nums">৳{p.price.toFixed(2)}</TableCell>
+                  <TableCell className="tabular-nums">৳{fmtMoney(p.price)}</TableCell>
                   <TableCell
                     className={cn(
                       'text-right tabular-nums',

@@ -7,7 +7,7 @@ import { ExportButton } from '@/features/exports/ExportButton'
 import { buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+import { cn, fmtMoney } from '@/lib/utils'
 
 export function CustomersListPage() {
   const [search, setSearch] = useState('')
@@ -18,7 +18,7 @@ export function CustomersListPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Customers</h1>
         <div className="flex items-center gap-2">
-          <ExportButton endpoint="/api/v1/exports/customers" label="Export CSV" filename="customers.csv" />
+          <ExportButton endpoint="/exports/customers" label="Export CSV" filename="customers.csv" />
           <Link href="/customers/new" className={cn(buttonVariants({ size: 'sm' }))}>
             + New Customer
           </Link>
@@ -54,7 +54,7 @@ export function CustomersListPage() {
               <p className="text-sm text-muted-foreground">{c.phone}</p>
             </div>
             <div className="text-right text-sm">
-              <p className="font-medium">৳{c.totalSpent.toFixed(2)}</p>
+              <p className="font-medium">৳{fmtMoney(c.totalSpent)}</p>
               <p className="text-muted-foreground">{c.totalOrders} orders</p>
             </div>
           </Link>

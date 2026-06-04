@@ -14,6 +14,16 @@ export interface CostEntry {
 
 export type ProductWithCosts = ProductResponse & { costEntries: CostEntry[] }
 
+export interface Variant {
+  id: string
+  productId: string
+  name: string
+  sku: string | null
+  price: number
+  currentStock: number
+  isActive: boolean
+}
+
 export const productsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getProducts: builder.query<ProductResponse[], { search?: string; lowStock?: boolean }>({
@@ -68,6 +78,21 @@ export const productsApi = apiSlice.injectEndpoints({
       query: (id) => ({ url: `/products/${id}`, method: 'DELETE' }),
       invalidatesTags: ['Product'],
     }),
+
+    createVariant: builder.mutation<
+      Variant,
+      { productId: string; name: string; sku?: string; price: number }
+    >({
+      query: ({ productId, ...body }) => ({
+        url: `/products/${productId}/variants`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: (_result, _error, { productId }) => [
+        { type: 'Product', id: productId },
+        'Product',
+      ],
+    }),
   }),
 })
 
@@ -78,4 +103,5 @@ export const {
   useUpdateProductMutation,
   useLogPurchaseMutation,
   useDeleteProductMutation,
+  useCreateVariantMutation,
 } = productsApi

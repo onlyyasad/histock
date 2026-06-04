@@ -23,13 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
+import { useCreateRemittanceImportMutation } from '@/features/analytics/store/analyticsApi'
+import { useLazyGetOrdersQuery } from '@/features/orders/store/ordersApi'
 
 type Step = 'upload' | 'map' | 'preview' | 'done'
-
-interface Courier {
-  id: string
-  name: string
-}
 
 export function RemittanceImportPage() {
   const [step, setStep] = useState<Step>('upload')
@@ -40,10 +38,13 @@ export function RemittanceImportPage() {
   const [confidence, setConfidence] = useState(0)
   const [matched, setMatched] = useState<MatchResult[]>([])
   const [unmatched, setUnmatched] = useState<UnmatchedRow[]>([])
-  const [couriers, setCouriers] = useState<Courier[]>([])
   const [courierId, setCourierId] = useState('')
   const [batchName, setBatchName] = useState('')
   const [isImporting, setIsImporting] = useState(false)
+
+  const { data: couriers = [] } = useGetCouriersQuery()
+  const [fetchOrders] = useLazyGetOrdersQuery()
+  const [createRemittanceImport] = useCreateRemittanceImportMutation()
 
   const handleFile = useCallback(async (file: File) => {
     try {
@@ -61,22 +62,16 @@ export function RemittanceImportPage() {
   }, [])
 
   const handleColumnConfirm = async () => {
-    const [ordersRes, couriersRes] = await Promise.all([
-      fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/orders?paymentMethod=cod&status=handover_to_courier&limit=1000`,
-        { credentials: 'include' },
-      ),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/couriers`, { credentials: 'include' }),
-    ])
-
-    const orders: Array<{ id: string; orderNumber: number }> = await ordersRes.json()
-    const courierList: Courier[] = await couriersRes.json()
+    const orders = await fetchOrders({
+      paymentMethod: 'cod',
+      status: 'handover_to_courier',
+      limit: 1000,
+    }).unwrap()
 
     const { matched: m, unmatched: u } = matchRowsToOrders(rows, mapping, orders)
     setMatched(m)
     setUnmatched(u)
-    setCouriers(courierList)
-    if (courierList.length > 0) setCourierId(courierList[0].id)
+    if (couriers.length > 0) setCourierId(couriers[0].id)
     setBatchName(`Remittance ${new Date().toLocaleDateString('en-BD')}`)
     setStep('preview')
   }
@@ -85,23 +80,16 @@ export function RemittanceImportPage() {
     if (matched.length === 0 || !courierId) return
     setIsImporting(true)
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/remittances/import`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courierId,
-          batchName,
-          fileName,
-          orders: matched.map((m) => ({ orderId: m.orderId, codAmount: m.codAmount })),
-          unmatchedCount: unmatched.length,
-        }),
-      })
-      if (!res.ok) throw new Error('Import failed')
-      toast.success(`Remittance batch created — ${matched.length} orders`)
+      await createRemittanceImport({
+        courierId,
+        batchName,
+        fileName,
+        orders: matched.map((m) => ({ orderId: m.orderId, codAmount: m.codAmount })),
+        unmatchedCount: unmatched.length,
+      }).unwrap()
       setStep('done')
     } catch {
-      toast.error('Failed to create remittance batch')
+      toast.error('Import failed. Please try again.')
     } finally {
       setIsImporting(false)
     }
