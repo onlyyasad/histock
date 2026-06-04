@@ -4,6 +4,7 @@ import { scheduleDemoSeed, demoSeedWorker } from './jobs/demoSeeder'
 import { emailWorker } from './jobs/emailQueue'
 import { scheduleWorker } from './jobs/scheduleQueue'
 import { aiWorker } from './jobs/aiQueue'
+import { scheduleSubscriptionLifecycle, subscriptionLifecycleWorker } from './jobs/subscriptionLifecycle'
 
 /* eslint-disable no-console */
 async function bootstrap() {
@@ -15,11 +16,15 @@ async function bootstrap() {
   // Schedule nightly demo data reseed (BullMQ deduplicates on restart)
   scheduleDemoSeed().catch(console.error)
 
+  // Schedule daily subscription lifecycle check (trial → grace_period → expired)
+  scheduleSubscriptionLifecycle().catch(console.error)
+
   // Keep references to prevent GC
   void demoSeedWorker
   void emailWorker
   void scheduleWorker
   void aiWorker
+  void subscriptionLifecycleWorker
 }
 
 bootstrap().catch(console.error)

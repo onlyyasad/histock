@@ -36,6 +36,7 @@ export const UpdateOrderMetadataSchema = z.object({
   courierId: z.string().uuid().nullable().optional(),
   notes: z.string().max(1000).nullable().optional(),
   tags: z.array(z.string().max(50)).max(10).optional(),
+  linkedOrderId: z.string().uuid().nullable().optional(),
 })
 
 export const AddOrderNoteSchema = z.object({

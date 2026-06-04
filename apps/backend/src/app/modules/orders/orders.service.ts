@@ -79,9 +79,9 @@ export class OrdersService {
       }>
     },
   ) {
-    await this.checkOrderCap(businessId)
+    const warning = await this.checkOrderCap(businessId)
 
-    return prismaAdmin.$transaction(async (tx) => {
+    const order = await prismaAdmin.$transaction(async (tx) => {
       const seqName = `orders_seq_${businessId.replace(/-/g, '')}`
       const result = await tx.$queryRawUnsafe<[{ nextval: bigint }]>(
         `SELECT nextval('${seqName}')`,
@@ -157,9 +157,19 @@ export class OrdersService {
 
       return order
     })
+
+    return { order, warning }
   }
 
-  updateMetadata(orderId: string, data: { courierId?: string | null; notes?: string | null; tags?: string[] }) {
+  updateMetadata(
+    orderId: string,
+    data: {
+      courierId?: string | null
+      notes?: string | null
+      tags?: string[]
+      linkedOrderId?: string | null
+    },
+  ) {
     return (this.prisma as unknown as typeof prismaAdmin).order.update({
       where: { id: orderId },
       data,
@@ -185,7 +195,9 @@ export class OrdersService {
     })
   }
 
-  private async checkOrderCap(businessId: string): Promise<void> {
+  private async checkOrderCap(
+    businessId: string,
+  ): Promise<{ type: 'ORDER_CAP_NEAR'; used: number; cap: number } | null> {
     const yearMonth = new Date().toISOString().slice(0, 7)
     const redisKey = `orders:count:${businessId}:${yearMonth}`
 
@@ -203,7 +215,7 @@ export class OrdersService {
     })
 
     const cap = sub?.plan.maxOrdersPerMonth ?? null
-    if (cap === null) return
+    if (cap === null) return null
 
     if (count >= cap) {
       throw Object.assign(
@@ -211,6 +223,12 @@ export class OrdersService {
         { status: 402, code: 'ORDER_CAP_REACHED' },
       )
     }
+
+    if (count >= Math.floor(cap * 0.9)) {
+      return { type: 'ORDER_CAP_NEAR' as const, used: count, cap }
+    }
+
+    return null
   }
 
   private async getOrderCountFromDb(businessId: string, yearMonth: string): Promise<number> {
