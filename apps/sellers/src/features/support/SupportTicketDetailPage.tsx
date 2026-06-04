@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { useSse } from '@/hooks/useSse'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -16,12 +17,25 @@ const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'outline'> = {
 }
 
 export function SupportTicketDetailPage({ ticketId }: { ticketId: string }) {
-  const { data: ticket, isLoading } = useGetTicketQuery(ticketId, {
-    pollingInterval: 30_000,
+  const { data: ticket, isLoading, refetch } = useGetTicketQuery(ticketId, {
     refetchOnFocus: true,
   })
   const [addMessage, { isLoading: sending }] = useAddTicketMessageMutation()
   const [body, setBody] = useState('')
+
+  const handleSseEvent = useCallback(
+    (type: string, data: unknown) => {
+      if (type === 'ticket_message') {
+        const d = data as { ticketId?: string }
+        if (d.ticketId === ticketId) {
+          void refetch()
+        }
+      }
+    },
+    [refetch, ticketId],
+  )
+
+  useSse(handleSseEvent)
 
   if (isLoading) return <div className="p-6 text-muted-foreground">Loading...</div>
   if (!ticket) return <div className="p-6 text-destructive">Ticket not found</div>
