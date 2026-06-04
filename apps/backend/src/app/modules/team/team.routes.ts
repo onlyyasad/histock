@@ -167,4 +167,40 @@ router.delete('/members/:userId', requireSeller, requireRole('owner'), async (re
   }
 })
 
+// PATCH /api/v1/team/members/:userId/role — change role of existing member (owner only)
+router.patch('/members/:userId/role', requireSeller, requireRole('owner'), async (req, res, next) => {
+  try {
+    const user = req.user as { businessId: string; id: string }
+    const targetId = req.params.userId as string
+
+    if (targetId === user.id) {
+      return res.status(400).json({ error: 'Cannot change your own role' })
+    }
+
+    const parsed = z
+      .object({ role: z.enum(['manager', 'staff']) })
+      .safeParse(req.body)
+    if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
+
+    const target = await prismaWithScope(user.businessId).user.findFirst({
+      where: { id: targetId },
+      select: { id: true, role: true },
+    })
+    if (!target) return res.status(404).json({ error: 'Team member not found' })
+    if (target.role === 'owner') {
+      return res.status(400).json({ error: 'Cannot change the role of an owner' })
+    }
+
+    const updated = await prismaAdmin.user.update({
+      where: { id: targetId },
+      data: { role: parsed.data.role },
+      select: { id: true, name: true, email: true, role: true },
+    })
+
+    res.json(updated)
+  } catch (err) {
+    next(err)
+  }
+})
+
 export { router as teamRoutes }
