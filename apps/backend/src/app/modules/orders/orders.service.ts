@@ -161,7 +161,15 @@ export class OrdersService {
     return { order, warning }
   }
 
-  updateMetadata(orderId: string, data: { courierId?: string | null; notes?: string | null; tags?: string[] }) {
+  updateMetadata(
+    orderId: string,
+    data: {
+      courierId?: string | null
+      notes?: string | null
+      tags?: string[]
+      linkedOrderId?: string | null
+    },
+  ) {
     return (this.prisma as unknown as typeof prismaAdmin).order.update({
       where: { id: orderId },
       data,
