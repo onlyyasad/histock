@@ -1,30 +1,56 @@
-import { Link, Outlet } from '@tanstack/react-router'
+import { Outlet, useRouterState } from '@tanstack/react-router'
+import { AppSidebar } from './AppSidebar'
+import {
+  SidebarProvider,
+  SidebarInset,
+  SidebarTrigger,
+} from '@/components/ui/sidebar'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+} from '@/components/ui/breadcrumb'
+import { Separator } from '@/components/ui/separator'
 
-const NAV = [
-  { to: '/', label: 'Businesses' },
-  { to: '/audit-log', label: 'Audit Log' },
-  { to: '/inquiries', label: 'Inquiries' },
-]
+const PAGE_TITLES: Record<string, string> = {
+  '/': 'Businesses',
+  '/subscription-plans': 'Subscription Plans',
+  '/audit-log': 'Audit Log',
+  '/inquiries': 'Inquiries',
+}
+
+function getPageTitle(pathname: string): string {
+  for (const [prefix, title] of Object.entries(PAGE_TITLES)) {
+    if (prefix === '/' ? pathname === '/' : pathname === prefix || pathname.startsWith(prefix + '/')) {
+      return title
+    }
+  }
+  return 'Admin'
+}
 
 export function AdminLayout() {
+  const { location } = useRouterState()
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <aside className="w-52 bg-white border-r flex flex-col p-4 gap-1">
-        <p className="text-xs font-bold text-gray-400 uppercase mb-3">HiStock Admin</p>
-        {NAV.map(({ to, label }) => (
-          <Link
-            key={to}
-            to={to}
-            className="text-sm px-3 py-2 rounded hover:bg-gray-100 text-gray-700"
-            activeProps={{ className: 'bg-gray-100 font-medium' }}
-          >
-            {label}
-          </Link>
-        ))}
-      </aside>
-      <main className="flex-1 overflow-auto">
-        <Outlet />
-      </main>
-    </div>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-14 items-center gap-2 border-b px-4 sticky top-0 bg-background z-10">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="h-4" />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbPage>{getPageTitle(location.pathname)}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </header>
+        <main className="flex-1">
+          <Outlet />
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
