@@ -23,6 +23,7 @@
 
     /* Workspace paths */
     "paths": {
+      "@/*": ["./src/*"],
       "@histock/shared": ["../../packages/shared/src/index.ts"]
     }
   },

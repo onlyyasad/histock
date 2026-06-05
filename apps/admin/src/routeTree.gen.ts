@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as ProtectedIndexRouteImport } from './routes/_protected/index'
+import { Route as ProtectedSubscriptionPlansRouteImport } from './routes/_protected/subscription-plans'
 import { Route as ProtectedInquiriesRouteImport } from './routes/_protected/inquiries'
 import { Route as ProtectedAuditLogRouteImport } from './routes/_protected/audit-log'
+import { Route as ProtectedInquiriesInquiryIdRouteImport } from './routes/_protected/inquiries.$inquiryId'
 import { Route as ProtectedBusinessesBusinessIdRouteImport } from './routes/_protected/businesses.$businessId'
 
 const LoginRoute = LoginRouteImport.update({
@@ -30,6 +32,12 @@ const ProtectedIndexRoute = ProtectedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedSubscriptionPlansRoute =
+  ProtectedSubscriptionPlansRouteImport.update({
+    id: '/subscription-plans',
+    path: '/subscription-plans',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
 const ProtectedInquiriesRoute = ProtectedInquiriesRouteImport.update({
   id: '/inquiries',
   path: '/inquiries',
@@ -40,6 +48,12 @@ const ProtectedAuditLogRoute = ProtectedAuditLogRouteImport.update({
   path: '/audit-log',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedInquiriesInquiryIdRoute =
+  ProtectedInquiriesInquiryIdRouteImport.update({
+    id: '/$inquiryId',
+    path: '/$inquiryId',
+    getParentRoute: () => ProtectedInquiriesRoute,
+  } as any)
 const ProtectedBusinessesBusinessIdRoute =
   ProtectedBusinessesBusinessIdRouteImport.update({
     id: '/businesses/$businessId',
@@ -51,24 +65,30 @@ export interface FileRoutesByFullPath {
   '/': typeof ProtectedIndexRoute
   '/login': typeof LoginRoute
   '/audit-log': typeof ProtectedAuditLogRoute
-  '/inquiries': typeof ProtectedInquiriesRoute
+  '/inquiries': typeof ProtectedInquiriesRouteWithChildren
+  '/subscription-plans': typeof ProtectedSubscriptionPlansRoute
   '/businesses/$businessId': typeof ProtectedBusinessesBusinessIdRoute
+  '/inquiries/$inquiryId': typeof ProtectedInquiriesInquiryIdRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/audit-log': typeof ProtectedAuditLogRoute
-  '/inquiries': typeof ProtectedInquiriesRoute
+  '/inquiries': typeof ProtectedInquiriesRouteWithChildren
+  '/subscription-plans': typeof ProtectedSubscriptionPlansRoute
   '/': typeof ProtectedIndexRoute
   '/businesses/$businessId': typeof ProtectedBusinessesBusinessIdRoute
+  '/inquiries/$inquiryId': typeof ProtectedInquiriesInquiryIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_protected': typeof ProtectedRouteWithChildren
   '/login': typeof LoginRoute
   '/_protected/audit-log': typeof ProtectedAuditLogRoute
-  '/_protected/inquiries': typeof ProtectedInquiriesRoute
+  '/_protected/inquiries': typeof ProtectedInquiriesRouteWithChildren
+  '/_protected/subscription-plans': typeof ProtectedSubscriptionPlansRoute
   '/_protected/': typeof ProtectedIndexRoute
   '/_protected/businesses/$businessId': typeof ProtectedBusinessesBusinessIdRoute
+  '/_protected/inquiries/$inquiryId': typeof ProtectedInquiriesInquiryIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -77,17 +97,28 @@ export interface FileRouteTypes {
     | '/login'
     | '/audit-log'
     | '/inquiries'
+    | '/subscription-plans'
     | '/businesses/$businessId'
+    | '/inquiries/$inquiryId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/audit-log' | '/inquiries' | '/' | '/businesses/$businessId'
+  to:
+    | '/login'
+    | '/audit-log'
+    | '/inquiries'
+    | '/subscription-plans'
+    | '/'
+    | '/businesses/$businessId'
+    | '/inquiries/$inquiryId'
   id:
     | '__root__'
     | '/_protected'
     | '/login'
     | '/_protected/audit-log'
     | '/_protected/inquiries'
+    | '/_protected/subscription-plans'
     | '/_protected/'
     | '/_protected/businesses/$businessId'
+    | '/_protected/inquiries/$inquiryId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,6 +149,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedIndexRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/subscription-plans': {
+      id: '/_protected/subscription-plans'
+      path: '/subscription-plans'
+      fullPath: '/subscription-plans'
+      preLoaderRoute: typeof ProtectedSubscriptionPlansRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/inquiries': {
       id: '/_protected/inquiries'
       path: '/inquiries'
@@ -132,6 +170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedAuditLogRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/inquiries/$inquiryId': {
+      id: '/_protected/inquiries/$inquiryId'
+      path: '/$inquiryId'
+      fullPath: '/inquiries/$inquiryId'
+      preLoaderRoute: typeof ProtectedInquiriesInquiryIdRouteImport
+      parentRoute: typeof ProtectedInquiriesRoute
+    }
     '/_protected/businesses/$businessId': {
       id: '/_protected/businesses/$businessId'
       path: '/businesses/$businessId'
@@ -142,16 +187,29 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ProtectedInquiriesRouteChildren {
+  ProtectedInquiriesInquiryIdRoute: typeof ProtectedInquiriesInquiryIdRoute
+}
+
+const ProtectedInquiriesRouteChildren: ProtectedInquiriesRouteChildren = {
+  ProtectedInquiriesInquiryIdRoute: ProtectedInquiriesInquiryIdRoute,
+}
+
+const ProtectedInquiriesRouteWithChildren =
+  ProtectedInquiriesRoute._addFileChildren(ProtectedInquiriesRouteChildren)
+
 interface ProtectedRouteChildren {
   ProtectedAuditLogRoute: typeof ProtectedAuditLogRoute
-  ProtectedInquiriesRoute: typeof ProtectedInquiriesRoute
+  ProtectedInquiriesRoute: typeof ProtectedInquiriesRouteWithChildren
+  ProtectedSubscriptionPlansRoute: typeof ProtectedSubscriptionPlansRoute
   ProtectedIndexRoute: typeof ProtectedIndexRoute
   ProtectedBusinessesBusinessIdRoute: typeof ProtectedBusinessesBusinessIdRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedAuditLogRoute: ProtectedAuditLogRoute,
-  ProtectedInquiriesRoute: ProtectedInquiriesRoute,
+  ProtectedInquiriesRoute: ProtectedInquiriesRouteWithChildren,
+  ProtectedSubscriptionPlansRoute: ProtectedSubscriptionPlansRoute,
   ProtectedIndexRoute: ProtectedIndexRoute,
   ProtectedBusinessesBusinessIdRoute: ProtectedBusinessesBusinessIdRoute,
 }
