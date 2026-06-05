@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useAddOrderNoteMutation } from '../store/ordersApi'
 import type { OrderResponse } from '@histock/shared'
+import { formatDateTime } from '@/lib/formatDate'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
@@ -43,7 +44,7 @@ export function OrderNotesPanel({ orderId, notes }: Props) {
             <div key={n.id} className="bg-muted/50 rounded-md p-3 text-sm">
               <p className="whitespace-pre-wrap">{n.content}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                {n.user.name} · {new Date(n.createdAt).toLocaleString('en-BD')}
+                {n.user.name} · {formatDateTime(n.createdAt)}
               </p>
             </div>
           ))}

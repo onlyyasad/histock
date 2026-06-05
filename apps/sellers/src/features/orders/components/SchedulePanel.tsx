@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useSse } from '@/hooks/useSse'
+import { formatDateTime } from '@/lib/formatDate'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,16 +16,6 @@ import {
   useDeleteScheduleMutation,
 } from '../store/schedulesApi'
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString('en-BD', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
 function isOverdue(scheduledAt: string) {
   return new Date(scheduledAt) < new Date()
 }
@@ -34,6 +25,9 @@ export function SchedulePanel({ orderId }: { orderId: string }) {
   const [createSchedule, { isLoading: creating }] = useCreateScheduleMutation()
   const [markDone] = useMarkScheduleDoneMutation()
   const [deleteSchedule] = useDeleteScheduleMutation()
+
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
   const [showForm, setShowForm] = useState(false)
   const [title, setTitle] = useState('')
@@ -137,8 +131,8 @@ export function SchedulePanel({ orderId }: { orderId: string }) {
           <div key={s.id} className="flex items-start justify-between gap-2 text-sm">
             <div className="space-y-0.5">
               <p className="font-medium">{s.title}</p>
-              <p className={isOverdue(s.scheduledAt) ? 'text-destructive text-xs' : 'text-muted-foreground text-xs'}>
-                {isOverdue(s.scheduledAt) ? '⚠ Overdue — ' : ''}{formatDateTime(s.scheduledAt)}
+              <p className={(mounted && isOverdue(s.scheduledAt)) ? 'text-destructive text-xs' : 'text-muted-foreground text-xs'}>
+                {(mounted && isOverdue(s.scheduledAt)) ? '⚠ Overdue — ' : ''}{formatDateTime(s.scheduledAt)}
               </p>
             </div>
             <div className="flex gap-1 shrink-0">

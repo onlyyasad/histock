@@ -1,24 +1,22 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
 import type { InvoiceData } from './InvoiceDocument'
 
-// @react-pdf/renderer uses browser-only APIs — must be dynamic with ssr: false.
-const PDFDownloadLink = dynamic(
-  () => import('@react-pdf/renderer').then((m) => m.PDFDownloadLink),
-  { ssr: false },
-)
-
-const InvoiceDocumentDynamic = dynamic(
-  () => import('./InvoiceDocument').then((m) => m.InvoiceDocument),
-  { ssr: false },
+const InvoiceDownloadButtonInner = dynamic(
+  () => import('./InvoiceDownloadButtonInner').then((m) => m.InvoiceDownloadButtonInner),
+  {
+    ssr: false,
+    loading: () => (
+      <button disabled className="border rounded px-4 py-2 text-sm opacity-50">
+        Loading PDF...
+      </button>
+    ),
+  },
 )
 
 interface Props {
   data: InvoiceData
-  // When locale is 'bn', react-pdf cannot shape Bangla text correctly (no HarfBuzz).
-  // Fallback: window.print() lets the browser OS renderer handle shaping.
   locale?: 'en' | 'bn'
 }
 
@@ -37,38 +35,5 @@ export function InvoiceDownloadButton({ data, locale = 'en' }: Props) {
     )
   }
 
-  return (
-    <Suspense
-      fallback={
-        <button disabled className="border rounded px-4 py-2 text-sm opacity-50">
-          Loading PDF...
-        </button>
-      }
-    >
-      <PDFDownloadLink document={<InvoiceDocumentDynamic data={data} />} fileName={filename}>
-        {({ loading, error }) => {
-          if (error) {
-            return (
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="border rounded px-4 py-2 text-sm text-red-600"
-              >
-                Print Invoice
-              </button>
-            )
-          }
-          return (
-            <button
-              type="button"
-              disabled={loading}
-              className="bg-gray-800 text-white rounded px-4 py-2 text-sm disabled:opacity-50"
-            >
-              {loading ? 'Generating PDF...' : 'Download Invoice'}
-            </button>
-          )
-        }}
-      </PDFDownloadLink>
-    </Suspense>
-  )
+  return <InvoiceDownloadButtonInner data={data} filename={filename} />
 }
