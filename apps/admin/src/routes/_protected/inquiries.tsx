@@ -1,42 +1,90 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useGetInquiriesQuery } from '../../store/adminApiSlice'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import { useGetInquiriesQuery } from '@/store/adminApiSlice'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+type InquiryStatus = 'new' | 'in_progress' | 'resolved'
+
+function statusVariant(status: InquiryStatus): 'default' | 'secondary' | 'outline' {
+  if (status === 'resolved') return 'default'
+  if (status === 'in_progress') return 'secondary'
+  return 'outline'
+}
 
 function InquiriesPage() {
-  const { data: inquiries, isLoading } = useGetInquiriesQuery({})
+  const [status, setStatus] = useState<string>('')
+
+  const { data: inquiries, isLoading } = useGetInquiriesQuery({
+    status: status || undefined,
+  })
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Inquiries</h1>
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Inquiries</h1>
 
-      {isLoading && <p className="text-gray-400">Loading...</p>}
+      <Select value={status} onValueChange={(v) => setStatus(v === 'all' ? '' : v)}>
+        <SelectTrigger className="w-44">
+          <SelectValue placeholder="All statuses" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All statuses</SelectItem>
+          <SelectItem value="new">New</SelectItem>
+          <SelectItem value="in_progress">In Progress</SelectItem>
+          <SelectItem value="resolved">Resolved</SelectItem>
+        </SelectContent>
+      </Select>
 
-      <div className="space-y-3">
-        {inquiries?.map((inq) => (
-          <div key={inq.id} className="bg-white border rounded-lg p-4">
-            <div className="flex justify-between text-sm mb-1">
-              <span className="font-medium">{inq.businessName}</span>
-              <span className="text-gray-400">{new Date(inq.createdAt).toLocaleString()}</span>
-            </div>
-            <p className="text-xs text-gray-400 mb-2">{inq.email}</p>
-            <p className="text-sm">{inq.message}</p>
-            <span
-              className={`inline-block mt-2 text-xs px-2 py-0.5 rounded-full ${
-                inq.status === 'resolved'
-                  ? 'bg-green-100 text-green-700'
-                  : inq.status === 'in_progress'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-500'
-              }`}
-            >
-              {inq.status.replace('_', ' ')}
-            </span>
-          </div>
-        ))}
-
-        {!isLoading && inquiries?.length === 0 && (
-          <p className="text-sm text-gray-400">No inquiries yet.</p>
-        )}
-      </div>
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {inquiries?.length === 0 && (
+            <p className="text-sm text-muted-foreground">No inquiries found.</p>
+          )}
+          {inquiries?.map((inq) => (
+            <Card key={inq.id}>
+              <CardContent className="py-3 space-y-2">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-0.5 min-w-0">
+                    <p className="font-medium truncate">{inq.name}</p>
+                    <p className="text-xs text-muted-foreground">{inq.email}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge variant={statusVariant(inq.status)}>
+                      {inq.status.replace('_', ' ')}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(inq.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm line-clamp-2">{inq.message}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<Link to="/inquiries/$inquiryId" params={{ inquiryId: inq.id }} />}
+                >
+                  View
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

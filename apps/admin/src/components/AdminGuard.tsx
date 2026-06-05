@@ -1,23 +1,28 @@
-import { type ReactNode } from 'react'
+import { type ReactNode, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useGetMeQuery } from '../store/adminApiSlice'
+import { useGetMeQuery } from '@/store/adminApiSlice'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function AdminGuard({ children }: { children: ReactNode }) {
   const navigate = useNavigate()
   const { isLoading, isError } = useGetMeQuery()
 
+  useEffect(() => {
+    if (isError) {
+      navigate({ to: '/login' })
+    }
+  }, [isError, navigate])
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-gray-400">
-        Checking session...
+      <div className="flex flex-col gap-4 p-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-64 w-full" />
       </div>
     )
   }
 
-  if (isError) {
-    navigate({ to: '/login' })
-    return null
-  }
+  if (isError) return null
 
   return <>{children}</>
 }
