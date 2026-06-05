@@ -1,11 +1,12 @@
 'use client'
 
 import { useGetOrderCostBreakdownQuery } from '../store/ordersApi'
+import { fmtMoney } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 
 function fmt(amount: number) {
-  return `৳${amount.toLocaleString('en-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return `৳${fmtMoney(amount)}`
 }
 
 interface Props {
