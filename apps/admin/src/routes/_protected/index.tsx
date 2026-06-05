@@ -1,13 +1,48 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useGetBusinessesQuery, useToggleDemoMutation } from '../../store/adminApiSlice'
+import {
+  useGetBusinessesQuery,
+  useToggleDemoMutation,
+  useGetSubscriptionPlansQuery,
+} from '@/store/adminApiSlice'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+function statusVariant(status: string): 'default' | 'secondary' | 'outline' {
+  if (status === 'active') return 'default'
+  if (status === 'trial') return 'secondary'
+  return 'outline'
+}
 
 function BusinessListPage() {
   const [search, setSearch] = useState('')
+  const [planId, setPlanId] = useState<string>('')
+  const [page, setPage] = useState(1)
+
   const { data: businesses, isLoading } = useGetBusinessesQuery({
     search: search || undefined,
+    planId: planId || undefined,
+    page,
   })
+  const { data: plans } = useGetSubscriptionPlansQuery()
   const [toggleDemo] = useToggleDemoMutation()
 
   const handleDemoToggle = async (id: string, current: boolean) => {
@@ -20,74 +55,106 @@ function BusinessListPage() {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Businesses</h1>
-      <input
-        type="text"
-        placeholder="Search..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="border rounded px-3 py-2 mb-4 w-full max-w-xs text-sm"
-      />
-      {isLoading && <p className="text-gray-400">Loading...</p>}
-      <table className="w-full text-sm">
-        <thead className="text-left text-gray-500 border-b">
-          <tr>
-            <th className="pb-2">Name</th>
-            <th className="pb-2">Plan</th>
-            <th className="pb-2">Status</th>
-            <th className="pb-2">Demo</th>
-            <th className="pb-2 text-right">Orders</th>
-          </tr>
-        </thead>
-        <tbody>
-          {businesses?.map((b) => (
-            <tr key={b.id} className="border-b hover:bg-gray-50">
-              <td className="py-3">
-                <Link
-                  to="/businesses/$businessId"
-                  params={{ businessId: b.id }}
-                  className="font-medium hover:underline"
-                >
-                  {b.name}
-                </Link>
-                <p className="text-xs text-gray-400">{b.slug}</p>
-              </td>
-              <td className="py-3">
-                <span className="capitalize px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700">
-                  {b.subscription.plan.name}
-                </span>
-              </td>
-              <td className="py-3">
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs ${
-                    b.subscription.status === 'active'
-                      ? 'bg-green-100 text-green-700'
-                      : b.subscription.status === 'trial'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-gray-100 text-gray-500'
-                  }`}
-                >
-                  {b.subscription.status}
-                </span>
-              </td>
-              <td className="py-3">
-                <button
-                  onClick={() => handleDemoToggle(b.id, b.isDemo)}
-                  className={`px-2 py-0.5 rounded text-xs border ${
-                    b.isDemo
-                      ? 'bg-yellow-50 border-yellow-300 text-yellow-700'
-                      : 'border-gray-200 text-gray-400'
-                  }`}
-                >
-                  {b.isDemo ? 'Demo' : 'Off'}
-                </button>
-              </td>
-              <td className="py-3 text-right tabular-nums">{b._count.orders}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-bold">Businesses</h1>
+
+      <div className="flex gap-3">
+        <Input
+          placeholder="Search by name or slug…"
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+          className="max-w-xs"
+        />
+        <Select value={planId} onValueChange={(v) => { setPlanId(v === 'all' ? '' : v); setPage(1) }}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="All plans" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All plans</SelectItem>
+            {plans?.map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Business</TableHead>
+            <TableHead>Plan</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Demo</TableHead>
+            <TableHead className="text-right">Orders</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-10 ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            : businesses?.map((b) => (
+                <TableRow key={b.id}>
+                  <TableCell>
+                    <Link
+                      to="/businesses/$businessId"
+                      params={{ businessId: b.id }}
+                      className="font-medium hover:underline"
+                    >
+                      {b.name}
+                    </Link>
+                    <p className="text-xs text-muted-foreground">{b.slug}</p>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{b.subscription.plan.name}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant(b.subscription.status)}>
+                      {b.subscription.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant={b.isDemo ? 'secondary' : 'outline'}
+                      size="sm"
+                      onClick={() => handleDemoToggle(b.id, b.isDemo)}
+                    >
+                      {b.isDemo ? 'Demo' : 'Off'}
+                    </Button>
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {b._count.orders}
+                  </TableCell>
+                </TableRow>
+              ))}
+        </TableBody>
+      </Table>
+
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={page === 1}
+          onClick={() => setPage((p) => p - 1)}
+        >
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground">Page {page}</span>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!businesses || businesses.length < 20}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Next
+        </Button>
+      </div>
     </div>
   )
 }
