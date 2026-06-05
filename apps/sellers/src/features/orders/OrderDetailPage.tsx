@@ -1,5 +1,6 @@
 'use client'
 
+import { formatDateTime } from '@/lib/formatDate'
 import { toast } from 'sonner'
 import { fmtMoney } from '@/lib/utils'
 import { useGetOrderQuery, useConfirmCodPaymentMutation } from './store/ordersApi'
@@ -70,7 +71,7 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
         <div>
           <h1 className="text-2xl font-bold">{formatOrderNumber(order.orderNumber)}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {new Date(order.createdAt).toLocaleString('en-BD')}
+            {formatDateTime(order.createdAt)}
           </p>
         </div>
         <div className="flex items-center gap-3">
