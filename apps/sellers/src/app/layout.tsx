@@ -1,14 +1,12 @@
 import type { Metadata } from 'next'
-import { Sora, Geist } from 'next/font/google'
+import { Figtree } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
-const sora = Sora({
-  variable: '--font-sora',
+const figtree = Figtree({
   subsets: ['latin'],
+  variable: '--font-sans',
   display: 'swap',
 })
 
@@ -25,8 +23,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn("h-full", "antialiased", sora.variable, "font-sans", geist.variable)}>
-      <body suppressHydrationWarning className="min-h-full flex flex-col font-[family-name:var(--font-sora)]">
+    <html lang="en" className={cn("h-full", "antialiased", figtree.variable)}>
+      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans">
         <Providers>{children}</Providers>
       </body>
     </html>
