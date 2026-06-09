@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { Button } from '@/components/ui/button'
 import type { InvoiceData } from './InvoiceDocument'
 
 const InvoiceDownloadButtonInner = dynamic(
@@ -8,9 +9,9 @@ const InvoiceDownloadButtonInner = dynamic(
   {
     ssr: false,
     loading: () => (
-      <button disabled className="border rounded px-4 py-2 text-sm opacity-50">
+      <Button disabled size="sm" variant="outline">
         Loading PDF...
-      </button>
+      </Button>
     ),
   },
 )
@@ -25,13 +26,9 @@ export function InvoiceDownloadButton({ data, locale = 'en' }: Props) {
 
   if (locale === 'bn') {
     return (
-      <button
-        type="button"
-        onClick={() => window.print()}
-        className="bg-gray-800 text-white rounded px-4 py-2 text-sm"
-      >
+      <Button type="button" size="sm" onClick={() => window.print()}>
         ইনভয়েস প্রিন্ট করুন
-      </button>
+      </Button>
     )
   }
 
