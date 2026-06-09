@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
 
 interface Props {
   from: string
@@ -36,18 +36,18 @@ export function DateRangePicker({ from, to, onChange }: Props) {
         </Button>
       ))}
       <div className="flex items-center gap-2 ml-1">
-        <Input
-          type="date"
-          value={from}
-          onChange={(e) => onChange({ from: e.target.value, to })}
-          className="w-36 h-8 text-sm"
+        <DatePicker
+          value={from || undefined}
+          onSelect={(date) => onChange({ from: date, to })}
+          placeholder="Start date"
+          className="w-36 text-sm"
         />
         <span className="text-muted-foreground text-sm">–</span>
-        <Input
-          type="date"
-          value={to}
-          onChange={(e) => onChange({ from, to: e.target.value })}
-          className="w-36 h-8 text-sm"
+        <DatePicker
+          value={to || undefined}
+          onSelect={(date) => onChange({ from, to: date })}
+          placeholder="End date"
+          className="w-36 text-sm"
         />
       </div>
     </div>

@@ -11,7 +11,7 @@ import { ExportButton } from '@/features/exports/ExportButton'
 import { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -131,21 +131,21 @@ export function OrdersListPage() {
 
         <div className="space-y-1">
           <Label className="text-xs">From</Label>
-          <Input
-            type="date"
-            value={from}
-            onChange={(e) => { setFrom(e.target.value); handleFilterChange() }}
-            className="h-9"
+          <DatePicker
+            value={from || undefined}
+            onSelect={(date) => { setFrom(date); handleFilterChange() }}
+            placeholder="From date"
+            className="h-9 w-full"
           />
         </div>
 
         <div className="space-y-1">
           <Label className="text-xs">To</Label>
-          <Input
-            type="date"
-            value={to}
-            onChange={(e) => { setTo(e.target.value); handleFilterChange() }}
-            className="h-9"
+          <DatePicker
+            value={to || undefined}
+            onSelect={(date) => { setTo(date); handleFilterChange() }}
+            placeholder="To date"
+            className="h-9 w-full"
           />
         </div>
       </div>

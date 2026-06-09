@@ -64,7 +64,7 @@ export function CostBreakdownPanel({ orderId }: Props) {
             <span className="text-muted-foreground">COGS</span>
             <span className="tabular-nums">{fmt(data.totalCost)}</span>
           </div>
-          <div className={`flex justify-between font-semibold ${isPositive ? 'text-green-600' : 'text-destructive'}`}>
+          <div className={`flex justify-between font-semibold ${isPositive ? 'text-success' : 'text-destructive'}`}>
             <span>Profit</span>
             <span className="tabular-nums">
               {fmt(data.profit)} ({data.margin.toFixed(1)}%)

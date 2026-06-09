@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
@@ -55,16 +57,19 @@ function NewTicketForm({ onSuccess }: { onSuccess: () => void }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
             <Label htmlFor="ticket-type">Type</Label>
-            <select
-              id="ticket-type"
+            <Select
               value={form.type}
-              onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as CreateTicketInput['type'] }))}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              onValueChange={(value) => setForm((f) => ({ ...f, type: value as CreateTicketInput['type'] }))}
             >
-              <option value="question">Question</option>
-              <option value="bug_report">Bug Report</option>
-              <option value="feature_request">Feature Request</option>
-            </select>
+              <SelectTrigger id="ticket-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="question">Question</SelectItem>
+                <SelectItem value="bug_report">Bug Report</SelectItem>
+                <SelectItem value="feature_request">Feature Request</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1">
             <Label htmlFor="ticket-title">Title</Label>
@@ -78,14 +83,13 @@ function NewTicketForm({ onSuccess }: { onSuccess: () => void }) {
           </div>
           <div className="space-y-1">
             <Label htmlFor="ticket-desc">Description</Label>
-            <textarea
+            <Textarea
               id="ticket-desc"
               rows={4}
               placeholder="Describe the issue or question in detail..."
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               required
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
             />
           </div>
           <div className="flex gap-2">

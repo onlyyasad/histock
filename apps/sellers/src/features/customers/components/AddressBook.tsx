@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 
 interface Props {
@@ -126,11 +127,10 @@ export function AddressBook({ customerId, addresses }: Props) {
                 />
               </div>
               <Label className="flex items-center gap-2 font-normal cursor-pointer">
-                <input
-                  type="checkbox"
+                <Checkbox
+                  id="default-address"
                   checked={form.isDefault}
-                  onChange={(e) => setForm((f) => ({ ...f, isDefault: e.target.checked }))}
-                  className="rounded"
+                  onCheckedChange={(checked) => setForm((f) => ({ ...f, isDefault: checked === true }))}
                 />
                 Set as default
               </Label>

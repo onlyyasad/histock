@@ -3,6 +3,7 @@
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
 import { useGetPermissionsQuery, useUpdatePermissionMutation } from './store/permissionsApi'
 
 const PERMISSIONS: Array<{ key: string; label: string; description: string }> = [
@@ -66,21 +67,12 @@ function ToggleCell({
 
   return (
     <td className="px-4 py-3 text-center">
-      <button
-        onClick={handleToggle}
+      <Switch
+        checked={granted}
+        onCheckedChange={() => void handleToggle()}
         disabled={isLoading}
-        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-          granted ? 'bg-primary' : 'bg-muted-foreground/30'
-        } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-        aria-pressed={granted}
         aria-label={`${granted ? 'Revoke' : 'Grant'} permission`}
-      >
-        <span
-          className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
-            granted ? 'translate-x-4' : 'translate-x-0.5'
-          }`}
-        />
-      </button>
+      />
     </td>
   )
 }

@@ -1,4 +1,5 @@
 import { PDFDownloadLink } from '@react-pdf/renderer'
+import { Button } from '@/components/ui/button'
 import { InvoiceDocument, type InvoiceData } from './InvoiceDocument'
 
 interface Props {
@@ -12,23 +13,21 @@ export function InvoiceDownloadButtonInner({ data, filename }: Props) {
       {({ loading, error }) => {
         if (error) {
           return (
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
+              className="text-destructive"
               onClick={() => window.print()}
-              className="border rounded px-4 py-2 text-sm text-red-600"
             >
               Print Invoice
-            </button>
+            </Button>
           )
         }
         return (
-          <button
-            type="button"
-            disabled={loading}
-            className="bg-gray-800 text-white rounded px-4 py-2 text-sm disabled:opacity-50"
-          >
+          <Button type="button" size="sm" disabled={loading}>
             {loading ? 'Generating PDF...' : 'Download Invoice'}
-          </button>
+          </Button>
         )
       }}
     </PDFDownloadLink>
