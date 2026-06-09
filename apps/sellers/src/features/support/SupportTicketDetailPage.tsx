@@ -7,6 +7,7 @@ import { useSse } from '@/hooks/useSse'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
 import { useGetTicketQuery, useAddTicketMessageMutation } from './store/supportApi'
 
 const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'outline'> = {
@@ -101,12 +102,11 @@ export function SupportTicketDetailPage({ ticketId }: { ticketId: string }) {
 
       {ticket.status !== 'closed' && (
         <form onSubmit={handleSend} className="space-y-2">
-          <textarea
+          <Textarea
             rows={3}
             placeholder="Add a message..."
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
           />
           <Button type="submit" size="sm" disabled={sending || !body.trim()}>
             {sending ? 'Sending...' : 'Send Message'}

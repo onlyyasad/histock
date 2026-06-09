@@ -7,6 +7,7 @@ import { ExportButton } from '@/features/exports/ExportButton'
 import { buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Table,
   TableBody,
@@ -46,11 +47,10 @@ export function ProductsListPage() {
           className="max-w-xs"
         />
         <Label className="flex items-center gap-2 text-sm cursor-pointer font-normal">
-          <input
-            type="checkbox"
+          <Checkbox
+            id="low-stock-filter"
             checked={lowStockOnly}
-            onChange={(e) => setLowStockOnly(e.target.checked)}
-            className="rounded"
+            onCheckedChange={(checked) => setLowStockOnly(checked === true)}
           />
           Low stock only
         </Label>

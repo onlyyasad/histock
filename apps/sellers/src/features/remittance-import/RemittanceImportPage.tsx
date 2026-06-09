@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { parseFile, type ParsedRow } from './utils/parseFile'
 import {
@@ -270,12 +271,12 @@ export function RemittanceImportPage() {
         <div className="text-center py-10 space-y-3">
           <p className="text-3xl">✓</p>
           <p className="font-semibold">Remittance batch created</p>
-          <a
+          <Link
             href="/analytics/remittance"
             className="text-primary hover:underline text-sm block"
           >
             View in Remittance Tracker
-          </a>
+          </Link>
         </div>
       )}
     </div>
