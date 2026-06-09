@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import {
   Dialog,
   DialogContent,
@@ -99,37 +100,39 @@ export function SocialPostButton({ productName, price }: Props) {
           <div className="space-y-4">
             <div className="flex gap-2">
               {(['facebook', 'whatsapp'] as Platform[]).map((p) => (
-                <button
+                <Button
                   key={p}
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     setPlatform(p)
                     setGeneratedText(null)
                     setJobId(null)
                   }}
-                  className={`flex-1 rounded border px-3 py-1.5 text-sm transition-colors ${
-                    platform === p
-                      ? 'bg-purple-600 text-white border-purple-600'
-                      : 'hover:bg-muted border-border'
-                  }`}
+                  className={cn(
+                    'flex-1',
+                    platform === p && 'bg-purple-600 text-white border-purple-600 hover:bg-purple-700 hover:text-white',
+                  )}
                 >
                   {p === 'facebook' ? '📘 Facebook' : '💬 WhatsApp'}
-                </button>
+                </Button>
               ))}
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleGenerate}
               disabled={isPolling}
-              className="w-full flex items-center justify-center gap-2 rounded border px-4 py-2 text-sm font-medium hover:bg-purple-50 hover:border-purple-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full hover:bg-purple-50 hover:border-purple-300"
             >
               {isPolling ? (
                 <><span className="animate-spin inline-block">⟳</span>Generating...</>
               ) : (
                 <><span>✨</span>{generatedText ? 'Regenerate' : 'Generate Caption'}</>
               )}
-            </button>
+            </Button>
 
             {generatedText && (
               <div className="rounded-md border bg-muted/40 p-3 space-y-2">

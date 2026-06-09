@@ -180,7 +180,7 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
         </Button>
       )}
       {order.isCodPaymentConfirmed && (
-        <p className="text-green-600 text-sm text-center">✓ COD payment confirmed</p>
+        <p className="text-success text-sm text-center">✓ COD payment confirmed</p>
       )}
 
       {nextActions.length > 0 && (

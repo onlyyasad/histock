@@ -12,6 +12,7 @@ import { VariantsSection } from './components/VariantsSection'
 import { ProductEditForm } from './components/ProductEditForm'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Alert } from '@/components/ui/alert'
 import { cn, fmtMoney } from '@/lib/utils'
 import {
   AlertDialog,
@@ -113,9 +114,9 @@ export function ProductDetailPage({ productId }: { productId: string }) {
       <div>
         <h2 className="font-semibold mb-3">Purchase History</h2>
         {(product.costEntries ?? []).length === 0 && (
-          <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 mb-3">
+          <Alert className="mb-3 border-warning/30 bg-warning/10 text-warning">
             Log a purchase above to track cost of goods and see margin data.
-          </div>
+          </Alert>
         )}
         <LotHistoryTable entries={product.costEntries ?? []} />
       </div>

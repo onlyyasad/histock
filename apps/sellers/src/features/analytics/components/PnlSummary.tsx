@@ -39,22 +39,22 @@ export function PnlSummary({ data }: Props) {
           </CardContent>
         </Card>
 
-        <Card className={cn(isPositive ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200')}>
+        <Card className={cn(isPositive ? 'bg-success/10 border-success/30' : 'bg-destructive/10 border-destructive/30')}>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Gross Profit</p>
-            <p className={cn('text-2xl font-bold', isPositive ? 'text-green-700' : 'text-destructive')}>
+            <p className={cn('text-2xl font-bold', isPositive ? 'text-success' : 'text-destructive')}>
               {fmt(data.profit)}
             </p>
-            <p className={cn('text-xs', isPositive ? 'text-green-500' : 'text-red-500')}>
+            <p className={cn('text-xs', isPositive ? 'text-success/70' : 'text-red-500')}>
               {data.margin.toFixed(1)}% margin
             </p>
           </CardContent>
         </Card>
 
-        <Card className={cn(isPositive ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200')}>
+        <Card className={cn(isPositive ? 'bg-success/10 border-success/30' : 'bg-destructive/10 border-destructive/30')}>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Margin</p>
-            <p className={cn('text-2xl font-bold', isPositive ? 'text-green-700' : 'text-destructive')}>
+            <p className={cn('text-2xl font-bold', isPositive ? 'text-success' : 'text-destructive')}>
               {data.margin.toFixed(1)}%
             </p>
           </CardContent>

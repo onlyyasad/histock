@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { parseFile, type ParsedRow } from './utils/parseFile'
 import {
@@ -96,7 +97,7 @@ export function RemittanceImportPage() {
   }
 
   const confidenceColor =
-    confidence >= 70 ? 'text-green-600' : confidence >= 40 ? 'text-yellow-600' : 'text-destructive'
+    confidence >= 70 ? 'text-success' : confidence >= 40 ? 'text-warning' : 'text-destructive'
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
@@ -194,7 +195,7 @@ export function RemittanceImportPage() {
       {step === 'preview' && (
         <div className="space-y-4">
           <div className="flex gap-4">
-            <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">
+            <Badge variant="outline" className="bg-success/10 text-success border-success/30 hover:bg-success/10">
               {matched.length} matched
             </Badge>
             {unmatched.length > 0 && (
@@ -270,12 +271,12 @@ export function RemittanceImportPage() {
         <div className="text-center py-10 space-y-3">
           <p className="text-3xl">✓</p>
           <p className="font-semibold">Remittance batch created</p>
-          <a
+          <Link
             href="/analytics/remittance"
             className="text-primary hover:underline text-sm block"
           >
             View in Remittance Tracker
-          </a>
+          </Link>
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import { useGetAiUsageQuery, useGenerateAiMutation, useGetAiResultQuery } from '@/store/aiApi'
 
 interface Props {
@@ -53,12 +54,14 @@ export function AiDescriptionButton({ productName, category, onGenerated }: Prop
   }
 
   return (
-    <button
+    <Button
       type="button"
+      variant="outline"
+      size="sm"
       onClick={handleGenerate}
       disabled={disabled}
       title={quota?.limit === 0 ? 'Upgrade to Growth plan to use AI features' : undefined}
-      className="flex items-center gap-2 text-sm border rounded px-3 py-1.5 min-h-[44px] hover:bg-purple-50 hover:border-purple-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="flex items-center gap-2 min-h-[44px] hover:bg-purple-50 hover:border-purple-300"
     >
       {isPolling || isQueuing ? (
         <><span className="animate-spin inline-block">⟳</span>Generating...</>
@@ -67,6 +70,6 @@ export function AiDescriptionButton({ productName, category, onGenerated }: Prop
       ) : (
         <><span>✨</span>Write with AI</>
       )}
-    </button>
+    </Button>
   )
 }

@@ -105,7 +105,7 @@ export function TeamSettingsPage() {
                         if (v) handleRoleChange(m.id, v as 'manager' | 'staff')
                       }}
                     >
-                      <SelectTrigger className="h-8 w-28 text-xs">
+                      <SelectTrigger className="h-9 w-28 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

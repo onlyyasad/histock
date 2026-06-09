@@ -70,7 +70,7 @@ export function SwipeableOrderCard({ orderId, orderNumber, customerName, status,
           <button
             onClick={handleMarkProcessing}
             disabled={isLoading}
-            className="w-[70px] bg-blue-600 text-white text-xs flex flex-col items-center justify-center gap-1 disabled:opacity-50"
+            className="w-[70px] bg-primary text-primary-foreground text-xs flex flex-col items-center justify-center gap-1 disabled:opacity-50"
           >
             <span className="text-lg">▶</span>
             <span>Process</span>
@@ -78,7 +78,7 @@ export function SwipeableOrderCard({ orderId, orderNumber, customerName, status,
         )}
         <button
           onClick={handleClose}
-          className="w-[70px] bg-gray-400 text-white text-xs flex flex-col items-center justify-center gap-1"
+          className="w-[70px] bg-muted text-muted-foreground text-xs flex flex-col items-center justify-center gap-1"
         >
           <span className="text-lg">✕</span>
           <span>Close</span>
@@ -88,7 +88,7 @@ export function SwipeableOrderCard({ orderId, orderNumber, customerName, status,
       {/* Card body — slides left on swipe */}
       <Link
         href={`/orders/${orderId}`}
-        className="bg-white border rounded-lg p-4 relative z-10 flex items-center justify-between block"
+        className="bg-background border rounded-lg p-4 relative z-10 flex items-center justify-between block"
         style={{
           transform: `translateX(${offset}px)`,
           transition: isRevealed || offset === 0 ? 'transform 0.2s ease' : 'none',
@@ -102,7 +102,7 @@ export function SwipeableOrderCard({ orderId, orderNumber, customerName, status,
       >
         <div>
           <p className="font-mono text-sm font-medium">{formatOrderNumber(orderNumber)}</p>
-          <p className="text-gray-500 text-sm">{customerName}</p>
+          <p className="text-muted-foreground text-sm">{customerName}</p>
         </div>
         <div className="text-right space-y-1">
           <OrderStatusBadge status={status} />
