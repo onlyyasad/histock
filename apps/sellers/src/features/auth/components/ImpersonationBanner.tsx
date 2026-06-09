@@ -43,14 +43,14 @@ export function ImpersonationBanner({
   }
 
   return (
-    <div className="w-full bg-amber-500 text-amber-950 px-4 py-2 flex items-center justify-between text-sm">
+    <div className="w-full bg-warning text-warning-foreground px-4 py-2 flex items-center justify-between text-sm">
       <span className="font-medium">
         Admin impersonation session active — expires in {countdown}
       </span>
       <Button
         size="sm"
         variant="outline"
-        className="h-7 text-xs border-amber-700 text-amber-900 hover:bg-amber-600"
+        className="text-xs border-warning text-warning-foreground hover:bg-warning/80"
         onClick={handleEnd}
         disabled={isLoading}
       >

@@ -130,7 +130,7 @@ export function NewOrderPage() {
             </Button>
           </div>
           {foundCustomer && (
-            <p className="text-sm text-green-600">
+            <p className="text-sm text-success">
               ✓ {foundCustomer.name} — {foundCustomer.phone}
             </p>
           )}

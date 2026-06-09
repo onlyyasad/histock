@@ -13,8 +13,8 @@ export function StatCard({ label, value, subtext, variant = 'default' }: StatCar
     <Card
       className={cn(
         'shadow-sm',
-        variant === 'warning' && 'bg-amber-50 border-amber-200',
-        variant === 'danger' && 'bg-red-50 border-red-200',
+        variant === 'warning' && 'bg-warning/10 border-warning/30',
+        variant === 'danger' && 'bg-destructive/10 border-destructive/30',
       )}
     >
       <CardContent className="p-5">

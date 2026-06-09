@@ -96,7 +96,7 @@ export function ProductsListPage() {
                         ? 'text-muted-foreground/40'
                         : margin < 10
                           ? 'text-destructive font-medium'
-                          : 'text-green-600 font-medium',
+                          : 'text-success font-medium',
                     )}
                   >
                     {margin !== null ? `${margin.toFixed(1)}%` : '—'}
