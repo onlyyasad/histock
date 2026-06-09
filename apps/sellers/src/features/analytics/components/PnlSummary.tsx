@@ -39,7 +39,7 @@ export function PnlSummary({ data }: Props) {
           </CardContent>
         </Card>
 
-        <Card className={cn(isPositive ? 'bg-success/10 border-success/30' : 'bg-red-50 border-red-200')}>
+        <Card className={cn(isPositive ? 'bg-success/10 border-success/30' : 'bg-destructive/10 border-destructive/30')}>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Gross Profit</p>
             <p className={cn('text-2xl font-bold', isPositive ? 'text-success' : 'text-destructive')}>
@@ -51,7 +51,7 @@ export function PnlSummary({ data }: Props) {
           </CardContent>
         </Card>
 
-        <Card className={cn(isPositive ? 'bg-success/10 border-success/30' : 'bg-red-50 border-red-200')}>
+        <Card className={cn(isPositive ? 'bg-success/10 border-success/30' : 'bg-destructive/10 border-destructive/30')}>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">Margin</p>
             <p className={cn('text-2xl font-bold', isPositive ? 'text-success' : 'text-destructive')}>
