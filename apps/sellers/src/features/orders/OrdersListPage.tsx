@@ -99,24 +99,26 @@ export function OrdersListPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Orders</h1>
-        <div className="flex items-center gap-2">
-          <ExportButton
-            endpoint="/exports/orders"
-            label="Export CSV"
-            filename="orders.csv"
-            params={{
-              status: status !== '__all__' ? status : undefined,
-              from: from || undefined,
-              to: to || undefined,
-            }}
-          />
-          <Link href="/orders/new" className={cn(buttonVariants({ size: 'sm' }), 'min-h-[44px]')}>
-            + New Order
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="Orders"
+        actions={
+          <>
+            <ExportButton
+              endpoint="/exports/orders"
+              label="Export CSV"
+              filename="orders.csv"
+              params={{
+                status: status !== '__all__' ? status : undefined,
+                from: from || undefined,
+                to: to || undefined,
+              }}
+            />
+            <Link href="/orders/new" className={cn(buttonVariants({ size: 'sm' }), 'min-h-[44px]')}>
+              + New Order
+            </Link>
+          </>
+        }
+      />
 
       {/* Filter bar */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 p-4 bg-muted/40 rounded-lg">
