@@ -6,15 +6,20 @@ import { useGetOrdersQuery } from './store/ordersApi'
 import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
 import { OrderStatusBadge } from './components/OrderStatusBadge'
 import { SwipeableOrderCard } from './components/SwipeableOrderCard'
-import { formatOrderNumber } from '@/lib/format'
-import { PAYMENT_METHOD_LABELS } from '@/lib/format'
+import { formatOrderNumber, formatDate, PAYMENT_METHOD_LABELS } from '@/lib/format'
 import { ExportButton } from '@/features/exports/ExportButton'
 import { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import {
   Select,
   SelectContent,
@@ -210,30 +215,48 @@ export function OrdersListPage() {
         ))}
       </div>
 
-      {/* Desktop: list */}
-      <Card className="hidden md:block divide-y overflow-hidden">
+      {/* Desktop: table */}
+      <div className="hidden md:block rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead className="text-right">Items</TableHead>
+              <TableHead>Payment</TableHead>
+              <TableHead>Courier</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders?.map((order) => (
+              <TableRow
+                key={order.id}
+                className="cursor-pointer"
+                onClick={() => router.push(`/orders/${order.id}`)}
+              >
+                <TableCell>
+                  <Link href={`/orders/${order.id}`} className="font-mono font-medium" onClick={(e) => e.stopPropagation()}>
+                    {formatOrderNumber(order.orderNumber)}
+                  </Link>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{formatDate(order.createdAt)}</TableCell>
+                <TableCell>{order.customer.name}</TableCell>
+                <TableCell className="text-right tabular-nums">{order.items.length}</TableCell>
+                <TableCell className="text-muted-foreground">{PAYMENT_METHOD_LABELS[order.paymentMethod as keyof typeof PAYMENT_METHOD_LABELS]}</TableCell>
+                <TableCell className="text-muted-foreground">{order.courier?.name ?? '—'}</TableCell>
+                <TableCell><OrderStatusBadge status={order.status} /></TableCell>
+                <TableCell className="text-right font-mono tabular-nums">৳{fmtMoney(order.total)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
         {orders?.length === 0 && (
           <p className="p-6 text-muted-foreground text-center">No orders match your filters.</p>
         )}
-        {orders?.map((order, i) => (
-          <div key={order.id}>
-            {i > 0 && <Separator />}
-            <Link
-              href={`/orders/${order.id}`}
-              className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-            >
-              <div>
-                <p className="font-medium">{formatOrderNumber(order.orderNumber)}</p>
-                <p className="text-sm text-muted-foreground">{order.customer.name}</p>
-              </div>
-              <div className="text-right space-y-1">
-                <OrderStatusBadge status={order.status} />
-                <p className="text-sm font-medium">৳{fmtMoney(order.total)}</p>
-              </div>
-            </Link>
-          </div>
-        ))}
-      </Card>
+      </div>
 
       {/* Pagination */}
       {(orders?.length ?? 0) === PAGE_SIZE && (
