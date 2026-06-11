@@ -211,6 +211,8 @@ export function OrdersListPage() {
             customerName={order.customer.name}
             status={order.status}
             total={order.total}
+            createdAt={order.createdAt}
+            paymentMethod={order.paymentMethod}
           />
         ))}
       </div>

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useUpdateOrderStatusMutation } from '../store/ordersApi'
 import { fmtMoney } from '@/lib/utils'
 import { OrderStatusBadge } from './OrderStatusBadge'
-import { formatOrderNumber } from '@/lib/format'
+import { formatOrderNumber, formatDate, PAYMENT_METHOD_LABELS } from '@/lib/format'
 import { toast } from 'sonner'
 
 interface Props {
@@ -14,12 +14,14 @@ interface Props {
   customerName: string
   status: string
   total: number
+  createdAt: string
+  paymentMethod: string
 }
 
 const SWIPE_THRESHOLD = 80  // px — minimum swipe to trigger reveal
 const SWIPE_MAX = 140       // px — max card offset when revealed
 
-export function SwipeableOrderCard({ orderId, orderNumber, customerName, status, total }: Props) {
+export function SwipeableOrderCard({ orderId, orderNumber, customerName, status, total, createdAt, paymentMethod }: Props) {
   const [offset, setOffset] = useState(0)
   const [isRevealed, setIsRevealed] = useState(false)
   const startX = useRef(0)
@@ -103,6 +105,9 @@ export function SwipeableOrderCard({ orderId, orderNumber, customerName, status,
         <div>
           <p className="font-mono text-sm font-medium">{formatOrderNumber(orderNumber)}</p>
           <p className="text-muted-foreground text-sm">{customerName}</p>
+          <p className="text-xs text-muted-foreground">
+            {formatDate(createdAt)} · {PAYMENT_METHOD_LABELS[paymentMethod as keyof typeof PAYMENT_METHOD_LABELS] ?? paymentMethod}
+          </p>
         </div>
         <div className="text-right space-y-1">
           <OrderStatusBadge status={status} />
