@@ -1,6 +1,6 @@
 import { Queue, Worker, type Job } from 'bullmq'
 import { redis } from '../shared/redis/client'
-import { generateText } from '../ai/groq'
+import { generateText } from '../ai/openai'
 import { prismaAdmin } from '../prisma/client'
 
 export const AI_QUEUE = 'ai-generation'

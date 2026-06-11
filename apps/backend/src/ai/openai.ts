@@ -1,11 +1,9 @@
-import Groq from 'groq-sdk'
+import OpenAI from 'openai'
 import config from '../config'
 
-// Single platform API key — not per-business. Groq free tier is rate-limited
-// but sufficient for the usage volumes at Growth/Business tier.
-const groq = new Groq({ apiKey: config.groq.apiKey })
+const openai = new OpenAI({ apiKey: config.openai.apiKey })
 
-export const MODEL = 'llama3-8b-8192'
+export const MODEL = 'gpt-4o-mini'
 
 export interface GenerationResult {
   text: string
@@ -13,7 +11,7 @@ export interface GenerationResult {
 }
 
 export async function generateText(prompt: string): Promise<GenerationResult> {
-  const completion = await groq.chat.completions.create({
+  const completion = await openai.chat.completions.create({
     model: MODEL,
     messages: [{ role: 'user', content: prompt }],
     max_tokens: 500,

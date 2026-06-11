@@ -28,7 +28,7 @@ export default {
     fromAddress: process.env.RESEND_FROM_ADDRESS ?? 'noreply@histock.app',
   },
   frontend_url: process.env.FRONTEND_URL ?? 'http://localhost:3000',
-  groq: {
-    apiKey: process.env.GROQ_API_KEY ?? '',
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY ?? '',
   },
 }
