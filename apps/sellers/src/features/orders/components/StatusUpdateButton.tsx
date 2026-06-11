@@ -4,16 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useUpdateOrderStatusMutation } from '../store/ordersApi'
 import { Button } from '@/components/ui/button'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 
 interface Props {
   orderId: string
@@ -48,31 +39,25 @@ export function StatusUpdateButton({ orderId, currentStatus, toStatus, label, va
     }
   }
 
-  const btnVariant = variant === 'primary' ? 'default' : variant === 'danger' ? 'destructive' : 'outline'
+  const btnVariant = variant === 'primary' ? 'default' : 'outline'
+  const btnClass = variant === 'danger' ? 'text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive' : ''
 
   return (
     <>
-      <Button variant={btnVariant} size="sm" className="min-h-[44px]" onClick={() => setOpen(true)} disabled={isLoading}>
+      <Button variant={btnVariant} size="sm" className={btnClass} onClick={() => setOpen(true)} disabled={isLoading}>
         {label}
       </Button>
 
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Status Change</AlertDialogTitle>
-            <AlertDialogDescription>
-              Move order from <strong>{currentStatus.replace(/_/g, ' ')}</strong> to{' '}
-              <strong>{toStatus.replace(/_/g, ' ')}</strong>?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isLoading}>
-              {isLoading ? 'Updating...' : 'Confirm'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Confirm status change"
+        description={`Move order from ${currentStatus.replace(/_/g, ' ')} to ${toStatus.replace(/_/g, ' ')}?`}
+        confirmLabel="Confirm"
+        destructive={variant === 'danger'}
+        loading={isLoading}
+        onConfirm={handleConfirm}
+      />
     </>
   )
 }

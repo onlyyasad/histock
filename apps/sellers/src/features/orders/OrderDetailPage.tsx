@@ -174,17 +174,20 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
           </Card>
 
           {nextActions.length > 0 && (
-            <div className="flex flex-wrap gap-3">
-              {nextActions.map(({ toStatus, label, variant }) => (
-                <StatusUpdateButton
-                  key={toStatus}
-                  orderId={orderId}
-                  currentStatus={order.status}
-                  toStatus={toStatus}
-                  label={label}
-                  variant={variant}
-                />
-              ))}
+            <div className="space-y-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Next step</p>
+              <div className="flex flex-wrap gap-3">
+                {nextActions.map(({ toStatus, label, variant }) => (
+                  <StatusUpdateButton
+                    key={toStatus}
+                    orderId={orderId}
+                    currentStatus={order.status}
+                    toStatus={toStatus}
+                    label={label}
+                    variant={variant}
+                  />
+                ))}
+              </div>
             </div>
           )}
 
