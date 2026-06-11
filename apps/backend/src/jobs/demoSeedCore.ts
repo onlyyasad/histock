@@ -31,6 +31,7 @@ export async function reseedDemoData(): Promise<string> {
   await prismaAdmin.product.deleteMany({ where: { businessId } })
   await prismaAdmin.customerAddress.deleteMany({ where: { businessId } })
   await prismaAdmin.customer.deleteMany({ where: { businessId } })
+  await prismaAdmin.teamInvite.deleteMany({ where: { businessId } })
   await prismaAdmin.user.deleteMany({ where: { businessId } })
 
   const [ownerHash, managerHash, staffHash] = await Promise.all([
