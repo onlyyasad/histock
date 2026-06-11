@@ -9,6 +9,7 @@ import {
   useUpdateMemberRoleMutation,
   useRemoveTeamMemberMutation,
 } from './store/teamApi'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -37,6 +38,7 @@ export function TeamSettingsPage() {
 
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<'manager' | 'staff'>('staff')
+  const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null)
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,13 +66,15 @@ export function TeamSettingsPage() {
     }
   }
 
-  const handleRemove = async (userId: string, name: string) => {
-    if (!confirm(`Remove ${name} from your team?`)) return
+  const handleRemove = async () => {
+    if (!removeTarget) return
     try {
-      await removeMember(userId).unwrap()
-      toast.success(`${name} removed`)
+      await removeMember(removeTarget.id).unwrap()
+      toast.success(`${removeTarget.name} removed`)
     } catch {
       toast.error('Failed to remove team member')
+    } finally {
+      setRemoveTarget(null)
     }
   }
 
@@ -117,7 +121,7 @@ export function TeamSettingsPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleRemove(m.id, m.name)}
+                      onClick={() => setRemoveTarget({ id: m.id, name: m.name })}
                       disabled={removing}
                       className="text-destructive hover:text-destructive text-xs h-auto py-1 px-2"
                     >
@@ -189,6 +193,16 @@ export function TeamSettingsPage() {
           </form>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={removeTarget !== null}
+        onOpenChange={(open) => { if (!open) setRemoveTarget(null) }}
+        title="Remove team member"
+        description={`Remove ${removeTarget?.name ?? ''} from your team? They will lose access immediately.`}
+        confirmLabel="Remove"
+        destructive
+        onConfirm={handleRemove}
+      />
     </div>
   )
 }
