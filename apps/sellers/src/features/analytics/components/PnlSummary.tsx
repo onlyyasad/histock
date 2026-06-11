@@ -45,7 +45,7 @@ export function PnlSummary({ data }: Props) {
             <p className={cn('text-2xl font-bold', isPositive ? 'text-success' : 'text-destructive')}>
               {fmt(data.profit)}
             </p>
-            <p className={cn('text-xs', isPositive ? 'text-success/70' : 'text-red-500')}>
+            <p className={cn('text-xs', isPositive ? 'text-success/70' : 'text-destructive')}>
               {data.margin.toFixed(1)}% margin
             </p>
           </CardContent>
