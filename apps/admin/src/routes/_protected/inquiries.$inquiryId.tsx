@@ -8,6 +8,7 @@ import {
   type ContactInquiry,
   type ContactInquiryMessage,
 } from '@/store/adminApiSlice'
+import { useSetBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +33,8 @@ function InquiryDetailPage({ inquiryId }: { inquiryId: string }) {
   const [updateInquiry, { isLoading: submitting }] = useUpdateInquiryMutation()
   const [reply, setReply] = useState('')
   const [messages, setMessages] = useState<ContactInquiryMessage[]>([])
+
+  useSetBreadcrumbEntity(inquiry?.name ?? null)
 
   useEffect(() => {
     if (inquiry?.messages) {

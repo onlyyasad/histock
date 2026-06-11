@@ -11,6 +11,7 @@ import {
   useGetMeQuery,
   type SubscriptionPayment,
 } from '@/store/adminApiSlice'
+import { useSetBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -69,6 +70,8 @@ function BusinessDetailPage({ businessId }: { businessId: string }) {
   const [payPeriodStart, setPayPeriodStart] = useState('')
   const [payPeriodEnd, setPayPeriodEnd] = useState('')
   const [payNotes, setPayNotes] = useState('')
+
+  useSetBreadcrumbEntity(business?.name ?? null)
 
   if (isLoading) {
     return (

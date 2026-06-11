@@ -13,6 +13,7 @@ import { PrintableInvoice } from '@/features/invoices/PrintableInvoice'
 import { CostBreakdownPanel } from './components/CostBreakdownPanel'
 import { OrderNotesPanel } from './components/OrderNotesPanel'
 import { SchedulePanel } from './components/SchedulePanel'
+import { useSetBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -50,6 +51,8 @@ const NEXT_STATUSES: Record<string, Array<{ toStatus: string; label: string; var
 export function OrderDetailPage({ orderId }: { orderId: string }) {
   const { data: order, isLoading, isError } = useGetOrderQuery(orderId)
   const [confirmCodPayment, { isLoading: confirmingCod }] = useConfirmCodPaymentMutation()
+
+  useSetBreadcrumbEntity(order ? formatOrderNumber(order.orderNumber) : null)
 
   if (isLoading) return <div className="p-6 text-muted-foreground">Loading...</div>
   if (isError || !order) return <div className="p-6 text-destructive">Order not found.</div>

@@ -10,6 +10,7 @@ import { LotHistoryTable } from './components/LotHistoryTable'
 import { SocialPostButton } from './components/SocialPostButton'
 import { VariantsSection } from './components/VariantsSection'
 import { ProductEditForm } from './components/ProductEditForm'
+import { useSetBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Alert } from '@/components/ui/alert'
@@ -32,6 +33,8 @@ export function ProductDetailPage({ productId }: { productId: string }) {
   const [showLogForm, setShowLogForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
   const [deleteProduct, { isLoading: deleting }] = useDeleteProductMutation()
+
+  useSetBreadcrumbEntity(product?.name ?? null)
 
   if (isLoading) return <div className="p-6 text-muted-foreground">Loading...</div>
   if (!product) return <div className="p-6 text-destructive">Product not found</div>

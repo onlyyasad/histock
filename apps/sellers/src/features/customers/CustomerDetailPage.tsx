@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { fmtMoney } from '@/lib/utils'
 
 import { formatOrderNumber } from '@/lib/format'
+import { useSetBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
 
 export function CustomerDetailPage({ customerId }: { customerId: string }) {
   const { data: customer, isLoading } = useGetCustomerQuery(customerId)
@@ -28,6 +29,8 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
   const [showFlagForm, setShowFlagForm] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', phone: '', email: '' })
+
+  useSetBreadcrumbEntity(customer?.name ?? null)
 
   useEffect(() => {
     if (customer) {
