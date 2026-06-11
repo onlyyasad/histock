@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Paginator } from '@/components/shared/Paginator'
 
 function statusVariant(status: string): 'default' | 'secondary' | 'outline' {
   if (status === 'active') return 'default'
@@ -136,25 +137,11 @@ function BusinessListPage() {
         </TableBody>
       </Table>
 
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page === 1}
-          onClick={() => setPage((p) => p - 1)}
-        >
-          Previous
-        </Button>
-        <span className="text-sm text-muted-foreground">Page {page}</span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!businesses || businesses.length < 20}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          Next
-        </Button>
-      </div>
+      <Paginator
+        page={page}
+        onPageChange={setPage}
+        hasNext={(businesses?.length ?? 0) >= 20}
+      />
     </div>
   )
 }
