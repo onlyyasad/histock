@@ -41,7 +41,7 @@ export class AnalyticsService {
         JOIN order_items oi ON oca.order_item_id = oi.id
         GROUP BY oi.order_id
       ) oca_agg ON oca_agg.order_id = o.id
-      WHERE o.business_id = ${businessId}::uuid
+      WHERE o.business_id = ${businessId}
         AND o.created_at >= ${from}
         AND o.created_at < ${to}
         AND o.deleted_at IS NULL
@@ -55,7 +55,7 @@ export class AnalyticsService {
         COUNT(*)::bigint                       AS count,
         COALESCE(SUM(total), 0)::text          AS total
       FROM orders
-      WHERE business_id = ${businessId}::uuid
+      WHERE business_id = ${businessId}
         AND created_at >= ${from}
         AND created_at < ${to}
         AND deleted_at IS NULL
