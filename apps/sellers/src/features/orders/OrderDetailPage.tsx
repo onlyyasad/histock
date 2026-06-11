@@ -15,6 +15,7 @@ import { SchedulePanel } from './components/SchedulePanel'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { useSetBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
 import { PaymentPanel } from './components/PaymentPanel'
+import { DeliveryPanel } from './components/DeliveryPanel'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -210,6 +211,12 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
             paymentMethod={order.paymentMethod}
             status={order.status}
             isCodPaymentConfirmed={order.isCodPaymentConfirmed}
+          />
+
+          <DeliveryPanel
+            courierName={order.courier?.name ?? null}
+            deliveryAttempts={order.deliveryAttempts}
+            deliveryFailedAt={order.deliveryFailedAt}
           />
 
           <OrderMetadataPanel
