@@ -2,9 +2,8 @@
 
 import Link from 'next/link'
 import { formatOrderNumber, formatDateTime } from '@/lib/format'
-import { toast } from 'sonner'
 import { fmtMoney } from '@/lib/utils'
-import { useGetOrderQuery, useConfirmCodPaymentMutation } from './store/ordersApi'
+import { useGetOrderQuery } from './store/ordersApi'
 import { OrderMetadataPanel } from './components/OrderMetadataPanel'
 import { OrderStatusBadge } from './components/OrderStatusBadge'
 import { StatusUpdateButton } from './components/StatusUpdateButton'
@@ -15,8 +14,8 @@ import { OrderNotesPanel } from './components/OrderNotesPanel'
 import { SchedulePanel } from './components/SchedulePanel'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { useSetBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
+import { PaymentPanel } from './components/PaymentPanel'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -52,7 +51,6 @@ const NEXT_STATUSES: Record<string, Array<{ toStatus: string; label: string; var
 
 export function OrderDetailPage({ orderId }: { orderId: string }) {
   const { data: order, isLoading, isError } = useGetOrderQuery(orderId)
-  const [confirmCodPayment, { isLoading: confirmingCod }] = useConfirmCodPaymentMutation()
 
   useSetBreadcrumbEntity(order ? formatOrderNumber(order.orderNumber) : null)
 
@@ -80,15 +78,6 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
   if (isError || !order) return <div className="p-6 text-destructive">Order not found.</div>
 
   const nextActions = NEXT_STATUSES[order.status] ?? []
-
-  const handleConfirmCod = async () => {
-    try {
-      await confirmCodPayment(orderId).unwrap()
-      toast.success('COD payment confirmed')
-    } catch {
-      toast.error('Failed to confirm payment')
-    }
-  }
 
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
@@ -183,15 +172,6 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
             </CardContent>
           </Card>
 
-          {order.paymentMethod === 'cod' && order.status === 'delivered' && !order.isCodPaymentConfirmed && (
-            <Button onClick={handleConfirmCod} disabled={confirmingCod} className="w-full">
-              {confirmingCod ? 'Confirming...' : 'Confirm COD Payment Received'}
-            </Button>
-          )}
-          {order.isCodPaymentConfirmed && (
-            <p className="text-success text-sm text-center">✓ COD payment confirmed</p>
-          )}
-
           {nextActions.length > 0 && (
             <div className="flex flex-wrap gap-3">
               {nextActions.map(({ toStatus, label, variant }) => (
@@ -224,6 +204,13 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
               </Link>
             </CardContent>
           </Card>
+
+          <PaymentPanel
+            orderId={orderId}
+            paymentMethod={order.paymentMethod}
+            status={order.status}
+            isCodPaymentConfirmed={order.isCodPaymentConfirmed}
+          />
 
           <OrderMetadataPanel
             orderId={orderId}
