@@ -15,6 +15,7 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
 } from '@/components/ui/sidebar'
+import { Badge } from '@/components/ui/badge'
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -60,8 +61,14 @@ export function AppSidebar() {
     }
   }
 
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(href + '/')
+  const ALL_NAV_HREFS = [...PRIMARY_NAV, ...SECONDARY_NAV].map((n) => n.href)
+
+  const isActive = (href: string) => {
+    const matches = (h: string) => pathname === h || pathname.startsWith(h + '/')
+    if (!matches(href)) return false
+    // exact-match priority: another nav item that matches more specifically wins
+    return !ALL_NAV_HREFS.some((other) => other !== href && other.length > href.length && matches(other))
+  }
 
   return (
     <Sidebar collapsible="icon">
@@ -124,6 +131,12 @@ export function AppSidebar() {
             <div className="px-2 py-1.5 group-data-[collapsible=icon]:hidden">
               <p className="text-sm font-medium truncate">{user?.name}</p>
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+              <div className="mt-1.5 flex items-center gap-1.5">
+                <p className="text-xs text-muted-foreground truncate">{user?.businessName}</p>
+                {user?.role && (
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 capitalize">{user.role}</Badge>
+                )}
+              </div>
             </div>
           </SidebarMenuItem>
           <SidebarMenuItem>
