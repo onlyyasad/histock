@@ -12,6 +12,11 @@ import { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { Paginator } from '@/components/shared/Paginator'
+import { TableSkeleton, ListSkeleton } from '@/components/shared/TableSkeleton'
+import { ShoppingBag } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -81,10 +86,9 @@ export function OrdersListPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-3 animate-pulse">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="h-16 bg-muted rounded-lg" />
-        ))}
+      <div className="p-4 md:p-6 space-y-4">
+        <TableSkeleton rows={8} className="hidden md:block" />
+        <ListSkeleton rows={5} className="md:hidden" />
       </div>
     )
   }
@@ -198,83 +202,98 @@ export function OrdersListPage() {
         <p className="text-xs text-muted-foreground">Refreshing...</p>
       )}
 
-      {/* Mobile: swipeable cards */}
-      <div className="space-y-2 md:hidden">
-        {orders?.length === 0 && (
-          <p className="p-6 text-muted-foreground text-center">No orders match your filters.</p>
-        )}
-        {orders?.map((order) => (
-          <SwipeableOrderCard
-            key={order.id}
-            orderId={order.id}
-            orderNumber={order.orderNumber}
-            customerName={order.customer.name}
-            status={order.status}
-            total={order.total}
-            createdAt={order.createdAt}
-            paymentMethod={order.paymentMethod}
+      {orders?.length === 0 ? (
+        hasActiveFilters ? (
+          <EmptyState
+            icon={ShoppingBag}
+            title="No orders match your filters"
+            description="Try adjusting or clearing the filters."
+            action={
+              <Button variant="outline" size="sm"
+                onClick={() => updateParams({ status: null, courierId: null, paymentMethod: null, from: null, to: null, page: null })}>
+                Clear filters
+              </Button>
+            }
           />
-        ))}
-      </div>
-
-      {/* Desktop: table */}
-      <div className="hidden md:block rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Order</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead className="text-right">Items</TableHead>
-              <TableHead>Payment</TableHead>
-              <TableHead>Courier</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        ) : (
+          <EmptyState
+            icon={ShoppingBag}
+            title="No orders yet"
+            description="Orders you log from your social media DMs appear here."
+            action={
+              <Link href="/orders/new" className={cn(buttonVariants({ size: 'sm' }))}>
+                + New order
+              </Link>
+            }
+          />
+        )
+      ) : (
+        <>
+          {/* Mobile: swipeable cards */}
+          <div className="space-y-2 md:hidden">
             {orders?.map((order) => (
-              <TableRow
+              <SwipeableOrderCard
                 key={order.id}
-                className="cursor-pointer"
-                onClick={() => router.push(`/orders/${order.id}`)}
-              >
-                <TableCell>
-                  <Link href={`/orders/${order.id}`} className="font-mono font-medium" onClick={(e) => e.stopPropagation()}>
-                    {formatOrderNumber(order.orderNumber)}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-muted-foreground">{formatDate(order.createdAt)}</TableCell>
-                <TableCell>{order.customer.name}</TableCell>
-                <TableCell className="text-right tabular-nums">{order.items.length}</TableCell>
-                <TableCell className="text-muted-foreground">{PAYMENT_METHOD_LABELS[order.paymentMethod as keyof typeof PAYMENT_METHOD_LABELS]}</TableCell>
-                <TableCell className="text-muted-foreground">{order.courier?.name ?? '—'}</TableCell>
-                <TableCell><OrderStatusBadge status={order.status} /></TableCell>
-                <TableCell className="text-right font-mono tabular-nums">৳{fmtMoney(order.total)}</TableCell>
-              </TableRow>
+                orderId={order.id}
+                orderNumber={order.orderNumber}
+                customerName={order.customer.name}
+                status={order.status}
+                total={order.total}
+                createdAt={order.createdAt}
+                paymentMethod={order.paymentMethod}
+              />
             ))}
-          </TableBody>
-        </Table>
-        {orders?.length === 0 && (
-          <p className="p-6 text-muted-foreground text-center">No orders match your filters.</p>
-        )}
-      </div>
+          </div>
 
-      {/* Pagination */}
-      {(orders?.length ?? 0) === PAGE_SIZE && (
-        <div className="flex justify-center pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => updateParams({ page: String(page + 1) })}
-            disabled={isFetching}
-          >
-            {isFetching ? 'Loading...' : 'Load more'}
-          </Button>
-        </div>
+          {/* Desktop: table */}
+          <div className="hidden md:block rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead className="text-right">Items</TableHead>
+                  <TableHead>Payment</TableHead>
+                  <TableHead>Courier</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {orders?.map((order) => (
+                  <TableRow
+                    key={order.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/orders/${order.id}`)}
+                  >
+                    <TableCell>
+                      <Link href={`/orders/${order.id}`} className="font-mono font-medium" onClick={(e) => e.stopPropagation()}>
+                        {formatOrderNumber(order.orderNumber)}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{formatDate(order.createdAt)}</TableCell>
+                    <TableCell>{order.customer.name}</TableCell>
+                    <TableCell className="text-right tabular-nums">{order.items.length}</TableCell>
+                    <TableCell className="text-muted-foreground">{PAYMENT_METHOD_LABELS[order.paymentMethod as keyof typeof PAYMENT_METHOD_LABELS]}</TableCell>
+                    <TableCell className="text-muted-foreground">{order.courier?.name ?? '—'}</TableCell>
+                    <TableCell><OrderStatusBadge status={order.status} /></TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">৳{fmtMoney(order.total)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
-      {page > 1 && (orders?.length ?? 0) < PAGE_SIZE && (
-        <p className="text-center text-xs text-muted-foreground">All orders loaded</p>
+
+      {(orders?.length ?? 0) > 0 && (page > 1 || (orders?.length ?? 0) === PAGE_SIZE) && (
+        <Paginator
+          page={page}
+          onPageChange={(p) => updateParams({ page: p <= 1 ? null : String(p) })}
+          hasNext={(orders?.length ?? 0) === PAGE_SIZE}
+          className="justify-center pt-2"
+        />
       )}
     </div>
   )
