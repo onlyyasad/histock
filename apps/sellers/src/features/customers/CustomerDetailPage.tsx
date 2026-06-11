@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { ShoppingBag } from 'lucide-react'
 import {
   useGetCustomerQuery,
   useUpdateCustomerMutation,
@@ -10,15 +11,26 @@ import {
   useUnflagCustomerMutation,
 } from './store/customersApi'
 import { AddressBook } from './components/AddressBook'
+import { OrderStatusBadge } from '@/features/orders/components/OrderStatusBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { formatOrderNumber, formatDate } from '@/lib/format'
 import { fmtMoney } from '@/lib/utils'
-
-import { formatOrderNumber } from '@/lib/format'
 import { useSetBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 export function CustomerDetailPage({ customerId }: { customerId: string }) {
   const { data: customer, isLoading } = useGetCustomerQuery(customerId)
@@ -42,8 +54,30 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
     }
   }, [customer])
 
-  if (isLoading) return <div className="p-6 text-muted-foreground">Loading...</div>
+  if (isLoading) {
+    return (
+      <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-56" />
+        </div>
+        <div className="lg:grid lg:grid-cols-3 lg:gap-6 space-y-6 lg:space-y-0">
+          <div className="lg:col-span-2">
+            <Skeleton className="h-64 w-full" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
+      </div>
+    )
+  }
   if (!customer) return <div className="p-6 text-destructive">Customer not found</div>
+
+  const avgOrder = customer.totalOrders > 0
+    ? fmtMoney(customer.totalSpent / customer.totalOrders)
+    : null
 
   const handleFlag = async () => {
     if (!flagReason.trim()) return
@@ -83,131 +117,194 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{customer.name}</h1>
-          <p className="text-muted-foreground">{customer.phone}</p>
-          {customer.email && <p className="text-muted-foreground text-sm">{customer.email}</p>}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowEdit((v) => !v)}>
-            {showEdit ? 'Cancel' : 'Edit'}
-          </Button>
-          {customer.isFlagged ? (
-            <div className="text-right space-y-2">
-              <Badge variant="destructive">Flagged: {customer.flagReason}</Badge>
+    <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+      <PageHeader
+        title={customer.name}
+        description={`${customer.phone}${customer.email ? ` · ${customer.email}` : ''}`}
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={() => setShowEdit((v) => !v)}>
+              {showEdit ? 'Cancel' : 'Edit'}
+            </Button>
+            {!customer.isFlagged && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleUnflag}
-                disabled={isUnflagging}
-                className="block text-xs text-muted-foreground"
+                onClick={() => setShowFlagForm(true)}
+                className="text-destructive hover:text-destructive"
               >
-                Remove flag
+                Flag customer
               </Button>
-            </div>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowFlagForm(true)}
-              className="text-destructive hover:text-destructive"
-            >
-              Flag customer
-            </Button>
-          )}
+            )}
+          </>
+        }
+      />
+
+      {customer.isFlagged && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm flex items-start justify-between gap-3">
+          <div>
+            <p className="font-medium text-destructive">Flagged customer</p>
+            <p className="text-muted-foreground mt-0.5">{customer.flagReason}</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleUnflag}
+            disabled={isUnflagging}
+            className="text-xs text-muted-foreground shrink-0"
+          >
+            Remove flag
+          </Button>
         </div>
-      </div>
-
-      {showEdit && (
-        <Card>
-          <CardContent className="pt-4 space-y-3">
-            <form onSubmit={handleEdit} className="space-y-3">
-              <div className="space-y-1">
-                <Label>Name</Label>
-                <Input
-                  value={editForm.name}
-                  onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Phone</Label>
-                <Input
-                  value={editForm.phone}
-                  onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Email (optional)</Label>
-                <Input
-                  type="email"
-                  value={editForm.email}
-                  onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
-                />
-              </div>
-              <Button type="submit" size="sm" disabled={updating}>
-                {updating ? 'Saving...' : 'Save changes'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
       )}
 
-      {showFlagForm && (
-        <Card className="border-destructive/30 bg-destructive/5">
-          <CardContent className="pt-4 space-y-3">
-            <p className="text-sm font-medium text-destructive">Reason for flagging:</p>
-            <Input
-              value={flagReason}
-              onChange={(e) => setFlagReason(e.target.value)}
-              placeholder="e.g. Repeated non-payment"
-            />
-            <div className="flex gap-2">
-              <Button size="sm" variant="destructive" onClick={handleFlag} disabled={isFlagging}>
-                Flag
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setShowFlagForm(false)}>
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <div className="lg:grid lg:grid-cols-3 lg:gap-6 space-y-6 lg:space-y-0">
+        {/* Main column: Order history */}
+        <div className="lg:col-span-2 space-y-6">
+          <div>
+            <h2 className="text-sm font-semibold mb-3">Order history</h2>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Total Spent</p>
-            <p className="text-xl font-bold">৳{fmtMoney(customer.totalSpent)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-muted-foreground">Total Orders</p>
-            <p className="text-xl font-bold">{customer.totalOrders}</p>
-          </CardContent>
-        </Card>
-      </div>
+            {customer.orders.length === 0 ? (
+              <EmptyState
+                icon={ShoppingBag}
+                title="No orders yet"
+                description="Orders placed by this customer will appear here."
+              />
+            ) : (
+              <>
+                {/* Desktop table */}
+                <div className="hidden md:block rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Order</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {customer.orders.map((order) => (
+                        <TableRow key={order.id}>
+                          <TableCell>
+                            <Link href={`/orders/${order.id}`} className="font-mono hover:underline">
+                              {formatOrderNumber(order.orderNumber)}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">{formatDate(order.createdAt)}</TableCell>
+                          <TableCell><OrderStatusBadge status={order.status} /></TableCell>
+                          <TableCell className="text-right font-mono tabular-nums">৳{fmtMoney(order.total)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
 
-      <AddressBook customerId={customerId} addresses={customer.addresses} />
+                {/* Mobile cards */}
+                <div className="md:hidden space-y-2">
+                  {customer.orders.map((order) => (
+                    <Link
+                      key={order.id}
+                      href={`/orders/${order.id}`}
+                      className="flex flex-col bg-card border rounded-lg p-3 hover:shadow-sm transition-shadow"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-sm">{formatOrderNumber(order.orderNumber)}</span>
+                        <OrderStatusBadge status={order.status} />
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs text-muted-foreground">{formatDate(order.createdAt)}</span>
+                        <span className="font-mono text-xs text-muted-foreground">৳{fmtMoney(order.total)}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
 
-      <div>
-        <h2 className="font-semibold mb-3">Order History</h2>
-        <div className="space-y-2">
-          {customer.orders.map((order) => (
-            <Link
-              key={order.id}
-              href={`/orders/${order.id}`}
-              className="flex items-center justify-between bg-card border rounded-lg p-3 hover:shadow-sm transition-shadow text-sm"
-            >
-              <span className="font-mono">{formatOrderNumber(order.orderNumber)}</span>
-              <span className="text-muted-foreground">{order.status.replace(/_/g, ' ')}</span>
-              <span className="font-medium">৳{fmtMoney(order.total)}</span>
-            </Link>
-          ))}
-          {customer.orders.length === 0 && (
-            <p className="text-muted-foreground text-sm">No orders yet</p>
+        {/* Side rail */}
+        <div className="space-y-6">
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3">
+            <Card>
+              <CardContent className="p-3">
+                <p className="text-xs text-muted-foreground">Total spent</p>
+                <p className="text-lg font-semibold tabular-nums font-mono">৳{fmtMoney(customer.totalSpent)}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3">
+                <p className="text-xs text-muted-foreground">Orders</p>
+                <p className="text-lg font-semibold tabular-nums">{customer.totalOrders}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-3">
+                <p className="text-xs text-muted-foreground">Avg order</p>
+                <p className="text-lg font-semibold tabular-nums font-mono">
+                  {avgOrder ? `৳${avgOrder}` : '—'}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <AddressBook customerId={customerId} addresses={customer.addresses} />
+
+          {showEdit && (
+            <Card>
+              <CardContent className="pt-4 space-y-3">
+                <form onSubmit={handleEdit} className="space-y-3">
+                  <div className="space-y-1">
+                    <Label>Name</Label>
+                    <Input
+                      value={editForm.name}
+                      onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Phone</Label>
+                    <Input
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Email (optional)</Label>
+                    <Input
+                      type="email"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
+                    />
+                  </div>
+                  <Button type="submit" size="sm" disabled={updating}>
+                    {updating ? 'Saving...' : 'Save changes'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          )}
+
+          {showFlagForm && (
+            <Card className="border-destructive/30 bg-destructive/5">
+              <CardContent className="pt-4 space-y-3">
+                <p className="text-sm font-medium text-destructive">Reason for flagging:</p>
+                <Input
+                  value={flagReason}
+                  onChange={(e) => setFlagReason(e.target.value)}
+                  placeholder="e.g. Repeated non-payment"
+                />
+                <div className="flex gap-2">
+                  <Button size="sm" variant="destructive" onClick={handleFlag} disabled={isFlagging}>
+                    Flag
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowFlagForm(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>
