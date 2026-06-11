@@ -48,7 +48,7 @@ router.get('/', requireSeller, async (req, res, next) => {
         FROM order_items oi
         JOIN orders o ON o.id = oi.order_id
         LEFT JOIN order_cost_allocations oca ON oca.order_item_id = oi.id
-        WHERE o.business_id = ${businessId}::uuid
+        WHERE o.business_id = ${businessId}
           AND o.status = 'delivered'
           AND o.deleted_at IS NULL
         GROUP BY oi.product_id
