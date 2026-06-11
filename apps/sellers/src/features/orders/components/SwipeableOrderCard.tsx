@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useUpdateOrderStatusMutation } from '../store/ordersApi'
 import { fmtMoney } from '@/lib/utils'
 import { OrderStatusBadge } from './OrderStatusBadge'
-import { formatOrderNumber } from '../NewOrderPage'
+import { formatOrderNumber } from '@/lib/format'
 import { toast } from 'sonner'
 
 interface Props {

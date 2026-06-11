@@ -1,4 +1,4 @@
-import { formatDate, formatDateTime } from '@/lib/formatDate'
+import { formatDate, formatDateTime } from '@/lib/format'
 
 describe('formatDate', () => {
   it('formats a date-only string', () => {

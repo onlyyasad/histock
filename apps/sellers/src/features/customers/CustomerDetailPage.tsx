@@ -17,9 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { fmtMoney } from '@/lib/utils'
 
-function formatOrderNumber(n: number) {
-  return `ORD-${String(n).padStart(6, '0')}`
-}
+import { formatOrderNumber } from '@/lib/format'
 
 export function CustomerDetailPage({ customerId }: { customerId: string }) {
   const { data: customer, isLoading } = useGetCustomerQuery(customerId)

@@ -24,10 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-
-export function formatOrderNumber(n: number): string {
-  return `ORD-${String(n).padStart(6, '0')}`
-}
+import { formatOrderNumber } from '@/lib/format'
 
 export function NewOrderPage() {
   const router = useRouter()

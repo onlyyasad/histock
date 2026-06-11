@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useSse } from '@/hooks/useSse'
-import { formatDateTime } from '@/lib/formatDate'
+import { formatDateTime } from '@/lib/format'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
