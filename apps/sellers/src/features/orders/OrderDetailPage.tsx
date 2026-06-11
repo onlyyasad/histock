@@ -17,6 +17,9 @@ import { useSetBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
 import { PaymentPanel } from './components/PaymentPanel'
 import { DeliveryPanel } from './components/DeliveryPanel'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Printer } from 'lucide-react'
+import { useAppSelector } from '@/store/hooks'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -80,6 +83,27 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
 
   const nextActions = NEXT_STATUSES[order.status] ?? []
 
+  const businessName = useAppSelector((state) => state.auth.user?.businessName)
+  const sellerName = businessName || 'HiStock'
+
+  const invoiceData = {
+    orderNumber: order.orderNumber,
+    createdAt: order.createdAt,
+    sellerName,
+    customerName: order.customer.name,
+    customerPhone: order.customer.phone,
+    items: order.items.map((item) => ({
+      productNameSnapshot: item.productNameSnapshot,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      totalPrice: item.totalPrice,
+    })),
+    subtotal: order.subtotal,
+    deliveryFee: order.deliveryFee,
+    total: order.total,
+    paymentMethod: order.paymentMethod,
+  }
+
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
       <PageHeader
@@ -91,49 +115,19 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
         }
         actions={
           <>
-            <InvoiceDownloadButton
-              data={{
-                orderNumber: order.orderNumber,
-                createdAt: order.createdAt,
-                sellerName: 'HiStock Seller',
-                customerName: order.customer.name,
-                customerPhone: order.customer.phone,
-                items: order.items.map((item) => ({
-                  productNameSnapshot: item.productNameSnapshot,
-                  quantity: item.quantity,
-                  unitPrice: item.unitPrice,
-                  totalPrice: item.totalPrice,
-                })),
-                subtotal: order.subtotal,
-                deliveryFee: order.deliveryFee,
-                total: order.total,
-                paymentMethod: order.paymentMethod,
-              }}
-            />
+            <div className="flex items-center gap-1">
+              <InvoiceDownloadButton data={invoiceData} />
+              <Button type="button" variant="outline" size="sm" onClick={() => window.print()}>
+                <Printer className="h-4 w-4" />
+                Print
+              </Button>
+            </div>
             <OrderStatusBadge status={order.status} />
           </>
         }
       />
 
-      <PrintableInvoice
-        data={{
-          orderNumber: order.orderNumber,
-          createdAt: order.createdAt,
-          sellerName: 'HiStock Seller',
-          customerName: order.customer.name,
-          customerPhone: order.customer.phone,
-          items: order.items.map((item) => ({
-            productNameSnapshot: item.productNameSnapshot,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            totalPrice: item.totalPrice,
-          })),
-          subtotal: order.subtotal,
-          deliveryFee: order.deliveryFee,
-          total: order.total,
-          paymentMethod: order.paymentMethod,
-        }}
-      />
+      <PrintableInvoice data={invoiceData} />
 
       <div className="lg:grid lg:grid-cols-3 lg:gap-6 space-y-6 lg:space-y-0">
         {/* Main column */}
