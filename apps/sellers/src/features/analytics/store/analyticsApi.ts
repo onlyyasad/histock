@@ -24,6 +24,23 @@ export interface RemittanceBatch {
   courier: { id: string; name: string }
 }
 
+export interface RemittanceBatchDetail extends RemittanceBatch {
+  updatedAt: string
+  orders: Array<{
+    id: string
+    remittanceId: string
+    orderId: string
+    codAmount: number
+    order: {
+      id: string
+      orderNumber: number
+      status: string
+      total: number
+      customer: { name: string; phone: string }
+    }
+  }>
+}
+
 export interface RemittanceImportInput {
   courierId: string
   batchName: string
@@ -44,6 +61,11 @@ export const analyticsApi = apiSlice.injectEndpoints({
       providesTags: ['Remittance'],
     }),
 
+    getRemittance: builder.query<RemittanceBatchDetail, string>({
+      query: (id) => `/remittances/${id}`,
+      providesTags: (_result, _error, id) => [{ type: 'Remittance', id }],
+    }),
+
     createRemittanceImport: builder.mutation<RemittanceBatch, RemittanceImportInput>({
       query: (body) => ({ url: '/remittances/import', method: 'POST', body }),
       invalidatesTags: ['Remittance'],
@@ -54,5 +76,6 @@ export const analyticsApi = apiSlice.injectEndpoints({
 export const {
   useGetPnlQuery,
   useGetRemittancesQuery,
+  useGetRemittanceQuery,
   useCreateRemittanceImportMutation,
 } = analyticsApi

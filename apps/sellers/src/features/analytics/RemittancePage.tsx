@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Upload, Banknote } from 'lucide-react'
 import { useGetRemittancesQuery } from './store/analyticsApi'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { TableSkeleton, ListSkeleton } from '@/components/shared/TableSkeleton'
@@ -32,12 +32,10 @@ export function RemittancePage() {
         title="COD remittance"
         description="Track cash-on-delivery payments expected from couriers after delivery."
         actions={
-          <Button asChild size="sm">
-            <Link href="/remittance/import">
-              <Upload className="size-4 mr-1.5" />
-              Import CSV
-            </Link>
-          </Button>
+          <Link href="/remittance/import" className={buttonVariants({ size: 'sm' })}>
+            <Upload className="size-4 mr-1.5" />
+            Import CSV
+          </Link>
         }
       />
 
