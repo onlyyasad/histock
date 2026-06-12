@@ -5,11 +5,12 @@ import { useGetDashboardQuery } from './store/dashboardApi'
 import { useGetOrdersQuery } from '@/features/orders/store/ordersApi'
 import { useGetMeQuery } from '@/store/authApi'
 import { OrderStatusBadge } from '@/features/orders/components/OrderStatusBadge'
-import { formatOrderNumber } from '@/lib/format'
+import { formatOrderNumber, formatDate, PAYMENT_METHOD_LABELS } from '@/lib/format'
 import { StatCard } from './components/StatCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { PageHeader } from '@/components/shared/PageHeader'
+import { EmptyState } from '@/components/shared/EmptyState'
 import { buttonVariants } from '@/components/ui/button'
 import { fmtMoney, cn } from '@/lib/utils'
 import {
@@ -118,7 +119,17 @@ export function DashboardPage() {
         </CardHeader>
         <CardContent className="p-0">
           {(!recentOrders || recentOrders.length === 0) && (
-            <p className="text-sm text-muted-foreground px-6 pb-4">No orders yet.</p>
+            <EmptyState
+              icon={ShoppingBag}
+              title="No orders yet"
+              description="Orders you log from your social media DMs appear here."
+              action={
+                <Link href="/orders/new" className={cn(buttonVariants({ size: 'sm' }))}>
+                  <Plus />
+                  New order
+                </Link>
+              }
+            />
           )}
           {recentOrders?.map((order, i) => (
             <div key={order.id}>
@@ -128,12 +139,13 @@ export function DashboardPage() {
                 className="flex items-center justify-between px-6 py-3 hover:bg-muted/50 transition-colors"
               >
                 <div>
-                  <p className="text-sm font-medium">{formatOrderNumber(order.orderNumber)}</p>
+                  <p className="font-mono text-sm font-medium">{formatOrderNumber(order.orderNumber)}</p>
                   <p className="text-xs text-muted-foreground">{order.customer.name}</p>
+                  <p className="text-xs text-muted-foreground">{formatDate(order.createdAt)} · {PAYMENT_METHOD_LABELS[order.paymentMethod]}</p>
                 </div>
                 <div className="text-right space-y-1">
                   <OrderStatusBadge status={order.status} />
-                  <p className="text-xs font-medium">৳{fmtMoney(order.total)}</p>
+                  <p className="font-mono tabular-nums text-xs font-medium">৳{fmtMoney(order.total)}</p>
                 </div>
               </Link>
             </div>
