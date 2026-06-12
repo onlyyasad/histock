@@ -4,7 +4,9 @@ import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
+import { PageHeader } from '@/components/shared/PageHeader'
 import { useGetPermissionsQuery, useUpdatePermissionMutation } from './store/permissionsApi'
+import { useAppSelector } from '@/store/hooks'
 
 const PERMISSIONS: Array<{ key: string; label: string; description: string }> = [
   {
@@ -79,27 +81,43 @@ function ToggleCell({
 
 export function PermissionsSettingsPage() {
   const { data: permissions, isLoading } = useGetPermissionsQuery()
+  const user = useAppSelector((state) => state.auth.user)
 
   if (isLoading) {
     return (
-      <div className="max-w-2xl mx-auto p-6">
+      <div className="max-w-2xl mx-auto p-4 md:p-6">
         <div className="h-64 bg-muted rounded-lg animate-pulse" />
       </div>
     )
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Role Permissions</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Control what each role can access. Owner permissions are always granted and cannot be changed.
-        </p>
-      </div>
+    <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-6">
+      <PageHeader title="Settings" description="Your workspace and role permissions." />
 
       <Card>
         <CardHeader className="pb-2 pt-4 px-5">
-          <CardTitle className="text-sm font-semibold">Feature Access</CardTitle>
+          <CardTitle className="text-sm font-semibold">Workspace</CardTitle>
+        </CardHeader>
+        <CardContent className="px-5 pb-4 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium">{user?.businessName}</p>
+              <p className="text-xs text-muted-foreground">Business name shown on your invoices</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="capitalize">{user?.role}</Badge>
+              {user?.isDemo && (
+                <Badge variant="outline" className="border-warning/30 bg-warning/10 text-warning">Demo</Badge>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2 pt-4 px-5">
+          <CardTitle className="text-sm font-semibold">Role permissions</CardTitle>
         </CardHeader>
         <CardContent className="px-0 pb-2">
           <div className="overflow-x-auto">
