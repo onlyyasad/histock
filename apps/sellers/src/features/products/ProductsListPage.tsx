@@ -11,7 +11,7 @@ import { ExportButton } from '@/features/exports/ExportButton'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { TableSkeleton, ListSkeleton } from '@/components/shared/TableSkeleton'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -53,12 +53,10 @@ function ProductsListInner() {
         actions={
           <>
             <ExportButton endpoint="/exports/products" label="Export CSV" filename="products.csv" />
-            <Button asChild size="sm">
-              <Link href="/products/new">
-                <Plus className="mr-1 size-4" />
-                New product
-              </Link>
-            </Button>
+            <Link href="/products/new" className={cn(buttonVariants({ size: 'sm' }))}>
+              <Plus className="mr-1 size-4" />
+              New product
+            </Link>
           </>
         }
       />
@@ -111,12 +109,10 @@ function ProductsListInner() {
             title="No products yet"
             description="Add your first product to start tracking stock and margins."
             action={
-              <Button asChild size="sm">
-                <Link href="/products/new">
-                  <Plus className="mr-1 size-4" />
-                  New product
-                </Link>
-              </Button>
+              <Link href="/products/new" className={cn(buttonVariants({ size: 'sm' }))}>
+                <Plus className="mr-1 size-4" />
+                New product
+              </Link>
             }
           />
         )
