@@ -6,16 +6,11 @@ import { toast } from 'sonner'
 import { useSse } from '@/hooks/useSse'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
+import { cn } from '@/lib/utils'
+import { TicketStatusBadge } from './components/TicketStatusBadge'
+import { formatDate, formatDateTime } from '@/lib/format'
 import { useGetTicketQuery, useAddTicketMessageMutation } from './store/supportApi'
-
-const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'outline'> = {
-  open: 'default',
-  in_progress: 'default',
-  resolved: 'secondary',
-  closed: 'outline',
-}
 
 export function SupportTicketDetailPage({ ticketId }: { ticketId: string }) {
   const { data: ticket, isLoading, refetch } = useGetTicketQuery(ticketId, {
@@ -53,19 +48,17 @@ export function SupportTicketDetailPage({ ticketId }: { ticketId: string }) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
+    <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-6">
       <div>
         <Link href="/support" className="text-sm text-muted-foreground hover:underline mb-1 block">
           ← Support
         </Link>
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-xl font-bold">{ticket.title}</h1>
-          <Badge variant={STATUS_VARIANTS[ticket.status] ?? 'secondary'} className="shrink-0 capitalize text-xs">
-            {ticket.status.replace('_', ' ')}
-          </Badge>
+          <TicketStatusBadge status={ticket.status} />
         </div>
         <p className="text-muted-foreground text-sm mt-1">
-          {ticket.type.replace('_', ' ')} · {new Date(ticket.createdAt).toLocaleDateString('en-BD')}
+          {ticket.type.replace('_', ' ')} · {formatDate(ticket.createdAt)}
         </p>
       </div>
 
@@ -84,15 +77,14 @@ export function SupportTicketDetailPage({ ticketId }: { ticketId: string }) {
           {ticket.messages.map((msg) => (
             <div
               key={msg.id}
-              className={`rounded-lg px-4 py-3 text-sm ${
-                msg.senderType === 'seller'
-                  ? 'bg-primary/10 ml-8'
-                  : 'bg-muted mr-8'
-              }`}
+              className={cn(
+                'rounded-lg px-4 py-3 text-sm',
+                msg.senderType === 'seller' ? 'bg-muted ml-8' : 'bg-primary/5 mr-8',
+              )}
             >
               <p className="text-xs text-muted-foreground mb-1">
                 {msg.senderType === 'seller' ? 'You' : 'HiStock Support'} ·{' '}
-                {new Date(msg.createdAt).toLocaleString('en-BD')}
+                {formatDateTime(msg.createdAt)}
               </p>
               <p className="whitespace-pre-wrap">{msg.body}</p>
             </div>
@@ -101,7 +93,7 @@ export function SupportTicketDetailPage({ ticketId }: { ticketId: string }) {
       )}
 
       {ticket.status !== 'closed' && (
-        <form onSubmit={handleSend} className="space-y-2">
+        <form onSubmit={handleSend} className="space-y-2 sticky bottom-0 bg-background border-t pt-3 pb-4 md:static md:border-0 md:pt-0 md:pb-0">
           <Textarea
             rows={3}
             placeholder="Add a message..."
