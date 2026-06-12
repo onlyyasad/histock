@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { Loader2 } from 'lucide-react'
 import { useLoginMutation } from '@/store/authApi'
 import { loginFormSchema, type LoginFormValues } from './schemas/authFormSchemas'
 import { Button } from '@/components/ui/button'
@@ -46,7 +47,7 @@ export function LoginPage() {
   return (
     <Card className="w-full max-w-md shadow">
       <CardHeader>
-        <CardTitle className="text-2xl">Sign In</CardTitle>
+        <CardTitle className="text-2xl">Sign in</CardTitle>
         <CardDescription>Enter your credentials to access your dashboard</CardDescription>
       </CardHeader>
       <CardContent>
@@ -83,7 +84,14 @@ export function LoginPage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Signing in...' : 'Sign In'}
+            {isLoading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Signing in…
+              </>
+            ) : (
+              'Sign in'
+            )}
           </Button>
         </form>
 

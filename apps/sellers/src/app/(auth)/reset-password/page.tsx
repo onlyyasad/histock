@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
 import { useResetPasswordMutation } from '@/store/authApi'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -100,9 +101,22 @@ function ResetPasswordForm() {
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Updating...' : 'Set new password'}
+            {isLoading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Updating…
+              </>
+            ) : (
+              'Set new password'
+            )}
           </Button>
         </form>
+
+        <p className="text-center text-sm mt-4">
+          <Link href="/login" className="text-primary hover:underline">
+            Back to login
+          </Link>
+        </p>
       </CardContent>
     </Card>
   )
