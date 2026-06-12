@@ -3,12 +3,16 @@
 import Link from 'next/link'
 import { useGetDashboardQuery } from './store/dashboardApi'
 import { useGetOrdersQuery } from '@/features/orders/store/ordersApi'
+import { useGetMeQuery } from '@/store/authApi'
 import { OrderStatusBadge } from '@/features/orders/components/OrderStatusBadge'
 import { formatOrderNumber } from '@/lib/format'
 import { StatCard } from './components/StatCard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { fmtMoney } from '@/lib/utils'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { buttonVariants } from '@/components/ui/button'
+import { fmtMoney, cn } from '@/lib/utils'
+import { Plus } from 'lucide-react'
 
 function formatMoney(amount: number): string {
   return new Intl.NumberFormat('en-BD', {
@@ -19,6 +23,7 @@ function formatMoney(amount: number): string {
 }
 
 export function DashboardPage() {
+  const { data: me } = useGetMeQuery()
   const { data, isLoading, isError } = useGetDashboardQuery(undefined, {
     pollingInterval: 30_000,
     refetchOnFocus: true,
@@ -27,7 +32,7 @@ export function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
           {Array.from({ length: 7 }).map((_, i) => (
             <div key={i} className="h-24 bg-muted rounded-lg" />
@@ -39,18 +44,24 @@ export function DashboardPage() {
 
   if (isError || !data) {
     return (
-      <div className="p-6 text-destructive">
+      <div className="p-4 md:p-6 text-destructive">
         Could not load dashboard. Check your connection and try again.
       </div>
     )
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Today&apos;s Snapshot</h1>
-        <p className="text-sm text-muted-foreground">Auto-refreshes every 30s</p>
-      </div>
+    <div className="p-4 md:p-6 space-y-6">
+      <PageHeader
+        title="Dashboard"
+        description={`Today at ${me?.businessName ?? 'your shop'} · auto-refreshes every 30s`}
+        actions={
+          <Link href="/orders/new" className={cn(buttonVariants({ size: 'sm' }))}>
+            <Plus />
+            New order
+          </Link>
+        }
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Today's Orders" value={data.todayOrders} />
@@ -83,7 +94,7 @@ export function DashboardPage() {
 
       <Card>
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Recent Orders</CardTitle>
+          <CardTitle className="text-sm font-semibold">Recent orders</CardTitle>
           <Link href="/orders" className="text-xs text-primary hover:underline">
             View all
           </Link>
