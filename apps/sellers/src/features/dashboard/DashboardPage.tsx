@@ -12,7 +12,17 @@ import { Separator } from '@/components/ui/separator'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { buttonVariants } from '@/components/ui/button'
 import { fmtMoney, cn } from '@/lib/utils'
-import { Plus } from 'lucide-react'
+import {
+  Plus,
+  ShoppingBag,
+  Clock,
+  Package,
+  CheckCircle2,
+  AlertTriangle,
+  Banknote,
+  PackageX,
+  BellRing,
+} from 'lucide-react'
 
 function formatMoney(amount: number): string {
   return new Intl.NumberFormat('en-BD', {
@@ -64,31 +74,38 @@ export function DashboardPage() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Today's Orders" value={data.todayOrders} />
+        <StatCard label="Today's Orders" value={data.todayOrders} icon={ShoppingBag} />
         <StatCard
           label="Pending"
           value={data.pendingOrders}
           variant={data.pendingOrders > 10 ? 'warning' : 'default'}
+          icon={Clock}
+          href="/orders?status=pending"
         />
-        <StatCard label="Processing" value={data.processingOrders} />
-        <StatCard label="Delivered Today" value={data.deliveredToday} />
+        <StatCard label="Processing" value={data.processingOrders} icon={Package} />
+        <StatCard label="Delivered Today" value={data.deliveredToday} icon={CheckCircle2} />
         <StatCard
           label="Delivery Failed"
           value={data.deliveryFailed}
           variant={data.deliveryFailed > 0 ? 'danger' : 'default'}
           subtext={data.deliveryFailed > 0 ? 'Needs attention' : undefined}
+          icon={AlertTriangle}
+          href="/orders?status=delivery_failed"
         />
-        <StatCard label="Today's Revenue" value={formatMoney(data.todayRevenue)} />
+        <StatCard label="Today's Revenue" value={formatMoney(data.todayRevenue)} icon={Banknote} />
         <StatCard
           label="Low Stock Products"
           value={data.lowStockProducts}
           variant={data.lowStockProducts > 0 ? 'warning' : 'default'}
+          icon={PackageX}
+          href="/products?lowStock=true"
         />
         <StatCard
           label="Overdue Reminders"
           value={data.overdueSchedules ?? 0}
           variant={(data.overdueSchedules ?? 0) > 0 ? 'danger' : 'default'}
           subtext={(data.overdueSchedules ?? 0) > 0 ? 'Action needed' : undefined}
+          icon={BellRing}
         />
       </div>
 
