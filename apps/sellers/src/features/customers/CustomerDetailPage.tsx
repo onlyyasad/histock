@@ -265,6 +265,7 @@ export function CustomerDetailPage({ customerId }: { customerId: string }) {
                   <div className="space-y-1">
                     <Label>Phone</Label>
                     <Input
+                      type="tel"
                       value={editForm.phone}
                       onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
                     />

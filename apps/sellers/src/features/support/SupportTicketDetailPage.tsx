@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { TicketStatusBadge } from './components/TicketStatusBadge'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { useGetTicketQuery, useAddTicketMessageMutation } from './store/supportApi'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export function SupportTicketDetailPage({ ticketId }: { ticketId: string }) {
   const { data: ticket, isLoading, refetch } = useGetTicketQuery(ticketId, {
@@ -33,7 +34,14 @@ export function SupportTicketDetailPage({ ticketId }: { ticketId: string }) {
 
   useSse(handleSseEvent)
 
-  if (isLoading) return <div className="p-6 text-muted-foreground">Loading...</div>
+  if (isLoading) return (
+    <div className="space-y-4 p-6">
+      <Skeleton className="h-6 w-1/3" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-5/6" />
+      <Skeleton className="h-32 w-full" />
+    </div>
+  )
   if (!ticket) return <div className="p-6 text-destructive">Ticket not found</div>
 
   const handleSend = async (e: React.FormEvent) => {

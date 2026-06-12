@@ -15,6 +15,7 @@ import {
   useMarkScheduleDoneMutation,
   useDeleteScheduleMutation,
 } from '../store/schedulesApi'
+import { Skeleton } from '@/components/ui/skeleton'
 
 function isOverdue(scheduledAt: string) {
   return new Date(scheduledAt) < new Date()
@@ -121,7 +122,12 @@ export function SchedulePanel({ orderId }: { orderId: string }) {
           </form>
         )}
 
-        {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
+        {isLoading && (
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        )}
 
         {!isLoading && pending.length === 0 && !showForm && (
           <p className="text-sm text-muted-foreground">No reminders for this order.</p>
