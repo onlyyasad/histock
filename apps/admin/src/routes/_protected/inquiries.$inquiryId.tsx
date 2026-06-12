@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { formatDateTime, formatRelative } from '@/lib/format'
 import {
   useGetInquiryQuery,
   useUpdateInquiryMutation,
@@ -9,24 +10,18 @@ import {
   type ContactInquiryMessage,
 } from '@/store/adminApiSlice'
 import { useSetBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { InquiryStatusBadge } from '@/components/shared/InquiryStatusBadge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Separator } from '@/components/ui/separator'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-
-type InquiryStatus = 'new' | 'in_progress' | 'resolved'
-
-function statusVariant(status: InquiryStatus): 'default' | 'secondary' | 'outline' {
-  if (status === 'resolved') return 'default'
-  if (status === 'in_progress') return 'secondary'
-  return 'outline'
-}
 
 function InquiryDetailPage({ inquiryId }: { inquiryId: string }) {
   const { data: inquiry, isLoading, refetch } = useGetInquiryQuery(inquiryId)
@@ -88,7 +83,7 @@ function InquiryDetailPage({ inquiryId }: { inquiryId: string }) {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-4">
+      <div className="p-4 md:p-6 space-y-4">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-48 w-full" />
@@ -97,49 +92,63 @@ function InquiryDetailPage({ inquiryId }: { inquiryId: string }) {
   }
 
   if (!inquiry) {
-    return <div className="p-6 text-destructive">Inquiry not found</div>
+    return <div className="p-4 md:p-6 text-destructive">Inquiry not found</div>
   }
 
   return (
-    <div className="p-6 max-w-2xl space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{inquiry.name}</h1>
-          <p className="text-sm text-muted-foreground">{inquiry.email}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={statusVariant(inquiry.status)}>
-            {inquiry.status.replace('_', ' ')}
-          </Badge>
-          {inquiry.status !== 'resolved' && (
-            <Button variant="outline" size="sm" onClick={handleResolve}>
-              Mark Resolved
-            </Button>
-          )}
-        </div>
-      </div>
+    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-6">
+      <PageHeader
+        title={inquiry.name}
+        description={inquiry.email}
+        actions={
+          <div className="flex items-center gap-2">
+            <InquiryStatusBadge status={inquiry.status} />
+            {inquiry.status !== 'resolved' && (
+              <Button variant="outline" size="sm" onClick={handleResolve}>
+                Mark Resolved
+              </Button>
+            )}
+          </div>
+        }
+      />
 
+      {/* Contact + message in one card */}
       <Card>
         <CardHeader><CardTitle>Message</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
+          <div className="space-y-1 text-sm">
+            <p><span className="text-muted-foreground">Name:</span> {inquiry.name}</p>
+            <p>
+              <span className="text-muted-foreground">Email:</span>{' '}
+              <a href={`mailto:${inquiry.email}`} className="hover:underline">{inquiry.email}</a>
+            </p>
+            {inquiry.phone && (
+              <p><span className="text-muted-foreground">Phone:</span> {inquiry.phone}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              <span title={formatDateTime(inquiry.createdAt)}>{formatRelative(inquiry.createdAt)}</span>
+            </p>
+          </div>
+          <Separator />
           <p className="text-sm whitespace-pre-wrap">{inquiry.message}</p>
-          <p className="text-xs text-muted-foreground mt-2">
-            {new Date(inquiry.createdAt).toLocaleString()}
-          </p>
         </CardContent>
       </Card>
 
       {messages.length > 0 && (
         <Card>
           <CardHeader><CardTitle>Thread</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={cn('space-y-1', msg.fromAdmin ? 'text-right' : '')}
+                className={cn(
+                  'rounded-lg px-4 py-3',
+                  msg.fromAdmin ? 'bg-primary/5' : 'bg-muted'
+                )}
               >
-                <p className="text-xs text-muted-foreground">
-                  {msg.fromAdmin ? 'Admin' : inquiry.name} · {new Date(msg.createdAt).toLocaleString()}
+                <p className="text-xs text-muted-foreground mb-1">
+                  {msg.fromAdmin ? 'Admin' : inquiry.name}{' '}
+                  · <span title={formatDateTime(msg.createdAt)}>{formatRelative(msg.createdAt)}</span>
                 </p>
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
               </div>
