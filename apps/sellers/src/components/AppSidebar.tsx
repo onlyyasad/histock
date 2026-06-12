@@ -43,7 +43,7 @@ const SECONDARY_NAV = [
   { href: '/team', label: 'Team', icon: UsersRound },
   { href: '/settings', label: 'Settings', icon: Settings },
   { href: '/support', label: 'Support', icon: HeadphonesIcon },
-  { href: '/analytics/remittance', label: 'Remittance', icon: Banknote },
+  { href: '/remittance', label: 'Remittance', icon: Banknote },
 ]
 
 export function AppSidebar() {

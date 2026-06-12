@@ -272,7 +272,7 @@ export function RemittanceImportPage() {
           <p className="text-3xl">✓</p>
           <p className="font-semibold">Remittance batch created</p>
           <Link
-            href="/analytics/remittance"
+            href="/remittance"
             className="text-primary hover:underline text-sm block"
           >
             View in Remittance Tracker

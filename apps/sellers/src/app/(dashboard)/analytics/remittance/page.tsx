@@ -1,5 +1,5 @@
-import { RemittancePage } from '@/features/analytics/RemittancePage'
+import { redirect } from 'next/navigation'
 
 export default function Page() {
-  return <RemittancePage />
+  redirect('/remittance')
 }
