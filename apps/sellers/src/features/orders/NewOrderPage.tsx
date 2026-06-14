@@ -5,6 +5,7 @@ import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import Link from 'next/link'
 import { newOrderFormSchema, type NewOrderFormValues } from './schemas/newOrderFormSchema'
 import { useCreateOrderMutation } from './store/ordersApi'
 import { fmtMoney } from '@/lib/utils'
@@ -12,11 +13,13 @@ import { useGetProductsQuery } from '@/features/products/store/productsApi'
 import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
 import { useLazyLookupCustomerQuery } from '@/features/customers/store/customersApi'
 import { InlineCreateCustomer } from '@/features/customers/components/InlineCreateCustomer'
+import { ProductCombobox } from './components/ProductCombobox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Minus, Plus } from 'lucide-react'
 import {
   Select,
   SelectContent,
@@ -24,10 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-
-export function formatOrderNumber(n: number): string {
-  return `ORD-${String(n).padStart(6, '0')}`
-}
+import { formatOrderNumber } from '@/lib/format'
 
 export function NewOrderPage() {
   const router = useRouter()
@@ -107,8 +107,13 @@ export function NewOrderPage() {
   const deliveryFee = Number(form.watch('deliveryFee')) || 0
   const total = subtotal + deliveryFee
 
+  const stepQuantity = (index: number, delta: number) => {
+    const current = Number(form.getValues(`items.${index}.quantity`)) || 1
+    form.setValue(`items.${index}.quantity`, Math.max(1, current + delta), { shouldValidate: true })
+  }
+
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-4 md:p-6">
       <h1 className="text-2xl font-bold mb-6">New Order</h1>
 
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -130,9 +135,17 @@ export function NewOrderPage() {
             </Button>
           </div>
           {foundCustomer && (
-            <p className="text-sm text-success">
-              ✓ {foundCustomer.name} — {foundCustomer.phone}
-            </p>
+            <Card>
+              <CardContent className="p-3 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{foundCustomer.name}</p>
+                  <p className="text-xs text-muted-foreground">{foundCustomer.phone}</p>
+                </div>
+                <Link href={`/customers/${foundCustomer.id}`} className="text-sm text-primary hover:underline shrink-0">
+                  View
+                </Link>
+              </CardContent>
+            </Card>
           )}
           {form.formState.errors.customerId && (
             <p className="text-destructive text-sm">{form.formState.errors.customerId.message}</p>
@@ -202,6 +215,7 @@ export function NewOrderPage() {
               const selectedProductId = form.watch(`items.${index}.productId`)
               const selectedProduct = products.find((p) => p.id === selectedProductId)
               const variants = selectedProduct?.variants ?? []
+              const lineTotal = (Number(items[index]?.quantity) || 0) * (Number(items[index]?.unitPrice) || 0)
 
               return (
                 <Card key={field.id}>
@@ -210,28 +224,16 @@ export function NewOrderPage() {
                       control={form.control}
                       name={`items.${index}.productId`}
                       render={({ field: f }) => (
-                        <Select
-                          value={f.value || '__none__'}
-                          onValueChange={(v) => {
-                            f.onChange(v === '__none__' ? '' : v)
+                        <ProductCombobox
+                          products={products}
+                          value={f.value || ''}
+                          onSelect={(id) => {
+                            f.onChange(id)
                             form.setValue(`items.${index}.variantId`, null)
-                            const prod = products.find((p) => p.id === v)
-                            if (prod) {
-                              form.setValue(`items.${index}.unitPrice`, prod.price)
-                            }
+                            const prod = products.find((p) => p.id === id)
+                            if (prod) form.setValue(`items.${index}.unitPrice`, prod.price)
                           }}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select product..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {products.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>
-                                {p.name} — ৳{fmtMoney(p.price)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        />
                       )}
                     />
 
@@ -256,7 +258,7 @@ export function NewOrderPage() {
                             <SelectContent>
                               {variants.map((v) => (
                                 <SelectItem key={v.id} value={v.id}>
-                                  {v.name} — ৳{fmtMoney(v.price)}
+                                  {v.name} — ৳{fmtMoney(v.price)} · {v.currentStock} left
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -266,13 +268,23 @@ export function NewOrderPage() {
                     )}
 
                     <div className="flex gap-2 items-center">
-                      <div className="flex-1">
+                      <div className="flex items-center gap-1">
+                        <Button type="button" variant="outline" size="icon" className="shrink-0"
+                          onClick={() => stepQuantity(index, -1)} aria-label="Decrease quantity">
+                          <Minus className="h-4 w-4" />
+                        </Button>
                         <Input
                           {...form.register(`items.${index}.quantity`)}
                           type="number"
                           min="1"
-                          placeholder="Qty"
+                          inputMode="numeric"
+                          className="w-16 text-center"
+                          aria-label="Quantity"
                         />
+                        <Button type="button" variant="outline" size="icon" className="shrink-0"
+                          onClick={() => stepQuantity(index, 1)} aria-label="Increase quantity">
+                          <Plus className="h-4 w-4" />
+                        </Button>
                       </div>
                       <div className="flex-1">
                         <Input
@@ -280,6 +292,7 @@ export function NewOrderPage() {
                           type="number"
                           min="0"
                           step="0.01"
+                          inputMode="decimal"
                           placeholder="Unit price (৳)"
                         />
                       </div>
@@ -294,6 +307,10 @@ export function NewOrderPage() {
                         ✕
                       </Button>
                     </div>
+
+                    <p className="text-right text-sm text-muted-foreground">
+                      Line total <span className="font-mono tabular-nums text-foreground">৳{lineTotal.toFixed(2)}</span>
+                    </p>
                   </CardContent>
                 </Card>
               )
@@ -318,27 +335,53 @@ export function NewOrderPage() {
         {/* Delivery fee */}
         <div className="space-y-1">
           <Label>Delivery Fee (৳)</Label>
-          <Input {...form.register('deliveryFee')} type="number" min="0" step="0.01" />
+          <div className="flex gap-2">
+            {[0, 60, 120].map((fee) => (
+              <Button
+                key={fee}
+                type="button"
+                variant={deliveryFee === fee ? 'secondary' : 'outline'}
+                size="sm"
+                onClick={() => form.setValue('deliveryFee', fee, { shouldValidate: true })}
+              >
+                ৳{fee}
+              </Button>
+            ))}
+          </div>
+          <Input {...form.register('deliveryFee')} type="number" min="0" step="0.01" inputMode="decimal" />
         </div>
 
-        <Card>
-          <CardContent className="p-4 space-y-1 text-sm">
-            <div className="flex justify-between text-muted-foreground">
-              <span>Subtotal</span><span>৳{subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-muted-foreground">
-              <span>Delivery</span><span>৳{deliveryFee.toFixed(2)}</span>
-            </div>
-            <Separator className="my-1" />
-            <div className="flex justify-between font-bold text-base">
-              <span>Total</span><span>৳{total.toFixed(2)}</span>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Desktop summary + submit */}
+        <div className="hidden md:block space-y-6">
+          <Card>
+            <CardContent className="p-4 space-y-1 text-sm">
+              <div className="flex justify-between text-muted-foreground">
+                <span>Subtotal</span><span>৳{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Delivery</span><span>৳{deliveryFee.toFixed(2)}</span>
+              </div>
+              <Separator className="my-1" />
+              <div className="flex justify-between font-bold text-base">
+                <span>Total</span><span>৳{total.toFixed(2)}</span>
+              </div>
+            </CardContent>
+          </Card>
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? 'Creating...' : 'Create order'}
+          </Button>
+        </div>
 
-        <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? 'Creating...' : 'Create Order'}
-        </Button>
+        {/* Mobile sticky total + submit */}
+        <div className="md:hidden sticky bottom-0 -mx-4 border-t bg-background p-3 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Total</p>
+            <p className="text-base font-semibold font-mono tabular-nums">৳{total.toFixed(2)}</p>
+          </div>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? 'Creating...' : 'Create order'}
+          </Button>
+        </div>
       </form>
     </div>
   )

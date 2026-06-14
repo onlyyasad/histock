@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
 import { useForgotPasswordMutation } from '@/store/authApi'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -84,7 +85,14 @@ export default function ForgotPasswordPage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Sending...' : 'Send reset link'}
+            {isLoading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Sending…
+              </>
+            ) : (
+              'Send reset link'
+            )}
           </Button>
         </form>
 

@@ -1,10 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense } from 'react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { Package, Plus } from 'lucide-react'
 import { useGetProductsQuery } from './store/productsApi'
+import { StockBadge } from './components/StockBadge'
 import { ExportButton } from '@/features/exports/ExportButton'
-import { buttonVariants } from '@/components/ui/button'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { TableSkeleton, ListSkeleton } from '@/components/shared/TableSkeleton'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -18,27 +25,43 @@ import {
 } from '@/components/ui/table'
 import { cn, fmtMoney } from '@/lib/utils'
 
-export function ProductsListPage() {
+function ProductsListInner() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [search, setSearch] = useState('')
-  const [lowStockOnly, setLowStockOnly] = useState(false)
+
+  const lowStockOnly = searchParams.get('lowStock') === 'true'
+  const setLowStockOnly = (on: boolean) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (on) params.set('lowStock', 'true')
+    else params.delete('lowStock')
+    router.replace(`/products${params.size ? `?${params}` : ''}`)
+  }
+
   const { data: products, isLoading } = useGetProductsQuery({
     search: search || undefined,
     lowStock: lowStockOnly || undefined,
   })
 
-  return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Products</h1>
-        <div className="flex items-center gap-2">
-          <ExportButton endpoint="/exports/products" label="Export CSV" filename="products.csv" />
-          <Link href="/products/new" className={cn(buttonVariants({ size: 'sm' }))}>
-            + New Product
-          </Link>
-        </div>
-      </div>
+  const hasFilters = search.length > 0 || lowStockOnly
 
-      <div className="flex gap-3 mb-4 items-center">
+  return (
+    <div className="p-4 md:p-6 space-y-6">
+      <PageHeader
+        title="Products"
+        description="Your catalog and current stock levels."
+        actions={
+          <>
+            <ExportButton endpoint="/exports/products" label="Export CSV" filename="products.csv" />
+            <Link href="/products/new" className={cn(buttonVariants({ size: 'sm' }))}>
+              <Plus className="mr-1 size-4" />
+              New product
+            </Link>
+          </>
+        }
+      />
+
+      <div className="flex gap-3 items-center">
         <Input
           type="text"
           placeholder="Search products..."
@@ -56,57 +79,130 @@ export function ProductsListPage() {
         </Label>
       </div>
 
-      {isLoading && <p className="text-muted-foreground">Loading...</p>}
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead className="text-right">In Stock</TableHead>
-              <TableHead className="text-right">Avg Margin</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {products?.map((p) => {
-              const margin = (p as unknown as { avgMarginPct: number | null }).avgMarginPct
-              return (
-                <TableRow key={p.id}>
-                  <TableCell>
-                    <Link href={`/products/${p.id}`} className="font-medium hover:underline">
-                      {p.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{p.sku ?? '—'}</TableCell>
-                  <TableCell className="tabular-nums">৳{fmtMoney(p.price)}</TableCell>
-                  <TableCell
-                    className={cn(
-                      'text-right tabular-nums',
-                      p.currentStock <= 5 && 'text-destructive font-medium',
-                    )}
-                  >
-                    {p.currentStock}
-                  </TableCell>
-                  <TableCell
-                    className={cn(
-                      'text-right tabular-nums text-sm',
-                      margin === null
-                        ? 'text-muted-foreground/40'
-                        : margin < 10
-                          ? 'text-destructive font-medium'
-                          : 'text-success font-medium',
-                    )}
-                  >
-                    {margin !== null ? `${margin.toFixed(1)}%` : '—'}
-                  </TableCell>
+      {isLoading ? (
+        <>
+          <TableSkeleton className="hidden md:block" />
+          <ListSkeleton className="md:hidden" />
+        </>
+      ) : !products || products.length === 0 ? (
+        hasFilters ? (
+          <EmptyState
+            icon={Package}
+            title="No products match"
+            description="Try a different search or clear the low-stock filter."
+            action={
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearch('')
+                  setLowStockOnly(false)
+                }}
+              >
+                Clear filters
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={Package}
+            title="No products yet"
+            description="Add your first product to start tracking stock and margins."
+            action={
+              <Link href="/products/new" className={cn(buttonVariants({ size: 'sm' }))}>
+                <Plus className="mr-1 size-4" />
+                New product
+              </Link>
+            }
+          />
+        )
+      ) : (
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>SKU</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead className="text-right">Stock</TableHead>
+                  <TableHead className="text-right">Variants</TableHead>
+                  <TableHead className="text-right">Avg Margin</TableHead>
                 </TableRow>
-              )
-            })}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
+              <TableBody>
+                {products.map((p) => {
+                  const margin = (p as unknown as { avgMarginPct: number | null }).avgMarginPct
+                  const variantCount = (p.variants ?? []).length
+                  return (
+                    <TableRow key={p.id}>
+                      <TableCell>
+                        <Link href={`/products/${p.id}`} className="font-medium hover:underline">
+                          {p.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{p.sku ?? '—'}</TableCell>
+                      <TableCell className="font-mono tabular-nums">৳{fmtMoney(p.price)}</TableCell>
+                      <TableCell className="text-right">
+                        <StockBadge stock={p.currentStock} />
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums text-muted-foreground">
+                        {variantCount > 0 ? variantCount : '—'}
+                      </TableCell>
+                      <TableCell
+                        className={cn(
+                          'text-right tabular-nums text-sm',
+                          margin === null
+                            ? 'text-muted-foreground/40'
+                            : margin < 10
+                              ? 'text-destructive font-medium'
+                              : 'text-success font-medium',
+                        )}
+                      >
+                        {margin !== null ? `${margin.toFixed(1)}%` : '—'}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-2">
+            {products.map((p) => (
+              <Link
+                key={p.id}
+                href={`/products/${p.id}`}
+                className="block rounded-lg border bg-card p-3 hover:bg-accent/50 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{p.name}</span>
+                  <span className="font-mono tabular-nums text-sm">৳{fmtMoney(p.price)}</span>
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-xs text-muted-foreground">SKU: {p.sku ?? '—'}</span>
+                  <StockBadge stock={p.currentStock} />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
     </div>
+  )
+}
+
+export function ProductsListPage() {
+  return (
+    <Suspense fallback={
+      <div className="p-4 md:p-6 space-y-6">
+        <TableSkeleton className="hidden md:block" />
+        <ListSkeleton className="md:hidden" />
+      </div>
+    }>
+      <ProductsListInner />
+    </Suspense>
   )
 }

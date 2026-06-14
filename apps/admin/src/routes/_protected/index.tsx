@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { Building2 } from 'lucide-react'
 import {
   useGetBusinessesQuery,
   useToggleDemoMutation,
@@ -9,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
 import {
   Table,
   TableBody,
@@ -25,17 +26,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-
-function statusVariant(status: string): 'default' | 'secondary' | 'outline' {
-  if (status === 'active') return 'default'
-  if (status === 'trial') return 'secondary'
-  return 'outline'
-}
+import {
+  Card,
+  CardContent,
+} from '@/components/ui/card'
+import { Paginator } from '@/components/shared/Paginator'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { TableSkeleton } from '@/components/shared/TableSkeleton'
+import { BusinessStatusBadge } from '@/components/shared/BusinessStatusBadge'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 
 function BusinessListPage() {
   const [search, setSearch] = useState('')
   const [planId, setPlanId] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState('')
   const [page, setPage] = useState(1)
+  const [pendingDemo, setPendingDemo] = useState<{ id: string; name: string; next: boolean } | null>(null)
 
   const { data: businesses, isLoading } = useGetBusinessesQuery({
     search: search || undefined,
@@ -45,25 +52,30 @@ function BusinessListPage() {
   const { data: plans } = useGetSubscriptionPlansQuery()
   const [toggleDemo] = useToggleDemoMutation()
 
-  const handleDemoToggle = async (id: string, current: boolean) => {
+  const visible = statusFilter
+    ? businesses?.filter((b) => b.subscription.status === statusFilter)
+    : businesses
+
+  const handleDemoToggle = async (id: string, currentIsDemo: boolean) => {
     try {
-      await toggleDemo({ businessId: id, isDemo: !current }).unwrap()
-      toast.success(current ? 'Demo mode disabled' : 'Demo mode enabled')
+      await toggleDemo({ businessId: id, isDemo: !currentIsDemo }).unwrap()
+      toast.success(currentIsDemo ? 'Demo mode disabled' : 'Demo mode enabled')
     } catch {
       toast.error('Failed to update')
     }
+    setPendingDemo(null)
   }
 
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Businesses</h1>
+    <div className="p-4 md:p-6 space-y-6">
+      <PageHeader title="Businesses" description="All seller workspaces on the platform" />
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Input
           placeholder="Search by name or slug…"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-          className="max-w-xs"
+          className="w-full sm:max-w-xs"
         />
         <Select value={planId} onValueChange={(v) => { setPlanId(v === 'all' ? '' : v); setPage(1) }}>
           <SelectTrigger className="w-40">
@@ -76,32 +88,124 @@ function BusinessListPage() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v === 'all' ? '' : v); setPage(1) }}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="trial">Trial</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="grace_period">Grace period</SelectItem>
+            <SelectItem value="expired">Expired</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Business</TableHead>
-            <TableHead>Plan</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Demo</TableHead>
-            <TableHead className="text-right">Orders</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading
-            ? Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-10 ml-auto" /></TableCell>
+      {statusFilter && (
+        <p className="text-xs text-muted-foreground">Status filter applies to the current page only.</p>
+      )}
+
+      {/* Desktop table */}
+      <div className="hidden md:block">
+        {isLoading ? (
+          <TableSkeleton />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Business</TableHead>
+                <TableHead>Plan</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Demo</TableHead>
+                <TableHead className="text-right">Orders</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visible?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="p-0">
+                    <EmptyState
+                      icon={Building2}
+                      title="No businesses found"
+                      description="Try a different search or clear the filters."
+                      action={
+                        (search || planId || statusFilter) ? (
+                          <Button variant="outline" size="sm" onClick={() => { setSearch(''); setPlanId(''); setStatusFilter('') }}>
+                            Clear filters
+                          </Button>
+                        ) : undefined
+                      }
+                    />
+                  </TableCell>
                 </TableRow>
-              ))
-            : businesses?.map((b) => (
-                <TableRow key={b.id}>
-                  <TableCell>
+              ) : (
+                visible?.map((b) => (
+                  <TableRow key={b.id}>
+                    <TableCell>
+                      <Link
+                        to="/businesses/$businessId"
+                        params={{ businessId: b.id }}
+                        className="font-medium hover:underline"
+                      >
+                        {b.name}
+                      </Link>
+                      <p className="text-xs text-muted-foreground">{b.slug}</p>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">{b.subscription.plan.name}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <BusinessStatusBadge status={b.subscription.status} />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={b.isDemo}
+                        onCheckedChange={(next) => setPendingDemo({ id: b.id, name: b.name, next })}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums font-mono">
+                      {b._count.orders}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-2">
+        {isLoading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="py-3 space-y-2">
+                <div className="h-4 bg-muted rounded animate-pulse w-32" />
+                <div className="h-3 bg-muted rounded animate-pulse w-20" />
+              </CardContent>
+            </Card>
+          ))
+        ) : visible?.length === 0 ? (
+          <EmptyState
+            icon={Building2}
+            title="No businesses found"
+            description="Try a different search or clear the filters."
+            action={
+              (search || planId || statusFilter) ? (
+                <Button variant="outline" size="sm" onClick={() => { setSearch(''); setPlanId(''); setStatusFilter('') }}>
+                  Clear filters
+                </Button>
+              ) : undefined
+            }
+          />
+        ) : (
+          visible?.map((b) => (
+            <Card key={b.id}>
+              <CardContent className="py-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
                     <Link
                       to="/businesses/$businessId"
                       params={{ businessId: b.id }}
@@ -110,51 +214,41 @@ function BusinessListPage() {
                       {b.name}
                     </Link>
                     <p className="text-xs text-muted-foreground">{b.slug}</p>
-                  </TableCell>
-                  <TableCell>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
                     <Badge variant="secondary">{b.subscription.plan.name}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusVariant(b.subscription.status)}>
-                      {b.subscription.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant={b.isDemo ? 'secondary' : 'outline'}
-                      size="sm"
-                      onClick={() => handleDemoToggle(b.id, b.isDemo)}
-                    >
-                      {b.isDemo ? 'Demo' : 'Off'}
-                    </Button>
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {b._count.orders}
-                  </TableCell>
-                </TableRow>
-              ))}
-        </TableBody>
-      </Table>
-
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page === 1}
-          onClick={() => setPage((p) => p - 1)}
-        >
-          Previous
-        </Button>
-        <span className="text-sm text-muted-foreground">Page {page}</span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!businesses || businesses.length < 20}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          Next
-        </Button>
+                    <BusinessStatusBadge status={b.subscription.status} />
+                  </div>
+                  <Switch
+                    checked={b.isDemo}
+                    onCheckedChange={(next) => setPendingDemo({ id: b.id, name: b.name, next })}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground font-mono tabular-nums">
+                  {b._count.orders} orders
+                </p>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
+
+      <Paginator
+        page={page}
+        onPageChange={setPage}
+        hasNext={(businesses?.length ?? 0) >= 20}
+      />
+
+      <ConfirmDialog
+        open={!!pendingDemo}
+        onOpenChange={(o) => !o && setPendingDemo(null)}
+        title={pendingDemo?.next ? `Enable demo mode for ${pendingDemo?.name}?` : `Disable demo mode for ${pendingDemo?.name}?`}
+        description={pendingDemo?.next ? 'All admin mutations will be gated to demo data.' : 'This workspace will be treated as a real seller account again.'}
+        confirmLabel={pendingDemo?.next ? 'Enable demo' : 'Disable demo'}
+        onConfirm={() => pendingDemo && handleDemoToggle(pendingDemo.id, !pendingDemo.next)}
+      />
     </div>
   )
 }

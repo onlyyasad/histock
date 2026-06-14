@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
 import { useAdminLoginMutation } from '@/store/adminApiSlice'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,7 +39,10 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background">
+      <span className="font-bold text-2xl">
+        <span className="text-primary">Hi</span>Stock Admin
+      </span>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Admin Login</CardTitle>
@@ -70,7 +74,8 @@ function LoginPage() {
               )}
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Logging in…' : 'Log In'}
+              {isLoading && <Loader2 className="animate-spin" />}
+              {isLoading ? 'Logging in…' : 'Log in'}
             </Button>
           </form>
         </CardContent>

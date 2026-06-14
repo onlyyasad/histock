@@ -1,21 +1,27 @@
 'use client'
 
-import { formatDateTime } from '@/lib/formatDate'
-import { toast } from 'sonner'
+import Link from 'next/link'
+import { formatOrderNumber, formatDateTime } from '@/lib/format'
 import { fmtMoney } from '@/lib/utils'
-import { useGetOrderQuery, useConfirmCodPaymentMutation } from './store/ordersApi'
+import { useGetOrderQuery } from './store/ordersApi'
 import { OrderMetadataPanel } from './components/OrderMetadataPanel'
 import { OrderStatusBadge } from './components/OrderStatusBadge'
 import { StatusUpdateButton } from './components/StatusUpdateButton'
-import { formatOrderNumber } from './NewOrderPage'
 import { InvoiceDownloadButton } from '@/features/invoices/InvoiceDownloadButton'
 import { PrintableInvoice } from '@/features/invoices/PrintableInvoice'
 import { CostBreakdownPanel } from './components/CostBreakdownPanel'
 import { OrderNotesPanel } from './components/OrderNotesPanel'
 import { SchedulePanel } from './components/SchedulePanel'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { useSetBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
+import { PaymentPanel } from './components/PaymentPanel'
+import { DeliveryPanel } from './components/DeliveryPanel'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Printer } from 'lucide-react'
+import { useAppSelector } from '@/store/hooks'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const NEXT_STATUSES: Record<string, Array<{ toStatus: string; label: string; variant: 'primary' | 'danger' | 'secondary' }>> = {
   pending: [
@@ -49,160 +55,180 @@ const NEXT_STATUSES: Record<string, Array<{ toStatus: string; label: string; var
 
 export function OrderDetailPage({ orderId }: { orderId: string }) {
   const { data: order, isLoading, isError } = useGetOrderQuery(orderId)
-  const [confirmCodPayment, { isLoading: confirmingCod }] = useConfirmCodPaymentMutation()
+  const businessName = useAppSelector((state) => state.auth.user?.businessName)
 
-  if (isLoading) return <div className="p-6 text-muted-foreground">Loading...</div>
+  useSetBreadcrumbEntity(order ? formatOrderNumber(order.orderNumber) : null)
+
+  if (isLoading) {
+    return (
+      <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-44" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="lg:grid lg:grid-cols-3 lg:gap-6 space-y-6 lg:space-y-0">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+          <div className="space-y-6">
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+            <Skeleton className="h-28 w-full" />
+          </div>
+        </div>
+      </div>
+    )
+  }
   if (isError || !order) return <div className="p-6 text-destructive">Order not found.</div>
 
   const nextActions = NEXT_STATUSES[order.status] ?? []
 
-  const handleConfirmCod = async () => {
-    try {
-      await confirmCodPayment(orderId).unwrap()
-      toast.success('COD payment confirmed')
-    } catch {
-      toast.error('Failed to confirm payment')
-    }
+  const sellerName = businessName || 'HiStock'
+
+  const invoiceData = {
+    orderNumber: order.orderNumber,
+    createdAt: order.createdAt,
+    sellerName,
+    customerName: order.customer.name,
+    customerPhone: order.customer.phone,
+    items: order.items.map((item) => ({
+      productNameSnapshot: item.productNameSnapshot,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      totalPrice: item.totalPrice,
+    })),
+    subtotal: order.subtotal,
+    deliveryFee: order.deliveryFee,
+    total: order.total,
+    paymentMethod: order.paymentMethod,
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{formatOrderNumber(order.orderNumber)}</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {formatDateTime(order.createdAt)}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <InvoiceDownloadButton
-            data={{
-              orderNumber: order.orderNumber,
-              createdAt: order.createdAt,
-              sellerName: 'HiStock Seller',
-              customerName: order.customer.name,
-              customerPhone: order.customer.phone,
-              items: order.items.map((item) => ({
-                productNameSnapshot: item.productNameSnapshot,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                totalPrice: item.totalPrice,
-              })),
-              subtotal: order.subtotal,
-              deliveryFee: order.deliveryFee,
-              total: order.total,
-              paymentMethod: order.paymentMethod,
-            }}
-          />
-          <OrderStatusBadge status={order.status} />
-        </div>
-      </div>
-
-      <PrintableInvoice
-        data={{
-          orderNumber: order.orderNumber,
-          createdAt: order.createdAt,
-          sellerName: 'HiStock Seller',
-          customerName: order.customer.name,
-          customerPhone: order.customer.phone,
-          items: order.items.map((item) => ({
-            productNameSnapshot: item.productNameSnapshot,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            totalPrice: item.totalPrice,
-          })),
-          subtotal: order.subtotal,
-          deliveryFee: order.deliveryFee,
-          total: order.total,
-          paymentMethod: order.paymentMethod,
-        }}
+    <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-6">
+      <PageHeader
+        title={<span className="font-mono">{formatOrderNumber(order.orderNumber)}</span>}
+        description={
+          order.updatedAt !== order.createdAt
+            ? `Created ${formatDateTime(order.createdAt)} · Updated ${formatDateTime(order.updatedAt)}`
+            : `Created ${formatDateTime(order.createdAt)}`
+        }
+        actions={
+          <>
+            <div className="flex items-center gap-1">
+              <InvoiceDownloadButton data={invoiceData} />
+              <Button type="button" variant="outline" size="sm" onClick={() => window.print()}>
+                <Printer className="h-4 w-4" />
+                Print
+              </Button>
+            </div>
+            <OrderStatusBadge status={order.status} />
+          </>
+        }
       />
 
-      <Card>
-        <CardHeader className="pb-2 pt-4 px-5">
-          <CardTitle className="text-sm font-semibold">Customer</CardTitle>
-        </CardHeader>
-        <CardContent className="px-5 pb-4">
-          <p className="font-medium">{order.customer.name}</p>
-          <p className="text-sm text-muted-foreground">{order.customer.phone}</p>
-        </CardContent>
-      </Card>
+      <PrintableInvoice data={invoiceData} />
 
-      <OrderMetadataPanel
-        orderId={orderId}
-        currentCourierId={order.courier?.id ?? null}
-        currentTags={order.tags ?? []}
-        currentNotes={order.notes ?? null}
-      />
-
-      <Card>
-        <CardHeader className="pb-2 pt-4 px-5">
-          <CardTitle className="text-sm font-semibold">Items</CardTitle>
-        </CardHeader>
-        <CardContent className="px-5 pb-4">
-          <div className="space-y-0">
-            {order.items.map((item, i) => (
-              <div key={item.id}>
-                {i > 0 && <Separator className="my-1" />}
-                <div className="py-2 flex justify-between text-sm">
-                  <span>
-                    {item.productNameSnapshot}
-                    {item.variantNameSnapshot && ` — ${item.variantNameSnapshot}`}
-                    {' '}×{item.quantity}
-                  </span>
-                  <span>৳{fmtMoney(item.totalPrice)}</span>
+      <div className="lg:grid lg:grid-cols-3 lg:gap-6 space-y-6 lg:space-y-0">
+        {/* Main column */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card>
+            <CardHeader className="pb-2 pt-4 px-5">
+              <CardTitle className="text-sm font-semibold">Items</CardTitle>
+            </CardHeader>
+            <CardContent className="px-5 pb-4">
+              <div className="space-y-0">
+                {order.items.map((item, i) => (
+                  <div key={item.id}>
+                    {i > 0 && <Separator className="my-1" />}
+                    <div className="py-2 flex justify-between text-sm">
+                      <span>
+                        {item.productNameSnapshot}
+                        {item.variantNameSnapshot && ` — ${item.variantNameSnapshot}`}
+                        {' '}×{item.quantity}
+                      </span>
+                      <span className="font-mono tabular-nums">৳{fmtMoney(item.totalPrice)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Separator className="my-2" />
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Subtotal</span><span className="font-mono tabular-nums">৳{fmtMoney(order.subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Delivery</span><span className="font-mono tabular-nums">৳{fmtMoney(order.deliveryFee)}</span>
+                </div>
+                <div className="flex justify-between font-bold text-base">
+                  <span>Total</span><span className="font-mono tabular-nums">৳{fmtMoney(order.total)}</span>
                 </div>
               </div>
-            ))}
-          </div>
-          <Separator className="my-2" />
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between text-muted-foreground">
-              <span>Subtotal</span><span>৳{fmtMoney(order.subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-muted-foreground">
-              <span>Delivery</span><span>৳{fmtMoney(order.deliveryFee)}</span>
-            </div>
-            <div className="flex justify-between font-bold text-base">
-              <span>Total</span><span>৳{fmtMoney(order.total)}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      {order.paymentMethod === 'cod' && order.status === 'delivered' && !order.isCodPaymentConfirmed && (
-        <Button
-          onClick={handleConfirmCod}
-          disabled={confirmingCod}
-          className="w-full"
-        >
-          {confirmingCod ? 'Confirming...' : 'Confirm COD Payment Received'}
-        </Button>
-      )}
-      {order.isCodPaymentConfirmed && (
-        <p className="text-success text-sm text-center">✓ COD payment confirmed</p>
-      )}
+          {nextActions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Next step</p>
+              <div className="flex flex-wrap gap-3">
+                {nextActions.map(({ toStatus, label, variant }) => (
+                  <StatusUpdateButton
+                    key={toStatus}
+                    orderId={orderId}
+                    currentStatus={order.status}
+                    toStatus={toStatus}
+                    label={label}
+                    variant={variant}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
-      {nextActions.length > 0 && (
-        <div className="flex flex-wrap gap-3">
-          {nextActions.map(({ toStatus, label, variant }) => (
-            <StatusUpdateButton
-              key={toStatus}
-              orderId={orderId}
-              currentStatus={order.status}
-              toStatus={toStatus}
-              label={label}
-              variant={variant}
-            />
-          ))}
+          <OrderNotesPanel orderId={orderId} notes={order.orderNotes ?? []} />
         </div>
-      )}
 
-      <OrderNotesPanel orderId={orderId} notes={order.orderNotes ?? []} />
+        {/* Side rail */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader className="pb-2 pt-4 px-5">
+              <CardTitle className="text-sm font-semibold">Customer</CardTitle>
+            </CardHeader>
+            <CardContent className="px-5 pb-4">
+              <p className="font-medium">{order.customer.name}</p>
+              <p className="text-sm text-muted-foreground">{order.customer.phone}</p>
+              <Link href={`/customers/${order.customer.id}`} className="text-sm text-primary hover:underline">
+                View customer
+              </Link>
+            </CardContent>
+          </Card>
 
-      <SchedulePanel orderId={orderId} />
+          <PaymentPanel
+            orderId={orderId}
+            paymentMethod={order.paymentMethod}
+            status={order.status}
+            isCodPaymentConfirmed={order.isCodPaymentConfirmed}
+          />
 
-      <CostBreakdownPanel orderId={orderId} />
+          <DeliveryPanel
+            courierName={order.courier?.name ?? null}
+            deliveryAttempts={order.deliveryAttempts}
+            deliveryFailedAt={order.deliveryFailedAt}
+          />
+
+          <OrderMetadataPanel
+            orderId={orderId}
+            currentCourierId={order.courier?.id ?? null}
+            currentTags={order.tags ?? []}
+            currentNotes={order.notes ?? null}
+          />
+
+          <SchedulePanel orderId={orderId} />
+
+          <CostBreakdownPanel orderId={orderId} />
+        </div>
+      </div>
     </div>
   )
 }
+
