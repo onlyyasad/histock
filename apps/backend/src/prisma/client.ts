@@ -13,7 +13,12 @@ const _base = new PrismaClient({
 // outside those directories.
 export const prismaAdmin = _base
 
-// prismaWithScope: auto-injects businessId + deletedAt: null on all queries.
+// Models that have a `deleted_at` column and support soft-delete.
+// Only these get `deletedAt: null` injected by prismaWithScope.
+// Add here when a new model gains a `deleted_at` column.
+const SOFT_DELETE_MODELS = new Set(['User', 'Customer', 'Product', 'ProductVariant', 'Order'])
+
+// prismaWithScope: auto-injects businessId (+ deletedAt: null for soft-delete models) on all queries.
 // Use in ALL seller route handlers. Accepts businessId from session.
 //
 // IMPORTANT: findUnique() is disabled — it cannot safely inject businessId scope.
@@ -22,12 +27,16 @@ export const prismaWithScope = (businessId: string) =>
   _base.$extends({
     query: {
       $allModels: {
-        async findMany({ args, query }) {
-          args.where = { ...(args.where as object), businessId, deletedAt: null }
+        async findMany({ model, args, query }) {
+          const where: Record<string, unknown> = { ...(args.where as Record<string, unknown>), businessId }
+          if (SOFT_DELETE_MODELS.has(model)) where.deletedAt = null
+          args.where = where
           return query(args)
         },
-        async findFirst({ args, query }) {
-          args.where = { ...(args.where as object), businessId, deletedAt: null }
+        async findFirst({ model, args, query }) {
+          const where: Record<string, unknown> = { ...(args.where as Record<string, unknown>), businessId }
+          if (SOFT_DELETE_MODELS.has(model)) where.deletedAt = null
+          args.where = where
           return query(args)
         },
         async findUnique() {
