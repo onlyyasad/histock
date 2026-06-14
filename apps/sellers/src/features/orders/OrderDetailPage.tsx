@@ -55,6 +55,7 @@ const NEXT_STATUSES: Record<string, Array<{ toStatus: string; label: string; var
 
 export function OrderDetailPage({ orderId }: { orderId: string }) {
   const { data: order, isLoading, isError } = useGetOrderQuery(orderId)
+  const businessName = useAppSelector((state) => state.auth.user?.businessName)
 
   useSetBreadcrumbEntity(order ? formatOrderNumber(order.orderNumber) : null)
 
@@ -83,7 +84,6 @@ export function OrderDetailPage({ orderId }: { orderId: string }) {
 
   const nextActions = NEXT_STATUSES[order.status] ?? []
 
-  const businessName = useAppSelector((state) => state.auth.user?.businessName)
   const sellerName = businessName || 'HiStock'
 
   const invoiceData = {
