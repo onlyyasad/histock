@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { Loader2 } from 'lucide-react'
 import { useRegisterMutation } from '@/store/authApi'
 import { registerFormSchema, type RegisterFormValues } from './schemas/authFormSchemas'
 import { Button } from '@/components/ui/button'
@@ -54,6 +55,7 @@ export function RegisterPage() {
             {form.formState.errors.businessName && (
               <p className="text-destructive text-sm">{form.formState.errors.businessName.message}</p>
             )}
+            <p className="text-xs text-muted-foreground">Shown on your invoices</p>
           </div>
 
           <div className="space-y-2">
@@ -96,7 +98,14 @@ export function RegisterPage() {
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Creating account...' : 'Create account'}
+            {isLoading ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Creating account…
+              </>
+            ) : (
+              'Create account'
+            )}
           </Button>
         </form>
 

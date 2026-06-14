@@ -3,15 +3,19 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { Plus, LifeBuoy } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { TicketStatusBadge } from './components/TicketStatusBadge'
+import { formatDate } from '@/lib/format'
 import { useGetTicketsQuery, useCreateTicketMutation } from './store/supportApi'
 import type { CreateTicketInput } from './store/supportApi'
 
@@ -19,13 +23,6 @@ const TYPE_LABELS: Record<string, string> = {
   bug_report: 'Bug Report',
   feature_request: 'Feature Request',
   question: 'Question',
-}
-
-const STATUS_VARIANTS: Record<string, 'default' | 'secondary' | 'outline'> = {
-  open: 'default',
-  in_progress: 'default',
-  resolved: 'secondary',
-  closed: 'outline',
 }
 
 function NewTicketForm({ onSuccess }: { onSuccess: () => void }) {
@@ -111,15 +108,12 @@ export function SupportPage() {
   const [showForm, setShowForm] = useState(false)
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Support</h1>
-        {!showForm && (
-          <Button size="sm" onClick={() => setShowForm(true)}>
-            + New Request
-          </Button>
-        )}
-      </div>
+    <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-6">
+      <PageHeader
+        title="Support"
+        description="Questions, bugs, and feature requests."
+        actions={!showForm ? <Button size="sm" onClick={() => setShowForm(true)}><Plus />New request</Button> : undefined}
+      />
 
       {showForm && (
         <NewTicketForm onSuccess={() => setShowForm(false)} />
@@ -134,11 +128,12 @@ export function SupportPage() {
       )}
 
       {!isLoading && tickets.length === 0 && !showForm && (
-        <Card>
-          <CardContent className="py-10 text-center text-muted-foreground text-sm">
-            No support requests yet. Click &quot;New Request&quot; if you need help.
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={LifeBuoy}
+          title="No support requests yet"
+          description="Need help? Open a request and we'll get back to you."
+          action={<Button size="sm" onClick={() => setShowForm(true)}>New request</Button>}
+        />
       )}
 
       {tickets.map((ticket, i) => (
@@ -152,12 +147,10 @@ export function SupportPage() {
               <div className="space-y-0.5 min-w-0">
                 <p className="font-medium truncate">{ticket.title}</p>
                 <p className="text-xs text-muted-foreground">
-                  {TYPE_LABELS[ticket.type]} · {new Date(ticket.createdAt).toLocaleDateString('en-BD')}
+                  {TYPE_LABELS[ticket.type]} · {formatDate(ticket.createdAt)}
                 </p>
               </div>
-              <Badge variant={STATUS_VARIANTS[ticket.status] ?? 'secondary'} className="shrink-0 capitalize text-xs">
-                {ticket.status.replace('_', ' ')}
-              </Badge>
+              <TicketStatusBadge status={ticket.status} />
             </div>
           </Link>
         </div>

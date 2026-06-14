@@ -4,13 +4,21 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useCreateVariantMutation } from '../store/productsApi'
 import type { Variant } from '../store/productsApi'
+import { StockBadge } from './StockBadge'
 import { fmtMoney } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 interface Props {
   productId: string
@@ -59,7 +67,7 @@ export function VariantsSection({ productId, variants }: Props) {
           Variants{variants.length > 0 && <Badge variant="secondary" className="ml-2">{variants.length}</Badge>}
         </CardTitle>
         <Button size="sm" variant="outline" onClick={() => setShowForm((v) => !v)}>
-          {showForm ? 'Cancel' : '+ Add Variant'}
+          {showForm ? 'Cancel' : 'Add variant'}
         </Button>
       </CardHeader>
       <CardContent className="px-5 pb-5 space-y-3">
@@ -67,23 +75,48 @@ export function VariantsSection({ productId, variants }: Props) {
           <p className="text-sm text-muted-foreground">No variants yet. Add size, colour, etc.</p>
         )}
 
-        {variants.map((v, i) => (
-          <div key={v.id}>
-            {i > 0 && <Separator className="mb-3" />}
-            <div className="flex items-center justify-between text-sm">
-              <div>
-                <p className="font-medium">{v.name}</p>
-                {v.sku && <p className="text-xs text-muted-foreground">SKU: {v.sku}</p>}
-              </div>
-              <div className="text-right">
-                <p className="font-medium tabular-nums">৳{fmtMoney(v.price)}</p>
-                <p className={`text-xs ${v.currentStock <= 5 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                  {v.currentStock} in stock
-                </p>
-              </div>
+        {variants.length > 0 && (
+          <>
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
+                    <TableHead className="text-right">Stock</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {variants.map((v) => (
+                    <TableRow key={v.id}>
+                      <TableCell className="font-medium">{v.name}</TableCell>
+                      <TableCell className="text-right font-mono tabular-nums">
+                        ৳{fmtMoney(v.price)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <StockBadge stock={v.currentStock} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-          </div>
-        ))}
+
+            {/* Mobile rows */}
+            <div className="md:hidden divide-y">
+              {variants.map((v) => (
+                <div key={v.id} className="flex items-center justify-between text-sm py-2">
+                  <span>{v.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono tabular-nums">৳{fmtMoney(v.price)}</span>
+                    <StockBadge stock={v.currentStock} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         {showForm && (
           <form onSubmit={handleAdd} className="space-y-3 border rounded-lg p-3 bg-muted/40">

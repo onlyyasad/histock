@@ -35,6 +35,18 @@ export function DateRangePicker({ from, to, onChange }: Props) {
           {p.label}
         </Button>
       ))}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          const now = new Date()
+          const first = new Date(now.getFullYear(), now.getMonth(), 1)
+          onChange({ from: first.toISOString().slice(0, 10), to: now.toISOString().slice(0, 10) })
+        }}
+      >
+        This month
+      </Button>
       <div className="flex items-center gap-2 ml-1">
         <DatePicker
           value={from || undefined}

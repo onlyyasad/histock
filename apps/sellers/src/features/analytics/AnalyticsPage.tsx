@@ -5,6 +5,8 @@ import { DateRangePicker } from './components/DateRangePicker'
 import { PnlSummary } from './components/PnlSummary'
 import { StatusBreakdown } from './components/StatusBreakdown'
 import { useGetPnlQuery } from './store/analyticsApi'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { formatDate } from '@/lib/format'
 
 function daysAgo(n: number) {
   const d = new Date()
@@ -23,13 +25,18 @@ export function AnalyticsPage() {
   const totalOrders = data?.statusBreakdown.reduce((sum, s) => sum + s.count, 0) ?? 0
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        {isFetching && !isLoading && (
-          <span className="text-xs text-muted-foreground">Refreshing...</span>
-        )}
-      </div>
+    <div className="p-4 md:p-6 space-y-6">
+      <PageHeader
+        title="Analytics"
+        description={
+          <span className="flex items-center gap-2">
+            {formatDate(range.from)} – {formatDate(range.to)}
+            {isFetching && !isLoading && (
+              <span className="text-xs text-muted-foreground">Refreshing...</span>
+            )}
+          </span>
+        }
+      />
 
       <DateRangePicker from={range.from} to={range.to} onChange={setRange} />
 

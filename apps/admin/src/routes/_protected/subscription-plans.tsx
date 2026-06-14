@@ -6,11 +6,17 @@ import {
   useUpdateSubscriptionPlanMutation,
   type SubscriptionPlan,
 } from '@/store/adminApiSlice'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { TableSkeleton } from '@/components/shared/TableSkeleton'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Card,
+  CardContent,
+} from '@/components/ui/card'
 import {
   Table,
   TableBody,
@@ -68,7 +74,7 @@ function EditPlanDialog({ plan, onClose }: { plan: SubscriptionPlan; onClose: ()
             onChange={(e) => setPriceMonthly(e.target.value)}
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label>Max Users (blank = unlimited)</Label>
             <Input value={maxUsers} onChange={(e) => setMaxUsers(e.target.value)} placeholder="e.g. 3" />
@@ -99,38 +105,44 @@ function SubscriptionPlansPage() {
   const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null)
 
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-bold">Subscription Plans</h1>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Price/mo</TableHead>
-            <TableHead>Max Users</TableHead>
-            <TableHead>Max Orders</TableHead>
-            <TableHead>Max Products</TableHead>
-            <TableHead>Max SKUs</TableHead>
-            <TableHead>Active</TableHead>
-            <TableHead />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 8 }).map((__, j) => (
-                    <TableCell key={j}><Skeleton className="h-4 w-16" /></TableCell>
-                  ))}
-                </TableRow>
-              ))
-            : plans?.map((plan) => (
+    <div className="p-4 md:p-6 space-y-6">
+      <PageHeader title="Subscription Plans" description="Tier limits and pricing. Changes apply without a deploy." />
+
+      {/* Desktop table */}
+      <div className="hidden md:block">
+        {isLoading ? (
+          <TableSkeleton />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Price/mo</TableHead>
+                <TableHead>Max Users</TableHead>
+                <TableHead>Max Orders</TableHead>
+                <TableHead>Max Products</TableHead>
+                <TableHead>Max SKUs</TableHead>
+                <TableHead>Active</TableHead>
+                <TableHead />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {plans?.map((plan) => (
                 <TableRow key={plan.id}>
                   <TableCell className="font-medium">{plan.name}</TableCell>
-                  <TableCell className="tabular-nums">{plan.priceMonthly}</TableCell>
-                  <TableCell>{plan.maxUsers ?? '∞'}</TableCell>
-                  <TableCell>{plan.maxOrdersPerMonth ?? '∞'}</TableCell>
-                  <TableCell>{plan.maxProducts ?? '∞'}</TableCell>
-                  <TableCell>{plan.maxSkus ?? '∞'}</TableCell>
+                  <TableCell className="font-mono tabular-nums">{plan.priceMonthly}</TableCell>
+                  <TableCell className="font-mono tabular-nums">
+                    {plan.maxUsers ?? <span className="font-sans text-muted-foreground">∞</span>}
+                  </TableCell>
+                  <TableCell className="font-mono tabular-nums">
+                    {plan.maxOrdersPerMonth ?? <span className="font-sans text-muted-foreground">∞</span>}
+                  </TableCell>
+                  <TableCell className="font-mono tabular-nums">
+                    {plan.maxProducts ?? <span className="font-sans text-muted-foreground">∞</span>}
+                  </TableCell>
+                  <TableCell className="font-mono tabular-nums">
+                    {plan.maxSkus ?? <span className="font-sans text-muted-foreground">∞</span>}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={plan.isActive ? 'default' : 'outline'}>
                       {plan.isActive ? 'Active' : 'Inactive'}
@@ -153,8 +165,74 @@ function SubscriptionPlansPage() {
                   </TableCell>
                 </TableRow>
               ))}
-        </TableBody>
-      </Table>
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-2">
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-36 w-full rounded-lg" />
+          ))
+        ) : (
+          plans?.map((plan) => (
+            <Card key={plan.id}>
+              <CardContent className="py-3 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-medium">{plan.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-mono tabular-nums text-sm">{plan.priceMonthly}/mo</p>
+                    <Badge variant={plan.isActive ? 'default' : 'outline'}>
+                      {plan.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Max Users</p>
+                    <p className="font-mono tabular-nums">
+                      {plan.maxUsers ?? <span className="font-sans text-muted-foreground">∞</span>}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Max Orders</p>
+                    <p className="font-mono tabular-nums">
+                      {plan.maxOrdersPerMonth ?? <span className="font-sans text-muted-foreground">∞</span>}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Max Products</p>
+                    <p className="font-mono tabular-nums">
+                      {plan.maxProducts ?? <span className="font-sans text-muted-foreground">∞</span>}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Max SKUs</p>
+                    <p className="font-mono tabular-nums">
+                      {plan.maxSkus ?? <span className="font-sans text-muted-foreground">∞</span>}
+                    </p>
+                  </div>
+                </div>
+                <Dialog
+                  open={editingPlan?.id === plan.id}
+                  onOpenChange={(open) => !open && setEditingPlan(null)}
+                >
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full" onClick={() => setEditingPlan(plan)}>
+                      Edit
+                    </Button>
+                  </DialogTrigger>
+                  {editingPlan?.id === plan.id && (
+                    <EditPlanDialog plan={editingPlan} onClose={() => setEditingPlan(null)} />
+                  )}
+                </Dialog>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
     </div>
   )
 }

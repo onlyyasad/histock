@@ -2,30 +2,53 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Plus, Users } from 'lucide-react'
 import { useGetCustomersQuery } from './store/customersApi'
 import { ExportButton } from '@/features/exports/ExportButton'
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
+import { PageHeader } from '@/components/shared/PageHeader'
+import { EmptyState } from '@/components/shared/EmptyState'
+import { TableSkeleton, ListSkeleton } from '@/components/shared/TableSkeleton'
+import { formatDate } from '@/lib/format'
 import { cn, fmtMoney } from '@/lib/utils'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 export function CustomersListPage() {
   const [search, setSearch] = useState('')
+  const [flaggedOnly, setFlaggedOnly] = useState(false)
   const { data: customers, isLoading } = useGetCustomersQuery({ search: search || undefined })
 
-  return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Customers</h1>
-        <div className="flex items-center gap-2">
-          <ExportButton endpoint="/exports/customers" label="Export CSV" filename="customers.csv" />
-          <Link href="/customers/new" className={cn(buttonVariants({ size: 'sm' }))}>
-            + New Customer
-          </Link>
-        </div>
-      </div>
+  const hasActiveFilters = !!search || flaggedOnly
+  const visible = (customers ?? []).filter((c) => !flaggedOnly || c.isFlagged)
 
-      <div className="mb-4">
+  return (
+    <div className="p-4 md:p-6 space-y-6">
+      <PageHeader
+        title="Customers"
+        description="Everyone who has ever ordered from you."
+        actions={
+          <>
+            <ExportButton endpoint="/exports/customers" label="Export CSV" filename="customers.csv" />
+            <Link href="/customers/new" className={cn(buttonVariants({ size: 'sm' }), 'min-h-[44px]')}>
+              <Plus className="h-4 w-4 mr-1" />
+              New customer
+            </Link>
+          </>
+        }
+      />
+
+      <div className="flex flex-wrap items-center gap-3">
         <Input
           type="text"
           placeholder="Search by name or phone..."
@@ -33,36 +56,101 @@ export function CustomersListPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-md"
         />
+        <Label className="flex items-center gap-2 text-sm cursor-pointer font-normal">
+          <Checkbox checked={flaggedOnly} onCheckedChange={(c) => setFlaggedOnly(c === true)} />
+          Flagged only
+        </Label>
       </div>
 
-      {isLoading && <p className="text-muted-foreground">Loading...</p>}
+      {isLoading ? (
+        <>
+          <TableSkeleton rows={8} className="hidden md:block" />
+          <ListSkeleton rows={5} className="md:hidden" />
+        </>
+      ) : visible.length === 0 ? (
+        hasActiveFilters ? (
+          <EmptyState
+            icon={Users}
+            title="No customers match"
+            description="Try a different search or clear the flag filter."
+            action={
+              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFlaggedOnly(false) }}>
+                Clear filters
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={Users}
+            title="No customers yet"
+            description="Customers are created automatically when you log an order, or add one manually."
+            action={
+              <Link href="/customers/new" className={cn(buttonVariants({ size: 'sm' }))}>
+                New customer
+              </Link>
+            }
+          />
+        )
+      ) : (
+        <>
+          {/* Desktop table */}
+          <div className="hidden md:block rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="text-right">Orders</TableHead>
+                  <TableHead className="text-right">Total spent</TableHead>
+                  <TableHead>Since</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visible.map((c) => (
+                  <TableRow key={c.id}>
+                    <TableCell>
+                      <Link href={`/customers/${c.id}`} className="font-medium hover:underline">
+                        {c.name}
+                      </Link>
+                      {c.isFlagged && (
+                        <Badge variant="destructive" className="ml-2 text-xs">Flagged</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>{c.phone}</TableCell>
+                    <TableCell className="text-muted-foreground">{c.email ?? '—'}</TableCell>
+                    <TableCell className="text-right tabular-nums">{c.totalOrders}</TableCell>
+                    <TableCell className="text-right font-mono tabular-nums">৳{fmtMoney(c.totalSpent)}</TableCell>
+                    <TableCell className="text-muted-foreground">{formatDate(c.createdAt)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
 
-      <div className="space-y-2">
-        {customers?.map((c) => (
-          <Link
-            key={c.id}
-            href={`/customers/${c.id}`}
-            className="flex items-center justify-between bg-card border rounded-lg p-4 hover:shadow-sm transition-shadow"
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{c.name}</span>
-                {c.isFlagged && (
-                  <Badge variant="destructive" className="text-xs">Flagged</Badge>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground">{c.phone}</p>
-            </div>
-            <div className="text-right text-sm">
-              <p className="font-medium">৳{fmtMoney(c.totalSpent)}</p>
-              <p className="text-muted-foreground">{c.totalOrders} orders</p>
-            </div>
-          </Link>
-        ))}
-        {customers?.length === 0 && (
-          <p className="text-muted-foreground text-center py-8">No customers found</p>
-        )}
-      </div>
+          {/* Mobile cards */}
+          <div className="md:hidden space-y-2">
+            {visible.map((c) => (
+              <Link
+                key={c.id}
+                href={`/customers/${c.id}`}
+                className="flex items-center justify-between bg-card border rounded-lg p-4 hover:shadow-sm transition-shadow"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium truncate">{c.name}</span>
+                    {c.isFlagged && (
+                      <Badge variant="destructive" className="text-xs shrink-0">Flagged</Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{c.phone} · {c.totalOrders} orders</p>
+                </div>
+                <span className="font-mono tabular-nums text-sm ml-3 shrink-0">৳{fmtMoney(c.totalSpent)}</span>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }

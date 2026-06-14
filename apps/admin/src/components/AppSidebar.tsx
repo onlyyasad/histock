@@ -13,6 +13,7 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
 } from '@/components/ui/sidebar'
+import { Badge } from '@/components/ui/badge'
 import { useGetMeQuery, useAdminLogoutMutation } from '@/store/adminApiSlice'
 
 const NAV = [
@@ -79,6 +80,12 @@ export function AppSidebar() {
             <div className="px-2 py-1.5 group-data-[collapsible=icon]:hidden">
               <p className="text-sm font-medium truncate">{me?.name}</p>
               <p className="text-xs text-muted-foreground truncate">{me?.email}</p>
+              <div className="flex items-center gap-1.5 mt-1">
+                <Badge variant="secondary" className="text-xs">Platform admin</Badge>
+                {me?.isDemo && (
+                  <Badge variant="outline" className="text-xs border-warning/30 bg-warning/10 text-warning">Demo</Badge>
+                )}
+              </div>
             </div>
           </SidebarMenuItem>
           <SidebarMenuItem>

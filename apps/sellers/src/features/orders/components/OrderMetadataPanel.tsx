@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useUpdateOrderMetadataMutation } from '../store/ordersApi'
 import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -75,9 +76,19 @@ export function OrderMetadataPanel({
             </span>
           </div>
           {currentTags.length > 0 && (
-            <div className="flex justify-between">
+            <div className="flex items-start justify-between gap-3">
               <span className="text-muted-foreground">Tags</span>
-              <span>{currentTags.join(', ')}</span>
+              <div className="flex flex-wrap justify-end gap-1">
+                {currentTags.map((tag) => (
+                  <Badge key={tag} variant="outline">{tag}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          {currentNotes && (
+            <div className="pt-1">
+              <p className="text-muted-foreground text-xs">Note</p>
+              <p className="text-sm whitespace-pre-wrap">{currentNotes}</p>
             </div>
           )}
         </CardContent>

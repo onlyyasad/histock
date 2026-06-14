@@ -55,7 +55,7 @@ export function InlineCreateCustomer({ prefillPhone, onCreated, onCancel }: Prop
           </div>
           <div className="space-y-1">
             <Label htmlFor="ic-phone">Phone number</Label>
-            <Input id="ic-phone" {...form.register('phone')} placeholder="Phone number" />
+            <Input id="ic-phone" {...form.register('phone')} type="tel" placeholder="Phone number" />
             {form.formState.errors.phone && (
               <p className="text-destructive text-xs">{form.formState.errors.phone.message}</p>
             )}
