@@ -90,23 +90,55 @@ export interface ContactInquiry {
   messages: ContactInquiryMessage[]
 }
 
+export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
+
+export interface SupportTicketMessage {
+  id: string
+  ticketId: string
+  senderType: 'seller' | 'admin'
+  senderId: string
+  body: string
+  createdAt: string
+}
+
+export interface SupportTicketSummary {
+  id: string
+  title: string
+  type: 'bug_report' | 'feature_request' | 'question'
+  status: TicketStatus
+  priority: 'low' | 'medium' | 'high'
+  createdAt: string
+  updatedAt: string
+  business: { id: string; name: string; isDemo: boolean }
+  _count: { messages: number }
+}
+
+export interface SupportTicketDetail extends Omit<SupportTicketSummary, '_count'> {
+  description: string
+  submitter: { id: string; name: string; email: string }
+  messages: SupportTicketMessage[]
+}
+
 // ── API Slice ────────────────────────────────────────────────────────────────
 
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Business', 'AuditLog', 'Inquiry', 'SubscriptionPlan', 'Payment'],
+  tagTypes: ['Business', 'AuditLog', 'Inquiry', 'SubscriptionPlan', 'Payment', 'Me', 'SupportTicket'],
   endpoints: (builder) => ({
 
     // Auth
     adminLogin: builder.mutation<{ ok: boolean }, { email: string; password: string }>({
       query: (body) => ({ url: '/auth/login', method: 'POST', body }),
+      invalidatesTags: ['Me'],
     }),
     adminLogout: builder.mutation<{ ok: boolean }, void>({
       query: () => ({ url: '/auth/logout', method: 'POST' }),
+      invalidatesTags: ['Me'],
     }),
     getMe: builder.query<AdminMe, void>({
       query: () => '/admin/me',
+      providesTags: ['Me'],
     }),
 
     // Businesses
@@ -221,6 +253,24 @@ export const adminApi = createApi({
       invalidatesTags: (_r, _e, { id }) => [{ type: 'Inquiry', id }, 'Inquiry'],
     }),
 
+    // Support Tickets
+    getSupportTickets: builder.query<SupportTicketSummary[], { status?: string }>({
+      query: (params) => ({ url: '/admin/support-tickets', params }),
+      providesTags: ['SupportTicket'],
+    }),
+    getSupportTicket: builder.query<SupportTicketDetail, string>({
+      query: (id) => `/admin/support-tickets/${id}`,
+      providesTags: (_r, _e, id) => [{ type: 'SupportTicket', id }],
+    }),
+    replySupportTicket: builder.mutation<SupportTicketMessage, { id: string; body: string }>({
+      query: ({ id, body }) => ({ url: `/admin/support-tickets/${id}/messages`, method: 'POST', body: { body } }),
+      invalidatesTags: (_r, _e, { id }) => [{ type: 'SupportTicket', id }, 'SupportTicket'],
+    }),
+    updateSupportTicketStatus: builder.mutation<SupportTicketSummary, { id: string; status: TicketStatus }>({
+      query: ({ id, status }) => ({ url: `/admin/support-tickets/${id}`, method: 'PATCH', body: { status } }),
+      invalidatesTags: (_r, _e, { id }) => [{ type: 'SupportTicket', id }, 'SupportTicket'],
+    }),
+
     // Impersonation
     startImpersonation: builder.mutation<{ token: string; expiresAt: string }, string>({
       query: (businessId) => ({
@@ -247,5 +297,9 @@ export const {
   useGetInquiriesQuery,
   useGetInquiryQuery,
   useUpdateInquiryMutation,
+  useGetSupportTicketsQuery,
+  useGetSupportTicketQuery,
+  useReplySupportTicketMutation,
+  useUpdateSupportTicketStatusMutation,
   useStartImpersonationMutation,
 } = adminApi

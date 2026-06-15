@@ -15,6 +15,8 @@ import { Route as ProtectedIndexRouteImport } from './routes/_protected/index'
 import { Route as ProtectedSubscriptionPlansRouteImport } from './routes/_protected/subscription-plans'
 import { Route as ProtectedInquiriesRouteImport } from './routes/_protected/inquiries'
 import { Route as ProtectedAuditLogRouteImport } from './routes/_protected/audit-log'
+import { Route as ProtectedSupportTicketsIndexRouteImport } from './routes/_protected/support-tickets.index'
+import { Route as ProtectedSupportTicketsTicketIdRouteImport } from './routes/_protected/support-tickets.$ticketId'
 import { Route as ProtectedInquiriesInquiryIdRouteImport } from './routes/_protected/inquiries.$inquiryId'
 import { Route as ProtectedBusinessesBusinessIdRouteImport } from './routes/_protected/businesses.$businessId'
 
@@ -48,6 +50,18 @@ const ProtectedAuditLogRoute = ProtectedAuditLogRouteImport.update({
   path: '/audit-log',
   getParentRoute: () => ProtectedRoute,
 } as any)
+const ProtectedSupportTicketsIndexRoute =
+  ProtectedSupportTicketsIndexRouteImport.update({
+    id: '/support-tickets/',
+    path: '/support-tickets/',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
+const ProtectedSupportTicketsTicketIdRoute =
+  ProtectedSupportTicketsTicketIdRouteImport.update({
+    id: '/support-tickets/$ticketId',
+    path: '/support-tickets/$ticketId',
+    getParentRoute: () => ProtectedRoute,
+  } as any)
 const ProtectedInquiriesInquiryIdRoute =
   ProtectedInquiriesInquiryIdRouteImport.update({
     id: '/$inquiryId',
@@ -69,6 +83,8 @@ export interface FileRoutesByFullPath {
   '/subscription-plans': typeof ProtectedSubscriptionPlansRoute
   '/businesses/$businessId': typeof ProtectedBusinessesBusinessIdRoute
   '/inquiries/$inquiryId': typeof ProtectedInquiriesInquiryIdRoute
+  '/support-tickets/$ticketId': typeof ProtectedSupportTicketsTicketIdRoute
+  '/support-tickets/': typeof ProtectedSupportTicketsIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -78,6 +94,8 @@ export interface FileRoutesByTo {
   '/': typeof ProtectedIndexRoute
   '/businesses/$businessId': typeof ProtectedBusinessesBusinessIdRoute
   '/inquiries/$inquiryId': typeof ProtectedInquiriesInquiryIdRoute
+  '/support-tickets/$ticketId': typeof ProtectedSupportTicketsTicketIdRoute
+  '/support-tickets': typeof ProtectedSupportTicketsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +107,8 @@ export interface FileRoutesById {
   '/_protected/': typeof ProtectedIndexRoute
   '/_protected/businesses/$businessId': typeof ProtectedBusinessesBusinessIdRoute
   '/_protected/inquiries/$inquiryId': typeof ProtectedInquiriesInquiryIdRoute
+  '/_protected/support-tickets/$ticketId': typeof ProtectedSupportTicketsTicketIdRoute
+  '/_protected/support-tickets/': typeof ProtectedSupportTicketsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -100,6 +120,8 @@ export interface FileRouteTypes {
     | '/subscription-plans'
     | '/businesses/$businessId'
     | '/inquiries/$inquiryId'
+    | '/support-tickets/$ticketId'
+    | '/support-tickets/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -109,6 +131,8 @@ export interface FileRouteTypes {
     | '/'
     | '/businesses/$businessId'
     | '/inquiries/$inquiryId'
+    | '/support-tickets/$ticketId'
+    | '/support-tickets'
   id:
     | '__root__'
     | '/_protected'
@@ -119,6 +143,8 @@ export interface FileRouteTypes {
     | '/_protected/'
     | '/_protected/businesses/$businessId'
     | '/_protected/inquiries/$inquiryId'
+    | '/_protected/support-tickets/$ticketId'
+    | '/_protected/support-tickets/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -170,6 +196,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedAuditLogRouteImport
       parentRoute: typeof ProtectedRoute
     }
+    '/_protected/support-tickets/': {
+      id: '/_protected/support-tickets/'
+      path: '/support-tickets'
+      fullPath: '/support-tickets/'
+      preLoaderRoute: typeof ProtectedSupportTicketsIndexRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/support-tickets/$ticketId': {
+      id: '/_protected/support-tickets/$ticketId'
+      path: '/support-tickets/$ticketId'
+      fullPath: '/support-tickets/$ticketId'
+      preLoaderRoute: typeof ProtectedSupportTicketsTicketIdRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
     '/_protected/inquiries/$inquiryId': {
       id: '/_protected/inquiries/$inquiryId'
       path: '/$inquiryId'
@@ -204,6 +244,8 @@ interface ProtectedRouteChildren {
   ProtectedSubscriptionPlansRoute: typeof ProtectedSubscriptionPlansRoute
   ProtectedIndexRoute: typeof ProtectedIndexRoute
   ProtectedBusinessesBusinessIdRoute: typeof ProtectedBusinessesBusinessIdRoute
+  ProtectedSupportTicketsTicketIdRoute: typeof ProtectedSupportTicketsTicketIdRoute
+  ProtectedSupportTicketsIndexRoute: typeof ProtectedSupportTicketsIndexRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
@@ -212,6 +254,8 @@ const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedSubscriptionPlansRoute: ProtectedSubscriptionPlansRoute,
   ProtectedIndexRoute: ProtectedIndexRoute,
   ProtectedBusinessesBusinessIdRoute: ProtectedBusinessesBusinessIdRoute,
+  ProtectedSupportTicketsTicketIdRoute: ProtectedSupportTicketsTicketIdRoute,
+  ProtectedSupportTicketsIndexRoute: ProtectedSupportTicketsIndexRoute,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
