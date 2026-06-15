@@ -103,6 +103,6 @@ function SupportTicketsPage() {
   )
 }
 
-export const Route = createFileRoute('/_protected/support-tickets')({
+export const Route = createFileRoute('/_protected/support-tickets/')({
   component: SupportTicketsPage,
 })
