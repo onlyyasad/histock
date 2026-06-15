@@ -95,18 +95,21 @@ export interface ContactInquiry {
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: axiosBaseQuery(),
-  tagTypes: ['Business', 'AuditLog', 'Inquiry', 'SubscriptionPlan', 'Payment'],
+  tagTypes: ['Business', 'AuditLog', 'Inquiry', 'SubscriptionPlan', 'Payment', 'Me'],
   endpoints: (builder) => ({
 
     // Auth
     adminLogin: builder.mutation<{ ok: boolean }, { email: string; password: string }>({
       query: (body) => ({ url: '/auth/login', method: 'POST', body }),
+      invalidatesTags: ['Me'],
     }),
     adminLogout: builder.mutation<{ ok: boolean }, void>({
       query: () => ({ url: '/auth/logout', method: 'POST' }),
+      invalidatesTags: ['Me'],
     }),
     getMe: builder.query<AdminMe, void>({
       query: () => '/admin/me',
+      providesTags: ['Me'],
     }),
 
     // Businesses
