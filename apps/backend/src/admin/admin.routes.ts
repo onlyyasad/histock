@@ -1,12 +1,13 @@
 import crypto from 'node:crypto'
 import { Router } from 'express'
 import { z } from 'zod'
-import type { InquiryStatus, SubscriptionStatus } from '@prisma/client'
+import type { InquiryStatus, SubscriptionStatus, TicketStatus } from '@prisma/client'
 import { requireAdmin } from '../app/middlewares/auth'
 import { prismaAdmin } from '../prisma/client'
 import { auditMiddleware } from './audit.middleware'
 import { AdminBusinessService } from './businesses.service'
 import { InquiryService } from './inquiries.service'
+import { SupportTicketService } from './supportTickets.service'
 import { getAllPlans, updatePlan } from './subscriptionPlans.service'
 
 const router = Router()
@@ -16,6 +17,7 @@ router.use(auditMiddleware)
 
 const businessService = new AdminBusinessService()
 const inquiryService = new InquiryService()
+const supportTicketService = new SupportTicketService()
 
 // ── Me ──────────────────────────────────────────────────────────────────────
 
@@ -280,6 +282,70 @@ router.get('/inquiries/:id/stream', (req, res) => {
       if (inquiry && !closed) res.write(`event: init\ndata: ${JSON.stringify(inquiry)}\n\n`)
     })
     .catch(() => {})
+})
+
+// ── Support Tickets ───────────────────────────────────────────────────────────
+
+function adminIsDemo(req: Express.Request): boolean {
+  return Boolean((req.user as { isDemo?: boolean }).isDemo)
+}
+
+router.get('/support-tickets', async (req, res, next) => {
+  try {
+    res.json(
+      await supportTicketService.list({
+        status: req.query.status as TicketStatus | undefined,
+        demoOnly: adminIsDemo(req),
+      }),
+    )
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.get('/support-tickets/:id', async (req, res, next) => {
+  try {
+    const ticket = await supportTicketService.getById(req.params.id as string, adminIsDemo(req))
+    if (!ticket) return res.status(404).json({ error: 'Not found' })
+    res.json(ticket)
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.post('/support-tickets/:id/messages', async (req, res, next) => {
+  try {
+    const parsed = z.object({ body: z.string().min(1) }).safeParse(req.body)
+    if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
+    const admin = req.user as { id: string }
+    // Demo admins must not reply outside demo businesses — verify reachability first.
+    if (adminIsDemo(req) && !(await supportTicketService.getById(req.params.id as string, true))) {
+      return res.status(404).json({ error: 'Not found' })
+    }
+    const message = await supportTicketService.reply(req.params.id as string, admin.id, parsed.data.body)
+    if (!message) return res.status(404).json({ error: 'Not found' })
+    res.status(201).json(message)
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.patch('/support-tickets/:id', async (req, res, next) => {
+  try {
+    const parsed = z
+      .object({ status: z.enum(['open', 'in_progress', 'resolved', 'closed']) })
+      .safeParse(req.body)
+    if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
+    const updated = await supportTicketService.setStatus(
+      req.params.id as string,
+      parsed.data.status as TicketStatus,
+      adminIsDemo(req),
+    )
+    if (!updated) return res.status(404).json({ error: 'Not found' })
+    res.json(updated)
+  } catch (err) {
+    next(err)
+  }
 })
 
 // ── Impersonation ────────────────────────────────────────────────────────────
