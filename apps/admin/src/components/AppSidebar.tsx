@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
-import { Building2, ClipboardList, FileText, MessageSquare, LogOut } from 'lucide-react'
+import { Building2, ClipboardList, FileText, MessageSquare, LifeBuoy, LogOut } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Sidebar,
@@ -21,6 +21,7 @@ const NAV = [
   { to: '/subscription-plans', label: 'Plans', icon: FileText },
   { to: '/audit-log', label: 'Audit Log', icon: ClipboardList },
   { to: '/inquiries', label: 'Inquiries', icon: MessageSquare },
+  { to: '/support-tickets', label: 'Support', icon: LifeBuoy },
 ] as const
 
 export function AppSidebar() {

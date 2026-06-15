@@ -21,6 +21,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/subscription-plans': 'Subscription Plans',
   '/audit-log': 'Audit Log',
   '/inquiries': 'Inquiries',
+  '/support-tickets': 'Support Tickets',
 }
 
 function getSection(pathname: string): { prefix: string; title: string } {
