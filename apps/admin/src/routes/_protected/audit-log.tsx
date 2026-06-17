@@ -24,6 +24,7 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { formatDate, formatDateTime, formatRelative } from '@/lib/format'
+import { humanizeAuditAction, parseAuditAction } from '@/lib/audit'
 
 function AuditLogPage() {
   const [page, setPage] = useState(1)
@@ -153,31 +154,36 @@ function AuditLogPage() {
           {Object.entries(groups).map(([day, dayLogs]) => (
             <div key={day}>
               <p className="text-xs font-medium text-muted-foreground pt-2">{formatDate(day)}</p>
-              {dayLogs.map((log) => (
-                <Card key={log.id} className="mt-1">
-                  <CardContent className="flex items-start justify-between gap-4 py-3">
-                    <div className="space-y-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="secondary" className="font-mono">
-                          {log.method} {log.path}
-                        </Badge>
-                        {log.targetBusinessId && (
-                          <span className="text-xs text-muted-foreground">
-                            Business: {log.targetBusinessId}
-                          </span>
-                        )}
+              {dayLogs.map((log) => {
+                const { method, path } = parseAuditAction(log.action)
+                return (
+                  <Card key={log.id} className="mt-1">
+                    <CardContent className="flex items-start justify-between gap-4 py-3">
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {method && (
+                            <Badge variant="secondary" className="font-mono">
+                              {method}
+                            </Badge>
+                          )}
+                          <p className="text-sm font-medium">{humanizeAuditAction(log.action)}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground font-mono truncate">{path}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {log.adminEmail}
+                          {log.targetBusinessId && <> · Business: {log.targetBusinessId}</>}
+                        </p>
                       </div>
-                      <p className="text-sm">{log.action}</p>
-                    </div>
-                    <span
-                      className="text-xs text-muted-foreground whitespace-nowrap"
-                      title={formatDateTime(log.createdAt)}
-                    >
-                      {formatRelative(log.createdAt)}
-                    </span>
-                  </CardContent>
-                </Card>
-              ))}
+                      <span
+                        className="text-xs text-muted-foreground whitespace-nowrap"
+                        title={formatDateTime(log.createdAt)}
+                      >
+                        {formatRelative(log.createdAt)}
+                      </span>
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
           ))}
         </div>

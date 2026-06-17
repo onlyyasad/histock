@@ -60,12 +60,12 @@ export interface SubscriptionPayment {
 
 export interface AdminAuditLog {
   id: string
-  adminId: string
+  adminUserId: string | null
+  adminEmail: string
   action: string
-  method: string
-  path: string
   targetBusinessId: string | null
-  requestBody: Record<string, unknown> | null
+  oldValue: Record<string, unknown> | null
+  newValue: Record<string, unknown> | null
   createdAt: string
 }
 
