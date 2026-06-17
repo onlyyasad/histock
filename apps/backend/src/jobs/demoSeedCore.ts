@@ -32,6 +32,10 @@ export async function reseedDemoData(): Promise<string> {
   await prismaAdmin.customerAddress.deleteMany({ where: { businessId } })
   await prismaAdmin.customer.deleteMany({ where: { businessId } })
   await prismaAdmin.teamInvite.deleteMany({ where: { businessId } })
+  // Support tickets reference users via submitted_by (no cascade) — clear them
+  // before deleting users, or the FK blocks the wipe and leaves data half-deleted.
+  // Ticket messages cascade-delete with their parent ticket.
+  await prismaAdmin.supportTicket.deleteMany({ where: { businessId } })
   await prismaAdmin.user.deleteMany({ where: { businessId } })
 
   const [ownerHash, managerHash, staffHash] = await Promise.all([
