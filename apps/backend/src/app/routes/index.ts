@@ -8,7 +8,6 @@ import { financialsRoutes } from '../modules/financials/financials.routes'
 import { teamRoutes } from '../modules/team/team.routes'
 import { exportsRoutes } from '../modules/exports/exports.routes'
 import { schedulesRoutes } from '../modules/schedules/schedules.routes'
-import { settingsRoutes } from '../modules/settings/settings.routes'
 import { supportRoutes } from '../modules/support/support.routes'
 import aiRoutes from '../../ai/routes'
 
@@ -21,7 +20,6 @@ router.use('/orders', ordersRoutes.seller)
 router.use('/team', teamRoutes.seller)
 router.use('/exports', exportsRoutes)
 router.use('/schedules', schedulesRoutes)
-router.use('/settings', settingsRoutes)
 router.use('/support', supportRoutes)
 router.use('/ai', aiRoutes)
 router.use('/remittances', remittancesRoutes.seller)
