@@ -1,7 +1,7 @@
 import { OrderStatus } from '@prisma/client'
 import { prismaAdmin } from '../../../prisma/client'
 import type { prismaWithScope } from '../../../prisma/client'
-import { OrderCostService } from '../products/cost.service'
+import { CostsService } from '../costs/costs.service'
 import { CustomersService } from '../customers/customers.service'
 import { redis } from '../../../shared/redis/client'
 
@@ -139,9 +139,8 @@ export class OrdersService {
         include: { items: true },
       })
 
-      const costService = new OrderCostService(tx)
       for (const item of order.items) {
-        await costService.allocateForItem({
+        await CostsService.allocateForItem(tx, {
           orderItemId: item.id,
           productId: item.productId,
           variantId: item.variantId,

@@ -1,5 +1,5 @@
 import type { OrderStatus, PrismaClient } from '@prisma/client'
-import { OrderCostService } from '../products/cost.service'
+import { CostsService } from '../costs/costs.service'
 import { CustomersService } from '../customers/customers.service'
 import { emailQueue } from '../../../jobs/emailQueue'
 
@@ -99,8 +99,7 @@ export class OrderStateService {
 
       // On cancellation: reverse FIFO cost allocations and customer counters in same TX
       if (toStatus === 'cancelled') {
-        const costService = new OrderCostService(tx)
-        await costService.reverseForOrder(orderId)
+        await CostsService.reverseForOrder(tx, orderId)
 
         await CustomersService.decrementOrderCounters(
           tx as unknown as typeof import('../../../prisma/client').prismaAdmin,
