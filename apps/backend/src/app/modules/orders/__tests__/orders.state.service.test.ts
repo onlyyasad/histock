@@ -1,5 +1,5 @@
 import { prismaAdmin } from '../../../../prisma/client'
-import { OrderStateService } from '../orders.state.service'
+import { OrdersService } from '../orders.service'
 import { redis } from '../../../../shared/redis/client'
 
 // Hits the real test database — no mocks.
@@ -98,9 +98,8 @@ describe('OrderStateService — valid transitions', () => {
   it('pending → processing', async () => {
     const biz = await createTestBusiness()
     const order = await createTestOrder(biz.id, 'pending')
-    const svc = new OrderStateService(prismaAdmin)
 
-    await svc.transition({
+    await OrdersService.transition({
       orderId: order.id,
       businessId: biz.id,
       toStatus: 'processing',
@@ -118,9 +117,8 @@ describe('OrderStateService — valid transitions', () => {
     if (!courier) throw new Error('No active courier in DB — run seed first')
 
     const order = await createTestOrder(biz.id, 'processing', courier.id)
-    const svc = new OrderStateService(prismaAdmin)
 
-    await svc.transition({
+    await OrdersService.transition({
       orderId: order.id,
       businessId: biz.id,
       toStatus: 'packed',
@@ -138,9 +136,8 @@ describe('OrderStateService — valid transitions', () => {
     if (!courier) throw new Error('No active courier in DB')
 
     const order = await createTestOrder(biz.id, 'handover_to_courier', courier.id)
-    const svc = new OrderStateService(prismaAdmin)
 
-    await svc.transition({
+    await OrdersService.transition({
       orderId: order.id,
       businessId: biz.id,
       toStatus: 'delivery_failed',
@@ -165,8 +162,7 @@ describe('OrderStateService — valid transitions', () => {
       data: { deliveryFailedAt: new Date(), deliveryAttempts: 1 },
     })
 
-    const svc = new OrderStateService(prismaAdmin)
-    await svc.transition({
+    await OrdersService.transition({
       orderId: order.id,
       businessId: biz.id,
       toStatus: 'handover_to_courier',
@@ -187,10 +183,9 @@ describe('OrderStateService — invalid transitions', () => {
     if (!courier) throw new Error('No active courier in DB')
 
     const order = await createTestOrder(biz.id, 'packed', courier.id)
-    const svc = new OrderStateService(prismaAdmin)
 
     await expect(
-      svc.transition({
+      OrdersService.transition({
         orderId: order.id,
         businessId: biz.id,
         toStatus: 'processing',
@@ -203,10 +198,9 @@ describe('OrderStateService — invalid transitions', () => {
   it('processing → packed without courier is blocked', async () => {
     const biz = await createTestBusiness()
     const order = await createTestOrder(biz.id, 'processing', null)
-    const svc = new OrderStateService(prismaAdmin)
 
     await expect(
-      svc.transition({
+      OrdersService.transition({
         orderId: order.id,
         businessId: biz.id,
         toStatus: 'packed',
@@ -219,10 +213,9 @@ describe('OrderStateService — invalid transitions', () => {
   it('COD cancelled order cannot transition to refunded', async () => {
     const biz = await createTestBusiness()
     const order = await createTestOrder(biz.id, 'cancelled')
-    const svc = new OrderStateService(prismaAdmin)
 
     await expect(
-      svc.transition({
+      OrdersService.transition({
         orderId: order.id,
         businessId: biz.id,
         toStatus: 'refunded',
@@ -235,10 +228,9 @@ describe('OrderStateService — invalid transitions', () => {
   it('refunded is a terminal state — no further transitions allowed', async () => {
     const biz = await createTestBusiness()
     const order = await createTestOrder(biz.id, 'refunded')
-    const svc = new OrderStateService(prismaAdmin)
 
     await expect(
-      svc.transition({
+      OrdersService.transition({
         orderId: order.id,
         businessId: biz.id,
         toStatus: 'cancelled',
