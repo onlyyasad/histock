@@ -1,4 +1,5 @@
 import { RequestHandler } from 'express'
+import { UserRole } from '@prisma/client'
 
 // Architecture: there is NO generic `requireAuth` middleware — by design.
 // Every route must explicitly declare which role it accepts to prevent
@@ -35,13 +36,13 @@ export const requireSeller: RequestHandler = async (req, res, next) => {
   next()
 }
 
-export const requireRole = (...roles: string[]): RequestHandler =>
+export const requireRole = (...roles: UserRole[]): RequestHandler =>
   (req, res, next) => {
     if (!req.isAuthenticated?.()) {
       return res.status(401).json({ error: 'Unauthorized' })
     }
     const user = req.user as Record<string, unknown>
-    if (!roles.includes(user.role as string)) {
+    if (!roles.includes(user.role as UserRole)) {
       return res.status(403).json({ error: 'Forbidden' })
     }
     next()

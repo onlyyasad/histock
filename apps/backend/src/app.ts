@@ -8,6 +8,8 @@ import { passport } from './app/modules/auth/passport'
 import router from './app/routes'
 import { adminRoutes } from './admin/admin.routes'
 import { stripeWebhookRoutes } from './webhooks/stripe.routes'
+import globalErrorHandler from './app/middlewares/globalErrorHandler'
+import notFound from './app/middlewares/notFound'
 
 const app = express()
 
@@ -34,5 +36,8 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/v1', router)
 app.use('/api/v1/admin', adminRoutes)
+
+app.use(notFound)
+app.use(globalErrorHandler)
 
 export default app

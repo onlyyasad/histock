@@ -6,4 +6,7 @@ module.exports = {
   moduleNameMapper: {
     '^@histock/shared$': '<rootDir>/../../packages/shared/src/index.ts',
   },
+  // Integration suites share a single Postgres/Redis. Run serially so parallel
+  // suites don't contend for DB connections (which caused intermittent timeouts).
+  maxWorkers: 1,
 }
