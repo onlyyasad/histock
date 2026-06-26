@@ -2,7 +2,12 @@ import type { OrderStatus } from '@prisma/client'
 import type { ScopedPrisma } from '../../../prisma/types'
 import type { IOrderExportFilters } from './exports.interface'
 
-const getOrderRows = async (db: ScopedPrisma, filters: IOrderExportFilters) => {
+type ExportRow = Record<string, string | number>
+
+const getOrderRows = async (
+  db: ScopedPrisma,
+  filters: IOrderExportFilters,
+): Promise<ExportRow[]> => {
   const { from, to, status } = filters
 
   const orders = await db.order.findMany({
@@ -37,7 +42,7 @@ const getOrderRows = async (db: ScopedPrisma, filters: IOrderExportFilters) => {
   }))
 }
 
-const getCustomerRows = async (db: ScopedPrisma) => {
+const getCustomerRows = async (db: ScopedPrisma): Promise<ExportRow[]> => {
   const customers = await db.customer.findMany({ orderBy: { createdAt: 'desc' } })
   return customers.map((c) => ({
     name: c.name,
@@ -51,7 +56,7 @@ const getCustomerRows = async (db: ScopedPrisma) => {
   }))
 }
 
-const getProductRows = async (db: ScopedPrisma) => {
+const getProductRows = async (db: ScopedPrisma): Promise<ExportRow[]> => {
   const products = await db.product.findMany({ orderBy: { name: 'asc' } })
   return products.map((p) => ({
     name: p.name,
