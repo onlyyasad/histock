@@ -20,8 +20,8 @@ beforeAll(async () => {
     name: 'Team Owner',
   })
   expect(res.status).toBe(201)
-  businessId = res.body.businessId
-  ownerId = res.body.id
+  businessId = res.body.data.businessId
+  ownerId = res.body.data.id
 
   ownerAgent = request.agent(app)
   await ownerAgent

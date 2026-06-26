@@ -32,8 +32,8 @@ describe('POST /api/v1/auth/register', () => {
       .send({ businessName: BUSINESS_NAME, email: TEST_EMAIL, password: TEST_PASSWORD, name: 'Test User' })
 
     expect(res.status).toBe(201)
-    expect(res.body.email).toBe(TEST_EMAIL)
-    expect(res.body.businessId).toBeDefined()
+    expect(res.body.data.email).toBe(TEST_EMAIL)
+    expect(res.body.data.businessId).toBeDefined()
     expect(res.headers['set-cookie']).toBeDefined()
 
     const dbUser = await prismaAdmin.user.findFirst({ where: { email: TEST_EMAIL } })
@@ -47,7 +47,7 @@ describe('POST /api/v1/auth/register', () => {
       .send({ businessName: 'Another Shop', email: TEST_EMAIL, password: TEST_PASSWORD, name: 'Dup' })
 
     expect(res.status).toBe(409)
-    expect(res.body.error).toMatch(/email already in use/i)
+    expect(res.body.message).toMatch(/email already in use/i)
   })
 
   it('returns 400 on missing required fields', async () => {
@@ -72,8 +72,8 @@ describe('POST /api/v1/auth/login', () => {
       .send({ email: TEST_EMAIL, password: TEST_PASSWORD })
 
     expect(res.status).toBe(200)
-    expect(res.body.email).toBe(TEST_EMAIL)
-    expect(res.body.businessId).toBeDefined()
+    expect(res.body.data.email).toBe(TEST_EMAIL)
+    expect(res.body.data.businessId).toBeDefined()
     expect(res.headers['set-cookie']).toBeDefined()
   })
 
@@ -124,8 +124,8 @@ describe('GET /api/v1/auth/me', () => {
     const res = await agent.get('/api/v1/auth/me')
 
     expect(res.status).toBe(200)
-    expect(res.body.email).toBe(TEST_EMAIL)
-    expect(res.body.businessId).toBeDefined()
+    expect(res.body.data.email).toBe(TEST_EMAIL)
+    expect(res.body.data.businessId).toBeDefined()
   })
 
   it('returns 401 when not authenticated', async () => {
@@ -154,7 +154,7 @@ describe('POST /api/v1/auth/forgot-password', () => {
       .send({ email: TEST_EMAIL })
 
     expect(res.status).toBe(200)
-    expect(res.body.ok).toBe(true)
+    expect(res.body.success).toBe(true)
   })
 
   it('returns 200 for unknown email (no leak)', async () => {
@@ -163,7 +163,7 @@ describe('POST /api/v1/auth/forgot-password', () => {
       .send({ email: 'nobody@nowhere.com' })
 
     expect(res.status).toBe(200)
-    expect(res.body.ok).toBe(true)
+    expect(res.body.success).toBe(true)
   })
 
   it('stores hashed token (not raw) in DB', async () => {
@@ -234,7 +234,7 @@ describe('POST /api/v1/auth/reset-password', () => {
       .send({ token: rawToken, password: 'brandnewpassword123' })
 
     expect(res.status).toBe(200)
-    expect(res.body.ok).toBe(true)
+    expect(res.body.success).toBe(true)
 
     // Token is marked used
     const record = await prismaAdmin.passwordResetToken.findFirst({ where: { tokenHash } })
