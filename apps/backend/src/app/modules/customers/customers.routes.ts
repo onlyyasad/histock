@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { UserRole } from '@prisma/client'
 import { requireSeller, requireRole } from '../../middlewares/auth'
 import validateRequest from '../../middlewares/validateRequest'
 import { CustomersController } from './customers.controller'
@@ -27,7 +28,12 @@ seller.patch(
   validateRequest(CustomerValidation.updateCustomer),
   CustomersController.update,
 )
-seller.delete('/:id', requireSeller, requireRole('owner', 'manager'), CustomersController.remove)
+seller.delete(
+  '/:id',
+  requireSeller,
+  requireRole(UserRole.owner, UserRole.manager),
+  CustomersController.remove,
+)
 seller.post(
   '/:id/addresses',
   requireSeller,
