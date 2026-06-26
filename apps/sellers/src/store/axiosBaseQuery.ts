@@ -12,6 +12,12 @@ export type AxiosBaseQueryArgs =
       headers?: Record<string, string>
     }
 
+// The standard success envelope returned by every refactored seller endpoint.
+type ApiEnvelope = { success: boolean; data: unknown }
+
+const isEnvelope = (value: unknown): value is ApiEnvelope =>
+  !!value && typeof value === 'object' && 'success' in value && 'data' in value
+
 export const axiosBaseQuery = (): BaseQueryFn<
   AxiosBaseQueryArgs,
   unknown,
@@ -22,7 +28,10 @@ export const axiosBaseQuery = (): BaseQueryFn<
       typeof args === 'string' ? { url: args } : args
     try {
       const result = await axiosInstance({ url, method, data: body, params, headers })
-      return { data: result.data }
+      // Unwrap the standard envelope so endpoints keep their existing payload types.
+      // Non-enveloped responses (defensive) pass through unchanged.
+      const payload = result.data
+      return { data: isEnvelope(payload) ? payload.data : payload }
     } catch (axiosError) {
       const err = axiosError as AxiosError
       return {
