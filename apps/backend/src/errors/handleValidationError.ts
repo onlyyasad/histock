@@ -1,3 +1,4 @@
+import httpStatus from 'http-status'
 import { Prisma } from '@prisma/client'
 import { IGenericErrorMessage, IGenericErrorResponse } from '../interfaces/error'
 
@@ -7,7 +8,7 @@ const handleValidationError = (
   const errorMessages: IGenericErrorMessage[] = [{ path: '', message: error.message }]
 
   return {
-    statusCode: 400,
+    statusCode: httpStatus.BAD_REQUEST,
     message: 'Validation Error',
     errorMessages,
   }

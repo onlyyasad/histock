@@ -1,4 +1,5 @@
 import { ErrorRequestHandler } from 'express'
+import httpStatus from 'http-status'
 import { ZodError } from 'zod'
 import { Prisma } from '@prisma/client'
 import config from '../../config'
@@ -9,7 +10,7 @@ import handleValidationError from '../../errors/handleValidationError'
 import { IGenericErrorMessage } from '../../interfaces/error'
 
 const globalErrorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
-  let statusCode = 500
+  let statusCode: number = httpStatus.INTERNAL_SERVER_ERROR
   let message = 'Something went wrong'
   let code: string | undefined
   let errorMessages: IGenericErrorMessage[] = []
