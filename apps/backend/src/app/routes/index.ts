@@ -25,6 +25,6 @@ router.use('/settings', settingsRoutes)
 router.use('/support', supportRoutes)
 router.use('/ai', aiRoutes)
 router.use('/remittances', remittancesRoutes.seller)
-router.use('/', financialsRoutes)
+router.use('/', financialsRoutes.seller)
 
 export default router
