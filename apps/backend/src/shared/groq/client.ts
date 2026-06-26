@@ -1,5 +1,5 @@
 import Groq from 'groq-sdk'
-import config from '../config'
+import config from '../../config'
 
 // Single platform API key — not per-business. Groq free tier is rate-limited
 // but sufficient for the usage volumes at Growth/Business tier.
