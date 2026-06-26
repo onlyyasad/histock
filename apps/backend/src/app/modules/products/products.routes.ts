@@ -2,6 +2,12 @@ import { Router } from 'express'
 import { requireSeller, requireRole } from '../../middlewares/auth'
 import { prismaAdmin, prismaWithScope } from '../../../prisma/client'
 import { ProductsService } from './products.service'
+import type {
+  ICreateProductInput,
+  IUpdateProductInput,
+  ICreateVariantInput,
+  ICreateCostEntryParams,
+} from './products.interface'
 import {
   CreateProductSchema,
   UpdateProductSchema,
@@ -11,9 +17,27 @@ import {
 
 const router = Router()
 
+// Transitional binding shim — keeps the existing handlers below unchanged while the
+// service is now an object literal. Removed when routes are rewritten (Task 5).
 function getService(req: Express.Request & { user?: unknown }) {
   const user = req.user as { businessId: string }
-  return new ProductsService(prismaWithScope(user.businessId))
+  const db = prismaWithScope(user.businessId)
+  return {
+    getById: (id: string) => ProductsService.getById(db, id),
+    listProducts: () => ProductsService.listProducts(db),
+    createProduct: (businessId: string, data: ICreateProductInput) =>
+      ProductsService.createProduct(db, businessId, data),
+    updateProduct: (id: string, data: IUpdateProductInput) =>
+      ProductsService.updateProduct(db, id, data),
+    softDeleteProduct: (id: string) => ProductsService.softDeleteProduct(db, id),
+    createVariant: (businessId: string, productId: string, data: ICreateVariantInput) =>
+      ProductsService.createVariant(db, businessId, productId, data),
+    createCostEntry: (
+      businessId: string,
+      productId: string,
+      params: ICreateCostEntryParams,
+    ) => ProductsService.createCostEntry(businessId, productId, params),
+  }
 }
 
 // GET /api/v1/products/:id

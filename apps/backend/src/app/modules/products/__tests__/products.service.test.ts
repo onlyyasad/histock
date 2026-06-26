@@ -232,7 +232,7 @@ describe('OrderCostService — FIFO allocation', () => {
 describe('ProductsService — product cap (starter: maxProducts = 5)', () => {
   it('throws PRODUCT_CAP_REACHED when at limit', async () => {
     const biz = await createTestBusiness('starter')
-    const svc = new ProductsService(prismaWithScope(biz.id))
+    const db = prismaWithScope(biz.id)
 
     for (let i = 0; i < 5; i++) {
       await prismaAdmin.product.create({
@@ -241,7 +241,7 @@ describe('ProductsService — product cap (starter: maxProducts = 5)', () => {
     }
 
     await expect(
-      svc.createProduct(biz.id, { name: 'One Too Many', price: 100 }),
+      ProductsService.createProduct(db, biz.id, { name: 'One Too Many', price: 100 }),
     ).rejects.toMatchObject({ code: 'PRODUCT_CAP_REACHED' })
 
     await cleanupBusiness(biz.id)
@@ -250,7 +250,7 @@ describe('ProductsService — product cap (starter: maxProducts = 5)', () => {
   it('returns PRODUCT_CAP_NEAR warning when at 80% of limit', async () => {
     // 80% of 5 = 4. After creating 4 products, the 5th triggers the warning.
     const biz = await createTestBusiness('starter')
-    const svc = new ProductsService(prismaWithScope(biz.id))
+    const db = prismaWithScope(biz.id)
 
     for (let i = 0; i < 4; i++) {
       await prismaAdmin.product.create({
@@ -258,7 +258,10 @@ describe('ProductsService — product cap (starter: maxProducts = 5)', () => {
       })
     }
 
-    const { product, warning } = await svc.createProduct(biz.id, { name: 'Fifth', price: 100 })
+    const { product, warning } = await ProductsService.createProduct(db, biz.id, {
+      name: 'Fifth',
+      price: 100,
+    })
     expect(product.name).toBe('Fifth')
     expect(warning?.type).toBe('PRODUCT_CAP_NEAR')
     expect(warning?.cap).toBe(5)
@@ -269,9 +272,12 @@ describe('ProductsService — product cap (starter: maxProducts = 5)', () => {
 
   it('returns no warning when well below limit', async () => {
     const biz = await createTestBusiness('starter')
-    const svc = new ProductsService(prismaWithScope(biz.id))
+    const db = prismaWithScope(biz.id)
 
-    const { warning } = await svc.createProduct(biz.id, { name: 'First', price: 100 })
+    const { warning } = await ProductsService.createProduct(db, biz.id, {
+      name: 'First',
+      price: 100,
+    })
     expect(warning).toBeNull()
 
     await cleanupBusiness(biz.id)

@@ -1,218 +1,207 @@
+import httpStatus from 'http-status'
 import { prismaAdmin } from '../../../prisma/client'
-import type { prismaWithScope } from '../../../prisma/client'
+import type { ScopedPrisma, AdminPrisma } from '../../../prisma/types'
+import ApiError from '../../../errors/ApiError'
+import {
+  productVariantSelect,
+  productCostEntrySelect,
+  CAP_WARNING_THRESHOLD,
+} from './products.constants'
+import type {
+  ICreateProductInput,
+  IUpdateProductInput,
+  ICreateVariantInput,
+  ICreateCostEntryParams,
+  IProductCapWarning,
+  ISkuCapWarning,
+} from './products.interface'
 
-type ScopedPrisma = ReturnType<typeof prismaWithScope>
+// create/update/updateMany are not intercepted by the scoped client — reach them
+// through the writable (admin-typed) view. Preserves existing behavior exactly.
+const writable = (db: ScopedPrisma) => db as unknown as AdminPrisma
 
-export class ProductsService {
-  constructor(private prisma: ScopedPrisma) {}
-
-  getById(productId: string) {
-    return this.prisma.product.findFirst({
-      where: { id: productId },
-      include: {
-        variants: {
-          where: { deletedAt: null },
-          select: { id: true, name: true, price: true, currentStock: true, isActive: true },
-        },
-        costEntries: {
-          orderBy: { entryDate: 'desc' },
-          select: {
-            id: true,
-            entryDate: true,
-            lotQuantity: true,
-            remainingQty: true,
-            totalCost: true,
-            costPerUnit: true,
-            idempotencyKey: true,
-            createdAt: true,
-          },
-        },
-      },
-    })
-  }
-
-  listProducts() {
-    return this.prisma.product.findMany({
-      include: {
-        variants: {
-          where: { deletedAt: null },
-          select: { id: true, name: true, price: true, currentStock: true, isActive: true },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
-  }
-
-  private async checkProductCap(
-    businessId: string,
-  ): Promise<{ type: 'PRODUCT_CAP_NEAR'; used: number; cap: number } | null> {
-    const sub = await prismaAdmin.subscription.findUnique({
-      where: { businessId },
-      include: { plan: { select: { maxProducts: true } } },
-    })
-    const cap = sub?.plan.maxProducts ?? null
-    if (cap === null) return null
-
-    const used = await prismaAdmin.product.count({
-      where: { businessId, deletedAt: null, isArchived: false },
-    })
-
-    if (used >= cap) {
-      throw Object.assign(
-        new Error(`Product limit reached (${cap}). Upgrade your plan to add more products.`),
-        { status: 402, code: 'PRODUCT_CAP_REACHED' },
-      )
-    }
-
-    if (used >= Math.floor(cap * 0.8)) {
-      return { type: 'PRODUCT_CAP_NEAR' as const, used, cap }
-    }
-
-    return null
-  }
-
-  async createProduct(
-    businessId: string,
-    data: { name: string; sku?: string; description?: string; price: number },
-  ) {
-    const warning = await this.checkProductCap(businessId)
-    const product = await this.prisma.product.create({
-      data: { ...data, businessId },
-    })
-    return { product, warning }
-  }
-
-  updateProduct(
-    productId: string,
-    data: Partial<{
-      name: string
-      sku: string
-      description: string
-      price: number
-      isActive: boolean
-      isArchived: boolean
-    }>,
-  ) {
-    return this.prisma.product.findFirst({
-      where: { id: productId },
-    }).then((existing) => {
-      if (!existing) throw Object.assign(new Error('Product not found'), { status: 404 })
-      return (this.prisma as unknown as typeof prismaAdmin).product.update({
-        where: { id: productId },
-        data,
-      })
-    })
-  }
-
-  softDeleteProduct(productId: string) {
-    return (this.prisma as unknown as typeof prismaAdmin).product.update({
-      where: { id: productId },
-      data: { deletedAt: new Date(), isActive: false },
-    })
-  }
-
-  private async checkSkuCap(
-    businessId: string,
-  ): Promise<{ type: 'SKU_CAP_NEAR'; used: number; cap: number } | null> {
-    const sub = await prismaAdmin.subscription.findUnique({
-      where: { businessId },
-      include: { plan: { select: { maxSkus: true } } },
-    })
-    const cap = sub?.plan.maxSkus ?? null
-    if (cap === null) return null
-
-    const [variantCount, noVariantProductCount] = await Promise.all([
-      prismaAdmin.productVariant.count({
-        where: { businessId, deletedAt: null },
-      }),
-      prismaAdmin.product.count({
-        where: {
-          businessId,
-          deletedAt: null,
-          isArchived: false,
-          variants: { none: { deletedAt: null } },
-        },
-      }),
-    ])
-    const used = variantCount + noVariantProductCount
-
-    if (used >= cap) {
-      throw Object.assign(
-        new Error(`SKU limit reached (${cap}). Upgrade your plan to add more variants.`),
-        { status: 402, code: 'SKU_CAP_REACHED' },
-      )
-    }
-
-    if (used >= Math.floor(cap * 0.8)) {
-      return { type: 'SKU_CAP_NEAR' as const, used, cap }
-    }
-
-    return null
-  }
-
-  async createVariant(
-    businessId: string,
-    productId: string,
-    data: { name: string; sku?: string; price: number },
-  ) {
-    const warning = await this.checkSkuCap(businessId)
-    const p = await this.prisma.product.findFirst({ where: { id: productId } })
-    if (!p) throw Object.assign(new Error('Product not found'), { status: 404 })
-    const variant = await (this.prisma as unknown as typeof prismaAdmin).productVariant.create({
-      data: { ...data, businessId, productId },
-    })
-    return { variant, warning }
-  }
-
-  async createCostEntry(
-    businessId: string,
-    productId: string,
-    params: {
-      variantId?: string
-      entryDate: string
-      lotQuantity: number
-      totalCost: number
-      idempotencyKey: string
+const getById = (db: ScopedPrisma, productId: string) =>
+  db.product.findFirst({
+    where: { id: productId },
+    include: {
+      variants: { where: { deletedAt: null }, select: productVariantSelect },
+      costEntries: { orderBy: { entryDate: 'desc' }, select: productCostEntrySelect },
     },
-  ) {
-    const { lotQuantity, totalCost, idempotencyKey } = params
+  })
 
-    // Idempotency check — use raw client (findUnique disabled on scoped client)
-    const existing = await prismaAdmin.productCostEntry.findUnique({
-      where: { idempotencyKey },
-    })
+const listProducts = (db: ScopedPrisma) =>
+  db.product.findMany({
+    include: { variants: { where: { deletedAt: null }, select: productVariantSelect } },
+    orderBy: { createdAt: 'desc' },
+  })
 
-    if (existing) {
-      const sameBody =
-        existing.lotQuantity === lotQuantity &&
-        Number(existing.totalCost) === totalCost &&
-        existing.businessId === businessId
+// Revenue + COGS per product across delivered orders (raw aggregate). Cross-tenant
+// safe via the explicit business_id filter — uses prismaAdmin like the original.
+const listProductMargins = (businessId: string) =>
+  prismaAdmin.$queryRaw<Array<{ product_id: string; revenue: string; cogs: string }>>`
+    SELECT
+      oi.product_id,
+      SUM(oi.total_price)::text                    AS revenue,
+      COALESCE(SUM(oca.total_cost), 0)::text       AS cogs
+    FROM order_items oi
+    JOIN orders o ON o.id = oi.order_id
+    LEFT JOIN order_cost_allocations oca ON oca.order_item_id = oi.id
+    WHERE o.business_id = ${businessId}
+      AND o.status = 'delivered'
+      AND o.deleted_at IS NULL
+    GROUP BY oi.product_id
+  `
 
-      if (sameBody) return { entry: existing, created: false }
-      throw Object.assign(new Error('Idempotency key conflict'), { status: 422 })
-    }
+// --- caps (module-private; need cross-tenant counts via prismaAdmin) ---
 
-    const costPerUnit = Number((totalCost / lotQuantity).toFixed(2))
+const checkProductCap = async (businessId: string): Promise<IProductCapWarning | null> => {
+  const sub = await prismaAdmin.subscription.findUnique({
+    where: { businessId },
+    include: { plan: { select: { maxProducts: true } } },
+  })
+  const cap = sub?.plan.maxProducts ?? null
+  if (cap === null) return null
 
-    const entry = await prismaAdmin.productCostEntry.create({
-      data: {
-        productId,
-        variantId: params.variantId ?? null,
-        businessId,
-        entryDate: new Date(params.entryDate),
-        lotQuantity,
-        remainingQty: lotQuantity,
-        totalCost,
-        costPerUnit,
-        idempotencyKey,
-      },
-    })
+  const used = await prismaAdmin.product.count({
+    where: { businessId, deletedAt: null, isArchived: false },
+  })
 
-    await prismaAdmin.product.update({
-      where: { id: productId },
-      data: { currentStock: { increment: lotQuantity } },
-    })
-
-    return { entry, created: true }
+  if (used >= cap) {
+    throw new ApiError(
+      httpStatus.PAYMENT_REQUIRED,
+      `Product limit reached (${cap}). Upgrade your plan to add more products.`,
+      { code: 'PRODUCT_CAP_REACHED' },
+    )
   }
+  if (used >= Math.floor(cap * CAP_WARNING_THRESHOLD)) {
+    return { type: 'PRODUCT_CAP_NEAR', used, cap }
+  }
+  return null
+}
+
+const checkSkuCap = async (businessId: string): Promise<ISkuCapWarning | null> => {
+  const sub = await prismaAdmin.subscription.findUnique({
+    where: { businessId },
+    include: { plan: { select: { maxSkus: true } } },
+  })
+  const cap = sub?.plan.maxSkus ?? null
+  if (cap === null) return null
+
+  const [variantCount, noVariantProductCount] = await Promise.all([
+    prismaAdmin.productVariant.count({ where: { businessId, deletedAt: null } }),
+    prismaAdmin.product.count({
+      where: {
+        businessId,
+        deletedAt: null,
+        isArchived: false,
+        variants: { none: { deletedAt: null } },
+      },
+    }),
+  ])
+  const used = variantCount + noVariantProductCount
+
+  if (used >= cap) {
+    throw new ApiError(
+      httpStatus.PAYMENT_REQUIRED,
+      `SKU limit reached (${cap}). Upgrade your plan to add more variants.`,
+      { code: 'SKU_CAP_REACHED' },
+    )
+  }
+  if (used >= Math.floor(cap * CAP_WARNING_THRESHOLD)) {
+    return { type: 'SKU_CAP_NEAR', used, cap }
+  }
+  return null
+}
+
+// --- writes ---
+
+const createProduct = async (db: ScopedPrisma, businessId: string, data: ICreateProductInput) => {
+  const warning = await checkProductCap(businessId)
+  const product = await db.product.create({ data: { ...data, businessId } })
+  return { product, warning }
+}
+
+const updateProduct = async (db: ScopedPrisma, productId: string, data: IUpdateProductInput) => {
+  const existing = await db.product.findFirst({ where: { id: productId } })
+  if (!existing) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Product not found')
+  }
+  return writable(db).product.update({ where: { id: productId }, data })
+}
+
+const softDeleteProduct = (db: ScopedPrisma, productId: string) =>
+  writable(db).product.update({
+    where: { id: productId },
+    data: { deletedAt: new Date(), isActive: false },
+  })
+
+const createVariant = async (
+  db: ScopedPrisma,
+  businessId: string,
+  productId: string,
+  data: ICreateVariantInput,
+) => {
+  const warning = await checkSkuCap(businessId)
+  const product = await db.product.findFirst({ where: { id: productId } })
+  if (!product) {
+    throw new ApiError(httpStatus.NOT_FOUND, 'Product not found')
+  }
+  const variant = await writable(db).productVariant.create({
+    data: { ...data, businessId, productId },
+  })
+  return { variant, warning }
+}
+
+const createCostEntry = async (
+  businessId: string,
+  productId: string,
+  params: ICreateCostEntryParams,
+) => {
+  const { lotQuantity, totalCost, idempotencyKey } = params
+
+  // Idempotency check — findUnique on the raw client (disabled on the scoped client).
+  const existing = await prismaAdmin.productCostEntry.findUnique({ where: { idempotencyKey } })
+  if (existing) {
+    const sameBody =
+      existing.lotQuantity === lotQuantity &&
+      Number(existing.totalCost) === totalCost &&
+      existing.businessId === businessId
+    if (sameBody) {
+      return { entry: existing, created: false }
+    }
+    throw new ApiError(httpStatus.UNPROCESSABLE_ENTITY, 'Idempotency key conflict: same key, different body')
+  }
+
+  const costPerUnit = Number((totalCost / lotQuantity).toFixed(2))
+  const entry = await prismaAdmin.productCostEntry.create({
+    data: {
+      productId,
+      variantId: params.variantId ?? null,
+      businessId,
+      entryDate: new Date(params.entryDate),
+      lotQuantity,
+      remainingQty: lotQuantity,
+      totalCost,
+      costPerUnit,
+      idempotencyKey,
+    },
+  })
+
+  await prismaAdmin.product.update({
+    where: { id: productId },
+    data: { currentStock: { increment: lotQuantity } },
+  })
+
+  return { entry, created: true }
+}
+
+export const ProductsService = {
+  getById,
+  listProducts,
+  listProductMargins,
+  createProduct,
+  updateProduct,
+  softDeleteProduct,
+  createVariant,
+  createCostEntry,
 }
