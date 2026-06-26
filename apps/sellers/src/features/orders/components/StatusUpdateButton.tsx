@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useUpdateOrderStatusMutation } from '../store/ordersApi'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { getErrorMessage } from '@/lib/apiError'
 
 interface Props {
   orderId: string
@@ -24,7 +25,7 @@ export function StatusUpdateButton({ orderId, currentStatus, toStatus, label, va
       toast.success(`Order updated to: ${toStatus.replace(/_/g, ' ')}`)
       setOpen(false)
     } catch (err: unknown) {
-      const e = err as { status?: number; data?: { error?: string } }
+      const e = err as { status?: number }
       const isReAttemptAllocFail =
         currentStatus === 'delivery_failed' &&
         toStatus === 'handover_to_courier' &&
@@ -34,7 +35,7 @@ export function StatusUpdateButton({ orderId, currentStatus, toStatus, label, va
           'Could not re-attempt delivery — one or more items are no longer in stock. Check inventory before retrying.',
         )
       } else {
-        toast.error(e?.data?.error ?? 'Update failed')
+        toast.error(getErrorMessage(err, 'Update failed'))
       }
     }
   }
