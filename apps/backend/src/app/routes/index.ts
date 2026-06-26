@@ -10,7 +10,7 @@ import { teamRoutes } from '../modules/team/team.routes'
 import { exportsRoutes } from '../modules/exports/exports.routes'
 import { schedulesRoutes } from '../modules/schedules/schedules.routes'
 import { supportRoutes } from '../modules/support/support.routes'
-import aiRoutes from '../../ai/routes'
+import { aiRoutes } from '../modules/ai/ai.routes'
 
 const router = Router()
 
@@ -22,7 +22,7 @@ router.use('/team', teamRoutes.seller)
 router.use('/exports', exportsRoutes.seller)
 router.use('/schedules', schedulesRoutes.seller)
 router.use('/support', supportRoutes.seller)
-router.use('/ai', aiRoutes)
+router.use('/ai', aiRoutes.seller)
 router.use('/remittances', remittancesRoutes.seller)
 router.use('/couriers', couriersRoutes.seller)
 router.use('/', financialsRoutes.seller)
