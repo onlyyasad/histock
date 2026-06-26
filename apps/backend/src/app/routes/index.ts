@@ -15,7 +15,7 @@ const router = Router()
 
 router.use('/auth', authRoutes)
 router.use('/products', productsRoutes)
-router.use('/customers', customersRoutes)
+router.use('/customers', customersRoutes.seller)
 router.use('/orders', ordersRoutes)
 router.use('/team', teamRoutes)
 router.use('/exports', exportsRoutes)
