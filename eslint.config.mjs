@@ -31,7 +31,7 @@ export default tseslint.config(
           selector:
             "CallExpression[callee.object.property.name='order'][callee.property.name='update'] ObjectExpression > Property[key.name='data'] > ObjectExpression > Property[key.name='status']",
           message:
-            "Use OrderStateService.transition() instead of prisma.order.update({ data: { status } }). See phase-1/06-backend-orders.md.",
+            "Use OrdersService.transition() instead of prisma.order.update({ data: { status } }).",
         },
       ],
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],

@@ -1,152 +1,60 @@
 import { Router } from 'express'
+import { UserRole } from '@prisma/client'
 import { requireSeller, requireRole } from '../../middlewares/auth'
-import { prismaWithScope } from '../../../prisma/client'
-import { CustomersService } from './customers.service'
-import {
-  CreateCustomerSchema,
-  UpdateCustomerSchema,
-  CreateAddressSchema,
-  UpdateAddressSchema,
-  FlagCustomerSchema,
-} from './customers.validation'
+import validateRequest from '../../middlewares/validateRequest'
+import { CustomersController } from './customers.controller'
+import { CustomerValidation } from './customers.validation'
 
-const router = Router()
+const seller = Router()
 
-function getService(req: Express.Request & { user?: unknown }) {
-  const user = req.user as { businessId: string }
-  return new CustomersService(prismaWithScope(user.businessId))
-}
+// NOTE: /lookup is declared before /:id so it is not captured by the param route.
+seller.get('/', requireSeller, CustomersController.list)
+seller.get(
+  '/lookup',
+  requireSeller,
+  validateRequest(CustomerValidation.lookupByPhone),
+  CustomersController.lookupByPhone,
+)
+seller.get('/:id', requireSeller, CustomersController.getById)
+seller.post(
+  '/',
+  requireSeller,
+  validateRequest(CustomerValidation.createCustomer),
+  CustomersController.create,
+)
+seller.patch(
+  '/:id',
+  requireSeller,
+  validateRequest(CustomerValidation.updateCustomer),
+  CustomersController.update,
+)
+seller.delete(
+  '/:id',
+  requireSeller,
+  requireRole(UserRole.owner, UserRole.manager),
+  CustomersController.remove,
+)
+seller.post(
+  '/:id/addresses',
+  requireSeller,
+  validateRequest(CustomerValidation.createAddress),
+  CustomersController.addAddress,
+)
+seller.patch(
+  '/:id/addresses/:addressId',
+  requireSeller,
+  validateRequest(CustomerValidation.updateAddress),
+  CustomersController.updateAddress,
+)
+seller.post(
+  '/:id/flag',
+  requireSeller,
+  validateRequest(CustomerValidation.flagCustomer),
+  CustomersController.flag,
+)
+seller.delete('/:id/flag', requireSeller, CustomersController.unflag)
 
-// GET /api/v1/customers?search=...
-router.get('/', requireSeller, async (req, res, next) => {
-  try {
-    const customers = await getService(req).list({
-      search: req.query.search as string | undefined,
-    })
-    res.json(customers)
-  } catch (err) {
-    next(err)
-  }
-})
+// Admin customer surface (all-business, prismaAdmin) is added in the admin refactor.
+const admin = Router()
 
-// GET /api/v1/customers/lookup?phone=... — must be before /:id
-router.get('/lookup', requireSeller, async (req, res, next) => {
-  try {
-    const phone = req.query.phone as string
-    if (!phone) return res.status(400).json({ error: 'phone query param required' })
-    const customer = await getService(req).lookupByPhone(phone)
-    res.json(customer ?? null)
-  } catch (err) {
-    next(err)
-  }
-})
-
-// GET /api/v1/customers/:id
-router.get('/:id', requireSeller, async (req, res, next) => {
-  try {
-    const customer = await getService(req).getById(req.params.id as string)
-    if (!customer) return res.status(404).json({ error: 'Not found' })
-    res.json(customer)
-  } catch (err) {
-    next(err)
-  }
-})
-
-// POST /api/v1/customers
-router.post('/', requireSeller, async (req, res, next) => {
-  try {
-    const parsed = CreateCustomerSchema.safeParse(req.body)
-    if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
-
-    const user = req.user as { businessId: string }
-    const customer = await getService(req).create(user.businessId, parsed.data)
-    res.status(201).json(customer)
-  } catch (err) {
-    next(err)
-  }
-})
-
-// PATCH /api/v1/customers/:id
-router.patch('/:id', requireSeller, async (req, res, next) => {
-  try {
-    const parsed = UpdateCustomerSchema.safeParse(req.body)
-    if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
-
-    const customer = await getService(req).update(req.params.id as string, parsed.data)
-    res.json(customer)
-  } catch (err) {
-    next(err)
-  }
-})
-
-// DELETE /api/v1/customers/:id (soft delete)
-router.delete('/:id', requireSeller, requireRole('owner', 'manager'), async (req, res, next) => {
-  try {
-    await getService(req).softDelete(req.params.id as string)
-    res.json({ ok: true })
-  } catch (err) {
-    next(err)
-  }
-})
-
-// POST /api/v1/customers/:id/addresses
-router.post('/:id/addresses', requireSeller, async (req, res, next) => {
-  try {
-    const parsed = CreateAddressSchema.safeParse(req.body)
-    if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
-
-    const user = req.user as { businessId: string }
-    const address = await getService(req).addAddress(
-      user.businessId,
-      req.params.id as string,
-      parsed.data,
-    )
-    res.status(201).json(address)
-  } catch (err) {
-    next(err)
-  }
-})
-
-// PATCH /api/v1/customers/:id/addresses/:addressId
-router.patch('/:id/addresses/:addressId', requireSeller, async (req, res, next) => {
-  try {
-    const parsed = UpdateAddressSchema.safeParse(req.body)
-    if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
-
-    const user = req.user as { businessId: string }
-    const address = await getService(req).updateAddress(
-      user.businessId,
-      req.params.id as string,
-      req.params.addressId as string,
-      parsed.data,
-    )
-    res.json(address)
-  } catch (err) {
-    next(err)
-  }
-})
-
-// POST /api/v1/customers/:id/flag
-router.post('/:id/flag', requireSeller, async (req, res, next) => {
-  try {
-    const parsed = FlagCustomerSchema.safeParse(req.body)
-    if (!parsed.success) return res.status(400).json({ errors: parsed.error.flatten() })
-
-    const customer = await getService(req).flag(req.params.id as string, parsed.data.reason)
-    res.json(customer)
-  } catch (err) {
-    next(err)
-  }
-})
-
-// DELETE /api/v1/customers/:id/flag
-router.delete('/:id/flag', requireSeller, async (req, res, next) => {
-  try {
-    const customer = await getService(req).unflag(req.params.id as string)
-    res.json(customer)
-  } catch (err) {
-    next(err)
-  }
-})
-
-export { router as customersRoutes }
+export const customersRoutes = { seller, admin }

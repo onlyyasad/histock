@@ -20,8 +20,8 @@ beforeAll(async () => {
     name: 'Team Owner',
   })
   expect(res.status).toBe(201)
-  businessId = res.body.businessId
-  ownerId = res.body.id
+  businessId = res.body.data.businessId
+  ownerId = res.body.data.id
 
   ownerAgent = request.agent(app)
   await ownerAgent
@@ -47,8 +47,8 @@ describe('POST /api/v1/team/invites', () => {
       .send({ email: `new-member-${Date.now()}@test.com`, role: 'staff' })
 
     expect(res.status).toBe(201)
-    expect(res.body.role).toBe('staff')
-    expect(res.body.token).toBeDefined()
+    expect(res.body.data.role).toBe('staff')
+    expect(res.body.data.token).toBeDefined()
   })
 
   it('returns 409 if email is already on the team', async () => {
@@ -57,7 +57,7 @@ describe('POST /api/v1/team/invites', () => {
       .send({ email: OWNER_EMAIL, role: 'staff' })
 
     expect(res.status).toBe(409)
-    expect(res.body.error).toMatch(/already in your team/i)
+    expect(res.body.message).toMatch(/already in your team/i)
   })
 
   it('returns 400 for invalid role (owner not allowed)', async () => {
@@ -107,7 +107,7 @@ describe('POST /api/v1/team/invites/:token/accept', () => {
       .post('/api/v1/team/invites')
       .send({ email: inviteEmail, role: 'manager' })
     expect(res.status).toBe(201)
-    inviteToken = res.body.token
+    inviteToken = res.body.data.token
 
     // Restore starter plan
     await prismaAdmin.subscription.update({
@@ -122,7 +122,7 @@ describe('POST /api/v1/team/invites/:token/accept', () => {
       .send({ name: 'New Manager', password: 'password123' })
 
     expect(res.status).toBe(200)
-    expect(res.body.ok).toBe(true)
+    expect(res.body.success).toBe(true)
 
     const user = await prismaAdmin.user.findFirst({
       where: { email: inviteEmail, businessId },
@@ -140,7 +140,7 @@ describe('POST /api/v1/team/invites/:token/accept', () => {
       .send({ name: 'Again', password: 'password123' })
 
     expect(res.status).toBe(409)
-    expect(res.body.error).toMatch(/already used/i)
+    expect(res.body.message).toMatch(/already used/i)
   })
 })
 
@@ -162,7 +162,7 @@ describe('PATCH /api/v1/team/members/:userId/role', () => {
       .send({ role: 'staff' })
 
     expect(res.status).toBe(200)
-    expect(res.body.role).toBe('staff')
+    expect(res.body.data.role).toBe('staff')
   })
 
   it('owner can promote staff back to manager', async () => {
@@ -171,7 +171,7 @@ describe('PATCH /api/v1/team/members/:userId/role', () => {
       .send({ role: 'manager' })
 
     expect(res.status).toBe(200)
-    expect(res.body.role).toBe('manager')
+    expect(res.body.data.role).toBe('manager')
   })
 
   it('returns 400 when owner tries to change own role', async () => {
@@ -180,7 +180,7 @@ describe('PATCH /api/v1/team/members/:userId/role', () => {
       .send({ role: 'staff' })
 
     expect(res.status).toBe(400)
-    expect(res.body.error).toMatch(/own role/i)
+    expect(res.body.message).toMatch(/own role/i)
   })
 
   it('returns 400 for invalid role value', async () => {
