@@ -3,6 +3,11 @@ import { requireSeller, requireRole } from '../../middlewares/auth'
 import { prismaAdmin, prismaWithScope } from '../../../prisma/client'
 import { OrdersService } from './orders.service'
 import { OrderStateService } from './orders.state.service'
+import type {
+  IOrderFilters,
+  ICreateOrderInput,
+  IUpdateOrderMetadataInput,
+} from './orders.interface'
 import {
   CreateOrderSchema,
   UpdateOrderStatusSchema,
@@ -12,9 +17,21 @@ import {
 
 const router = Router()
 
+// Transitional binding shim — keeps the existing handlers below unchanged while the
+// service is now an object literal. Removed when routes are rewritten (Task 6).
 function getService(req: Express.Request & { user?: unknown }) {
-  const user = req.user as { businessId: string }
-  return new OrdersService(prismaWithScope(user.businessId))
+  const user = req.user as { businessId: string; id: string }
+  const db = prismaWithScope(user.businessId)
+  return {
+    list: (filters: IOrderFilters) => OrdersService.list(db, filters),
+    getById: (id: string) => OrdersService.getById(db, id),
+    create: (_businessId: string, _userId: string, data: ICreateOrderInput) =>
+      OrdersService.create(user.businessId, data),
+    updateMetadata: (id: string, data: IUpdateOrderMetadataInput) =>
+      OrdersService.updateMetadata(db, id, data),
+    softDelete: (id: string) => OrdersService.softDelete(db, id),
+    confirmCodPayment: (_businessId: string, id: string) => OrdersService.confirmCodPayment(db, id),
+  }
 }
 
 // GET /api/v1/orders
