@@ -20,13 +20,5 @@ export type ICreateVariantInput = {
   price: number
 }
 
-export type ICreateCostEntryParams = {
-  variantId?: string
-  entryDate: string
-  lotQuantity: number
-  totalCost: number
-  idempotencyKey: string
-}
-
 export type IProductCapWarning = { type: 'PRODUCT_CAP_NEAR'; used: number; cap: number }
 export type ISkuCapWarning = { type: 'SKU_CAP_NEAR'; used: number; cap: number }

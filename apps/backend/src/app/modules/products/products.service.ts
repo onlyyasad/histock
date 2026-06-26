@@ -11,7 +11,6 @@ import type {
   ICreateProductInput,
   IUpdateProductInput,
   ICreateVariantInput,
-  ICreateCostEntryParams,
   IProductCapWarning,
   ISkuCapWarning,
 } from './products.interface'
@@ -152,49 +151,6 @@ const createVariant = async (
   return { variant, warning }
 }
 
-const createCostEntry = async (
-  businessId: string,
-  productId: string,
-  params: ICreateCostEntryParams,
-) => {
-  const { lotQuantity, totalCost, idempotencyKey } = params
-
-  // Idempotency check — findUnique on the raw client (disabled on the scoped client).
-  const existing = await prismaAdmin.productCostEntry.findUnique({ where: { idempotencyKey } })
-  if (existing) {
-    const sameBody =
-      existing.lotQuantity === lotQuantity &&
-      Number(existing.totalCost) === totalCost &&
-      existing.businessId === businessId
-    if (sameBody) {
-      return { entry: existing, created: false }
-    }
-    throw new ApiError(httpStatus.UNPROCESSABLE_ENTITY, 'Idempotency key conflict: same key, different body')
-  }
-
-  const costPerUnit = Number((totalCost / lotQuantity).toFixed(2))
-  const entry = await prismaAdmin.productCostEntry.create({
-    data: {
-      productId,
-      variantId: params.variantId ?? null,
-      businessId,
-      entryDate: new Date(params.entryDate),
-      lotQuantity,
-      remainingQty: lotQuantity,
-      totalCost,
-      costPerUnit,
-      idempotencyKey,
-    },
-  })
-
-  await prismaAdmin.product.update({
-    where: { id: productId },
-    data: { currentStock: { increment: lotQuantity } },
-  })
-
-  return { entry, created: true }
-}
-
 export const ProductsService = {
   getById,
   listProducts,
@@ -203,5 +159,4 @@ export const ProductsService = {
   updateProduct,
   softDeleteProduct,
   createVariant,
-  createCostEntry,
 }

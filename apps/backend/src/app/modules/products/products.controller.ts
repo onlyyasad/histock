@@ -5,6 +5,7 @@ import sendResponse from '../../../shared/sendResponse'
 import ApiError from '../../../errors/ApiError'
 import { prismaWithScope } from '../../../prisma/client'
 import { ProductsService } from './products.service'
+import { CostsService } from '../costs/costs.service'
 
 const scoped = (req: Request) => prismaWithScope((req.user as { businessId: string }).businessId)
 const businessIdOf = (req: Request) => (req.user as { businessId: string }).businessId
@@ -103,7 +104,7 @@ const createCostEntry = catchAsync(async (req: Request, res: Response) => {
   if (!idempotencyKey) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'X-Idempotency-Key header required')
   }
-  const { entry, created } = await ProductsService.createCostEntry(
+  const { entry, created } = await CostsService.createCostEntry(
     businessIdOf(req),
     req.params.id as string,
     { ...req.body, idempotencyKey },
