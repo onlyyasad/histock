@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
+import { getErrorMessage, getErrorCode } from '@/lib/apiError'
 import {
   Select,
   SelectContent,
@@ -52,11 +53,10 @@ export function TeamSettingsPage() {
       toast.success(`Invite sent to ${email.trim()}`)
       setEmail('')
     } catch (err: unknown) {
-      const e = err as { data?: { error?: string; code?: string } }
-      if (e?.data?.code === 'USER_CAP_REACHED') {
+      if (getErrorCode(err) === 'USER_CAP_REACHED') {
         toast.error('Team seat limit reached. Upgrade your plan to invite more members.')
       } else {
-        toast.error(e?.data?.error ?? 'Failed to send invite')
+        toast.error(getErrorMessage(err, 'Failed to send invite'))
       }
     }
   }
