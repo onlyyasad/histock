@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { useLoginMutation } from '@/store/authApi'
+import { getErrorMessage } from '@/lib/apiError'
 import { loginFormSchema, type LoginFormValues } from './schemas/authFormSchemas'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,11 +36,11 @@ export function LoginPage() {
       await login(values).unwrap()
       router.push('/dashboard')
     } catch (err: unknown) {
-      const e = err as { status?: number; data?: { error?: string; retryAfterSeconds?: number } }
+      const e = err as { status?: number; data?: { retryAfterSeconds?: number } }
       if (e?.status === 429) {
         toast.error(`Too many attempts. Try again in ${e?.data?.retryAfterSeconds ?? 60}s.`)
       } else {
-        toast.error(e?.data?.error ?? 'Login failed')
+        toast.error(getErrorMessage(err, 'Login failed'))
       }
     }
   }
