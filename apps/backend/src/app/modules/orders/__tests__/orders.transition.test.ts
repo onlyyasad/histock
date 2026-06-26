@@ -94,7 +94,7 @@ afterAll(async () => {
   await redis.quit()
 })
 
-describe('OrderStateService — valid transitions', () => {
+describe('OrdersService.transition — valid transitions', () => {
   it('pending → processing', async () => {
     const biz = await createTestBusiness()
     const order = await createTestOrder(biz.id, 'pending')
@@ -176,7 +176,7 @@ describe('OrderStateService — valid transitions', () => {
   })
 })
 
-describe('OrderStateService — invalid transitions', () => {
+describe('OrdersService.transition — invalid transitions', () => {
   it('packed → processing is invalid', async () => {
     const biz = await createTestBusiness()
     const courier = await prismaAdmin.courier.findFirst({ where: { isActive: true } })
