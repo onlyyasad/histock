@@ -14,7 +14,7 @@ import aiRoutes from '../../ai/routes'
 const router = Router()
 
 router.use('/auth', authRoutes)
-router.use('/products', productsRoutes)
+router.use('/products', productsRoutes.seller)
 router.use('/customers', customersRoutes.seller)
 router.use('/orders', ordersRoutes)
 router.use('/team', teamRoutes)
