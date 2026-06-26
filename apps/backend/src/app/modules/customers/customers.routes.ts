@@ -2,6 +2,12 @@ import { Router } from 'express'
 import { requireSeller, requireRole } from '../../middlewares/auth'
 import { prismaWithScope } from '../../../prisma/client'
 import { CustomersService } from './customers.service'
+import type {
+  ICreateCustomerInput,
+  IUpdateCustomerInput,
+  ICreateAddressInput,
+  IUpdateAddressInput,
+} from './customers.interface'
 import {
   CreateCustomerSchema,
   UpdateCustomerSchema,
@@ -12,9 +18,30 @@ import {
 
 const router = Router()
 
+// Transitional binding shim — keeps the existing handlers below unchanged while the
+// service is now an object literal. Removed when routes are rewritten (Task 5).
 function getService(req: Express.Request & { user?: unknown }) {
   const user = req.user as { businessId: string }
-  return new CustomersService(prismaWithScope(user.businessId))
+  const db = prismaWithScope(user.businessId)
+  return {
+    list: (query: { search?: string }) => CustomersService.list(db, query),
+    getById: (id: string) => CustomersService.getById(db, id),
+    lookupByPhone: (phone: string) => CustomersService.lookupByPhone(db, phone),
+    create: (businessId: string, data: ICreateCustomerInput) =>
+      CustomersService.create(db, businessId, data),
+    update: (id: string, data: IUpdateCustomerInput) => CustomersService.update(db, id, data),
+    softDelete: (id: string) => CustomersService.softDelete(db, id),
+    addAddress: (businessId: string, id: string, data: ICreateAddressInput) =>
+      CustomersService.addAddress(db, businessId, id, data),
+    updateAddress: (
+      businessId: string,
+      id: string,
+      addressId: string,
+      data: IUpdateAddressInput,
+    ) => CustomersService.updateAddress(db, businessId, id, addressId, data),
+    flag: (id: string, reason: string) => CustomersService.flag(db, id, reason),
+    unflag: (id: string) => CustomersService.unflag(db, id),
+  }
 }
 
 // GET /api/v1/customers?search=...
