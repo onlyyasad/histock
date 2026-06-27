@@ -167,6 +167,34 @@ const endImpersonation = (req: Request, res: Response, next: NextFunction) => {
   })
 }
 
+const adminMe = catchAsync(async (req: Request, res: Response) => {
+  const user = req.user as { id: string; name: string; email: string }
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Admin profile retrieved',
+    data: { id: user.id, name: user.name, email: user.email, role: 'platform_admin' },
+  })
+})
+
+const adminImpersonate = catchAsync(async (req: Request, res: Response) => {
+  const admin = req.user as { id: string; isDemo?: boolean }
+  if (admin.isDemo) throw new ApiError(httpStatus.FORBIDDEN, 'Demo admin cannot impersonate')
+
+  const result = await AuthService.createImpersonationToken(
+    admin.id,
+    req.params.businessId as string,
+  )
+  if (!result) throw new ApiError(httpStatus.NOT_FOUND, 'Business not found')
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: 'Impersonation token issued',
+    data: result,
+  })
+})
+
 export const AuthController = {
   register,
   login,
@@ -176,4 +204,6 @@ export const AuthController = {
   resetPassword,
   impersonate,
   endImpersonation,
+  adminMe,
+  adminImpersonate,
 }
