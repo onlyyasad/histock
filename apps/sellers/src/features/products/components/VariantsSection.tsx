@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { getErrorMessage, getErrorCode } from '@/lib/apiError'
 import {
   Table,
   TableBody,
@@ -51,9 +52,8 @@ export function VariantsSection({ productId, variants }: Props) {
       setForm({ name: '', sku: '', price: '' })
       setShowForm(false)
     } catch (err: unknown) {
-      const e = err as { data?: { error?: string; code?: string } }
-      if (e?.data?.code === 'SKU_CAP_REACHED') {
-        toast.error(e.data.error ?? 'SKU limit reached. Upgrade your plan.')
+      if (getErrorCode(err) === 'SKU_CAP_REACHED') {
+        toast.error(getErrorMessage(err, 'SKU limit reached. Upgrade your plan.'))
       } else {
         toast.error('Failed to add variant')
       }

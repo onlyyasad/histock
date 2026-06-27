@@ -12,6 +12,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { useGetAiUsageQuery, useGenerateAiMutation, useGetAiResultQuery } from '@/store/aiApi'
+import { getErrorMessage } from '@/lib/apiError'
 
 interface Props {
   productName: string
@@ -57,8 +58,7 @@ export function SocialPostButton({ productName, price }: Props) {
       }).unwrap()
       setJobId(id)
     } catch (err: unknown) {
-      const e = err as { data?: { error?: string } }
-      toast.error(e?.data?.error ?? 'AI generation failed')
+      toast.error(getErrorMessage(err, 'AI generation failed'))
     }
   }
 

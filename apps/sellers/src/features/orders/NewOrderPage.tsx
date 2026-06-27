@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { formatOrderNumber } from '@/lib/format'
+import { getErrorMessage, getErrorCode } from '@/lib/apiError'
 
 export function NewOrderPage() {
   const router = useRouter()
@@ -90,11 +91,10 @@ export function NewOrderPage() {
       toast.success(`Order ${formatOrderNumber(result.orderNumber)} created`)
       router.push(`/orders/${result.id}`)
     } catch (err: unknown) {
-      const e = err as { data?: { error?: string; code?: string } }
-      if (e?.data?.code === 'ORDER_CAP_REACHED') {
-        toast.error(e.data.error ?? 'Monthly order limit reached')
+      if (getErrorCode(err) === 'ORDER_CAP_REACHED') {
+        toast.error(getErrorMessage(err, 'Monthly order limit reached'))
       } else {
-        toast.error(e?.data?.error ?? 'Failed to create order')
+        toast.error(getErrorMessage(err, 'Failed to create order'))
       }
     }
   }

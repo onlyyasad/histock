@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { getErrorMessage } from '@/lib/apiError'
 
 const schema = z.object({
   name: z.string().min(1, 'Name required').max(300),
@@ -48,8 +49,7 @@ export function NewProductPage() {
       }
       router.push(`/products/${r.id}`)
     } catch (err: unknown) {
-      const e = err as { data?: { error?: string } }
-      toast.error(e?.data?.error ?? 'Failed to create product')
+      toast.error(getErrorMessage(err, 'Failed to create product'))
     }
   }
 

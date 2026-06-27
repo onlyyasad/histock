@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getErrorMessage } from '@/lib/apiError'
 
 const schema = z.object({
   name: z.string().min(1, 'Name required'),
@@ -34,8 +35,7 @@ export function InlineCreateCustomer({ prefillPhone, onCreated, onCancel }: Prop
       toast.success(`Customer "${customer.name}" created`)
       onCreated({ id: customer.id, name: customer.name, phone: customer.phone })
     } catch (err: unknown) {
-      const e = err as { data?: { error?: string } }
-      toast.error(e?.data?.error ?? 'Failed to create customer')
+      toast.error(getErrorMessage(err, 'Failed to create customer'))
     }
   }
 

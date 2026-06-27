@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { useStartImpersonationMutation } from '@/store/authApi'
 
-export default function ImpersonatePage() {
+function ImpersonateRunner() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [startImpersonation] = useStartImpersonationMutation()
@@ -37,5 +37,19 @@ export default function ImpersonatePage() {
     <div className="min-h-screen flex items-center justify-center">
       <p className="text-muted-foreground text-sm">Starting impersonation session...</p>
     </div>
+  )
+}
+
+export default function ImpersonatePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-muted-foreground text-sm">Starting impersonation session...</p>
+        </div>
+      }
+    >
+      <ImpersonateRunner />
+    </Suspense>
   )
 }

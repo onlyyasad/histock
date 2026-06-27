@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { getErrorMessage } from '@/lib/apiError'
 
 const schema = z.object({
   entryDate: z.string().min(1, 'Date required'),
@@ -50,8 +51,7 @@ export function LogPurchaseForm({ productId, onSuccess }: { productId: string; o
       form.reset()
       onSuccess?.()
     } catch (err: unknown) {
-      const e = err as { data?: { error?: string } }
-      toast.error(e?.data?.error ?? 'Failed to log purchase')
+      toast.error(getErrorMessage(err, 'Failed to log purchase'))
     }
   }
 
