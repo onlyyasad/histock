@@ -2,6 +2,15 @@ import type { BaseQueryFn } from '@reduxjs/toolkit/query'
 import type { AxiosRequestConfig, AxiosError } from 'axios'
 import { axiosInstance } from '@/lib/axiosInstance'
 
+type Envelope = { success: boolean; message: string; data: unknown }
+
+const isEnvelope = (payload: unknown): payload is Envelope =>
+  typeof payload === 'object' &&
+  payload !== null &&
+  'success' in payload &&
+  'data' in payload &&
+  typeof (payload as { success: unknown }).success === 'boolean'
+
 export type AxiosBaseQueryArgs =
   | string
   | {
@@ -22,7 +31,8 @@ export const axiosBaseQuery = (): BaseQueryFn<
       typeof args === 'string' ? { url: args } : args
     try {
       const result = await axiosInstance({ url, method, data: body, params, headers })
-      return { data: result.data }
+      const payload = result.data
+      return { data: isEnvelope(payload) ? payload.data : payload }
     } catch (axiosError) {
       const err = axiosError as AxiosError
       return {
