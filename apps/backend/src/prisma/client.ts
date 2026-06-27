@@ -7,10 +7,10 @@ const _base = new PrismaClient({
 })
 
 // prismaAdmin: raw client — no scoping. Use ONLY in:
-//   • src/app/modules/auth/ (login, register, passport strategy)
-//   • src/admin/ routes
-// ESLint no-restricted-imports enforces this at CI — prismaAdmin is blocked
-// outside those directories.
+//   • src/app/modules/auth/ (login, register, passport strategy, admin me/impersonate)
+//   • each module's admin surface — *.admin.service.ts / admin controllers + services
+//     (billing, businesses, audit, inquiries, support admin)
+// (ESLint enforcement of this boundary is a separate deferred follow-up.)
 export const prismaAdmin = _base
 
 // Models that have a `deleted_at` column and support soft-delete.
