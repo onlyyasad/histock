@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { useGetAiUsageQuery, useGenerateAiMutation, useGetAiResultQuery } from '@/store/aiApi'
+import { getErrorMessage, getErrorCode } from '@/lib/apiError'
 
 interface Props {
   productName: string
@@ -44,9 +45,8 @@ export function AiDescriptionButton({ productName, category, onGenerated }: Prop
       }).unwrap()
       setJobId(id)
     } catch (err: unknown) {
-      const e = err as { data?: { error?: string; code?: string } }
-      if (e?.data?.code === 'AI_LIMIT_REACHED') {
-        toast.error(e.data.error ?? 'Daily AI limit reached')
+      if (getErrorCode(err) === 'AI_LIMIT_REACHED') {
+        toast.error(getErrorMessage(err, 'Daily AI limit reached'))
       } else {
         toast.error('AI generation failed')
       }

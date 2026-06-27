@@ -5,15 +5,15 @@ export type PermissionMap = Record<string, Record<string, boolean>>
 export const permissionsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getPermissions: builder.query<PermissionMap, void>({
-      query: () => '/settings/permissions',
+      query: () => '/team/permissions',
       providesTags: ['Permission'],
     }),
 
     updatePermission: builder.mutation<
-      { ok: boolean },
+      void,
       { role: 'manager' | 'staff'; permission: string; granted: boolean }
     >({
-      query: (body) => ({ url: '/settings/permissions', method: 'PATCH', body }),
+      query: (body) => ({ url: '/team/permissions', method: 'PATCH', body }),
       invalidatesTags: ['Permission'],
     }),
   }),

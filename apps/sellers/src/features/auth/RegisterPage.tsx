@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { useRegisterMutation } from '@/store/authApi'
+import { getErrorMessage } from '@/lib/apiError'
 import { registerFormSchema, type RegisterFormValues } from './schemas/authFormSchemas'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,11 +28,11 @@ export function RegisterPage() {
       await register(values).unwrap()
       router.push('/dashboard')
     } catch (err: unknown) {
-      const e = err as { status?: number; data?: { error?: string } }
+      const e = err as { status?: number }
       if (e?.status === 409) {
         form.setError('email', { message: 'An account with this email already exists' })
       } else {
-        toast.error(e?.data?.error ?? 'Registration failed')
+        toast.error(getErrorMessage(err, 'Registration failed'))
       }
     }
   }

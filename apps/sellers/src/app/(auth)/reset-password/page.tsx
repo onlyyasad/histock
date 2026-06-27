@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { useResetPasswordMutation } from '@/store/authApi'
+import { getErrorMessage } from '@/lib/apiError'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -59,8 +60,7 @@ function ResetPasswordForm() {
       toast.success('Password updated. Sign in with your new password.')
       router.push('/login?reset=success')
     } catch (err: unknown) {
-      const e = err as { data?: { error?: string } }
-      toast.error(e?.data?.error ?? 'Reset failed. The link may have expired.')
+      toast.error(getErrorMessage(err, 'Reset failed. The link may have expired.'))
     }
   }
 

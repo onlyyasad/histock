@@ -18,21 +18,21 @@ export const authApi = apiSlice.injectEndpoints({
       query: (body) => ({ url: '/auth/register', method: 'POST', body }),
       invalidatesTags: ['Auth'],
     }),
-    logout: builder.mutation<{ ok: boolean }, void>({
+    logout: builder.mutation<void, void>({
       query: () => ({ url: '/auth/logout', method: 'POST' }),
       invalidatesTags: ['Auth'],
     }),
-    forgotPassword: builder.mutation<{ ok: boolean; message: string }, { email: string }>({
+    forgotPassword: builder.mutation<void, { email: string }>({
       query: (body) => ({ url: '/auth/forgot-password', method: 'POST', body }),
     }),
-    resetPassword: builder.mutation<{ ok: boolean; message: string }, { token: string; password: string }>({
+    resetPassword: builder.mutation<void, { token: string; password: string }>({
       query: (body) => ({ url: '/auth/reset-password', method: 'POST', body }),
     }),
     startImpersonation: builder.mutation<AuthUser, { token: string }>({
       query: (body) => ({ url: '/auth/impersonate', method: 'POST', body }),
       invalidatesTags: ['Auth'],
     }),
-    endImpersonation: builder.mutation<{ ok: boolean }, void>({
+    endImpersonation: builder.mutation<void, void>({
       query: () => ({ url: '/auth/impersonate/end', method: 'POST' }),
       invalidatesTags: ['Auth'],
     }),
