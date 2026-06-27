@@ -1,8 +1,10 @@
 import { Router } from 'express'
-import { requireSeller } from '../../middlewares/auth'
+import { requireSeller, requireAdmin } from '../../middlewares/auth'
 import validateRequest from '../../middlewares/validateRequest'
 import { SupportController } from './support.controller'
 import { SupportValidation } from './support.validation'
+import { SupportAdminController } from './support.admin.controller'
+import { SupportAdminValidation } from './support.admin.validation'
 
 const seller = Router()
 
@@ -21,7 +23,20 @@ seller.post(
   SupportController.addMessage,
 )
 
-// Admin support surface (inbox, status/priority) is added in the admin refactor.
 const admin = Router()
+admin.get('/support-tickets', requireAdmin, SupportAdminController.list)
+admin.get('/support-tickets/:id', requireAdmin, SupportAdminController.getById)
+admin.post(
+  '/support-tickets/:id/messages',
+  requireAdmin,
+  validateRequest(SupportAdminValidation.addMessage),
+  SupportAdminController.addMessage,
+)
+admin.patch(
+  '/support-tickets/:id',
+  requireAdmin,
+  validateRequest(SupportAdminValidation.setStatus),
+  SupportAdminController.setStatus,
+)
 
 export const supportRoutes = { seller, admin }
