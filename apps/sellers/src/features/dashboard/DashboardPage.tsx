@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useGetDashboardQuery } from './store/dashboardApi'
-import { useGetOrdersQuery } from '@/features/orders/store/ordersApi'
+import { useGetOrdersQuery } from '@/features/orders/api/ordersApi'
 import { useGetMeQuery } from '@/features/auth/api/authApi'
 import { OrderStatusBadge } from '@/features/orders/components/OrderStatusBadge'
 import { formatOrderNumber, formatDate, PAYMENT_METHOD_LABELS } from '@/lib/format'

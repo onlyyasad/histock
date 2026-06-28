@@ -2,10 +2,10 @@
 
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useGetOrdersQuery } from './store/ordersApi'
+import { useGetOrdersQuery } from '../api/ordersApi'
 import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
-import { OrderStatusBadge } from './components/OrderStatusBadge'
-import { SwipeableOrderCard } from './components/SwipeableOrderCard'
+import { OrderStatusBadge } from './OrderStatusBadge'
+import { SwipeableOrderCard } from './SwipeableOrderCard'
 import { formatOrderNumber, formatDate, PAYMENT_METHOD_LABELS } from '@/lib/format'
 import { ExportButton } from '@/features/exports/ExportButton'
 import { buttonVariants } from '@/components/ui/button'

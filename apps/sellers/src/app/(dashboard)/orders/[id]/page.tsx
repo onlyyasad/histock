@@ -1,4 +1,4 @@
-import { OrderDetailPage } from '@/features/orders/OrderDetailPage'
+import { OrderDetailPage } from '@/features/orders/components/OrderDetailPage'
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

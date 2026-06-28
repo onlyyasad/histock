@@ -28,7 +28,7 @@ import {
 import { PageHeader } from '@/components/shared/PageHeader'
 import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
 import { useCreateRemittanceImportMutation } from '@/features/analytics/store/analyticsApi'
-import { useLazyGetOrdersQuery } from '@/features/orders/store/ordersApi'
+import { useLazyGetOrdersQuery } from '@/features/orders/api/ordersApi'
 import { cn } from '@/lib/utils'
 
 type Step = 'upload' | 'map' | 'preview' | 'done'

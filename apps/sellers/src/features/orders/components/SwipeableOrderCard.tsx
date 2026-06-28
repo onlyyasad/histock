@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import Link from 'next/link'
-import { useUpdateOrderStatusMutation } from '../store/ordersApi'
+import { useUpdateOrderStatusMutation } from '../api/ordersApi'
 import { fmtMoney } from '@/lib/utils'
 import { OrderStatusBadge } from './OrderStatusBadge'
 import { formatOrderNumber, formatDate, PAYMENT_METHOD_LABELS } from '@/lib/format'

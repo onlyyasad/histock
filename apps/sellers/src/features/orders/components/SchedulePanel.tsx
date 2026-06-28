@@ -14,7 +14,7 @@ import {
   useCreateScheduleMutation,
   useMarkScheduleDoneMutation,
   useDeleteScheduleMutation,
-} from '../store/schedulesApi'
+} from '../api/schedulesApi'
 import { Skeleton } from '@/components/ui/skeleton'
 
 function isOverdue(scheduledAt: string) {
