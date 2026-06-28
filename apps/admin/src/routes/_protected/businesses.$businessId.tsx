@@ -157,7 +157,7 @@ function BusinessDetailPage({ businessId }: { businessId: string }) {
     }
   }
 
-  const end = business.subscription.currentPeriodEnd
+  const end = business.subscription?.currentPeriodEnd ?? null
   const endDate = end ? new Date(end) : null
   const past = endDate ? endDate.getTime() < Date.now() : false
   const soon = endDate ? !past && endDate.getTime() - Date.now() < 7 * 86_400_000 : false
@@ -209,11 +209,15 @@ function BusinessDetailPage({ businessId }: { businessId: string }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <p className="text-sm text-muted-foreground">Current Plan</p>
-                  <p className="text-sm font-medium">{business.subscription.plan.name}</p>
+                  <p className="text-sm font-medium">{business.subscription?.plan.name ?? 'No subscription'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Status</p>
-                  <BusinessStatusBadge status={business.subscription.status} />
+                  {business.subscription ? (
+                    <BusinessStatusBadge status={business.subscription.status} />
+                  ) : (
+                    <Badge variant="outline">No subscription</Badge>
+                  )}
                 </div>
               </div>
 
@@ -225,7 +229,7 @@ function BusinessDetailPage({ businessId }: { businessId: string }) {
                     <Label>Plan</Label>
                     <Select value={planId} onValueChange={setPlanId}>
                       <SelectTrigger>
-                        <SelectValue placeholder={`Keep: ${business.subscription.plan.name}`} />
+                        <SelectValue placeholder={`Keep: ${business.subscription?.plan.name ?? 'No subscription'}`} />
                       </SelectTrigger>
                       <SelectContent>
                         {plans?.map((p) => (
@@ -468,7 +472,7 @@ function BusinessDetailPage({ businessId }: { businessId: string }) {
             <Card>
               <CardHeader className="pb-1"><CardTitle className="text-sm">Plan</CardTitle></CardHeader>
               <CardContent>
-                <p className="text-lg font-semibold">{business.subscription.plan.name}</p>
+                <p className="text-lg font-semibold">{business.subscription?.plan.name ?? 'No subscription'}</p>
               </CardContent>
             </Card>
             <Card className={cn(past && 'bg-destructive/10 border-destructive/30', soon && 'bg-warning/10 border-warning/30')}>
