@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Plus, Users } from 'lucide-react'
 import { useGetCustomersQuery } from '../api/customersApi'
 import { ExportButton } from '@/features/exports/ExportButton'
@@ -25,8 +25,23 @@ import {
 } from '@/components/ui/table'
 
 export function CustomersListPage() {
-  const [search, setSearch] = useState('')
-  const [flaggedOnly, setFlaggedOnly] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const search = searchParams.get('search') ?? ''
+  const flaggedOnly = searchParams.get('flagged') === '1'
+
+  const updateParams = (patch: Record<string, string | null>) => {
+    const next = new URLSearchParams(searchParams.toString())
+    for (const [key, value] of Object.entries(patch)) {
+      if (value === null || value === '') next.delete(key)
+      else next.set(key, value)
+    }
+    const qs = next.toString()
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+  }
+
   const { data: customers, isLoading } = useGetCustomersQuery({ search: search || undefined })
 
   const hasActiveFilters = !!search || flaggedOnly
@@ -53,11 +68,11 @@ export function CustomersListPage() {
           type="text"
           placeholder="Search by name or phone..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => updateParams({ search: e.target.value })}
           className="max-w-md"
         />
         <Label className="flex items-center gap-2 text-sm cursor-pointer font-normal">
-          <Checkbox checked={flaggedOnly} onCheckedChange={(c) => setFlaggedOnly(c === true)} />
+          <Checkbox checked={flaggedOnly} onCheckedChange={(c) => updateParams({ flagged: c === true ? '1' : null })} />
           Flagged only
         </Label>
       </div>
@@ -74,7 +89,7 @@ export function CustomersListPage() {
             title="No customers match"
             description="Try a different search or clear the flag filter."
             action={
-              <Button variant="ghost" size="sm" onClick={() => { setSearch(''); setFlaggedOnly(false) }}>
+              <Button variant="ghost" size="sm" onClick={() => updateParams({ search: null, flagged: null })}>
                 Clear filters
               </Button>
             }
