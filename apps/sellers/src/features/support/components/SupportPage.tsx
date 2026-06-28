@@ -14,10 +14,10 @@ import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { TicketStatusBadge } from './components/TicketStatusBadge'
+import { TicketStatusBadge } from './TicketStatusBadge'
 import { formatDate } from '@/lib/format'
-import { useGetTicketsQuery, useCreateTicketMutation } from './store/supportApi'
-import type { CreateTicketInput } from './store/supportApi'
+import { useGetTicketsQuery, useCreateTicketMutation } from '../api/supportApi'
+import type { CreateTicketInput } from '../api/supportApi'
 
 const TYPE_LABELS: Record<string, string> = {
   bug_report: 'Bug Report',

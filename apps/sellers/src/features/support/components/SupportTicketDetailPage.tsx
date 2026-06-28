@@ -8,9 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
-import { TicketStatusBadge } from './components/TicketStatusBadge'
+import { TicketStatusBadge } from './TicketStatusBadge'
 import { formatDate, formatDateTime } from '@/lib/format'
-import { useGetTicketQuery, useAddTicketMessageMutation } from './store/supportApi'
+import { useGetTicketQuery, useAddTicketMessageMutation } from '../api/supportApi'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export function SupportTicketDetailPage({ ticketId }: { ticketId: string }) {
