@@ -53,7 +53,7 @@ function BusinessListPage() {
   const [toggleDemo] = useToggleDemoMutation()
 
   const visible = statusFilter
-    ? businesses?.filter((b) => b.subscription.status === statusFilter)
+    ? businesses?.filter((b) => b.subscription?.status === statusFilter)
     : businesses
 
   const handleDemoToggle = async (id: string, currentIsDemo: boolean) => {
@@ -154,10 +154,18 @@ function BusinessListPage() {
                       <p className="text-xs text-muted-foreground">{b.slug}</p>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{b.subscription.plan.name}</Badge>
+                      {b.subscription ? (
+                        <Badge variant="secondary">{b.subscription.plan.name}</Badge>
+                      ) : (
+                        <Badge variant="outline">No subscription</Badge>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <BusinessStatusBadge status={b.subscription.status} />
+                      {b.subscription ? (
+                        <BusinessStatusBadge status={b.subscription.status} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Switch
@@ -218,8 +226,14 @@ function BusinessListPage() {
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary">{b.subscription.plan.name}</Badge>
-                    <BusinessStatusBadge status={b.subscription.status} />
+                    {b.subscription ? (
+                      <>
+                        <Badge variant="secondary">{b.subscription.plan.name}</Badge>
+                        <BusinessStatusBadge status={b.subscription.status} />
+                      </>
+                    ) : (
+                      <Badge variant="outline">No subscription</Badge>
+                    )}
                   </div>
                   <Switch
                     checked={b.isDemo}
