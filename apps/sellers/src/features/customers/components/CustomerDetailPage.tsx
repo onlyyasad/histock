@@ -9,8 +9,8 @@ import {
   useUpdateCustomerMutation,
   useFlagCustomerMutation,
   useUnflagCustomerMutation,
-} from './store/customersApi'
-import { AddressBook } from './components/AddressBook'
+} from '../api/customersApi'
+import { AddressBook } from './AddressBook'
 import { OrderStatusBadge } from '@/features/orders/components/OrderStatusBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'

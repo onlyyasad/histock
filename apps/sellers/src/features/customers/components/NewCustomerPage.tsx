@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { InlineCreateCustomer } from './components/InlineCreateCustomer'
+import { InlineCreateCustomer } from './InlineCreateCustomer'
 
 export function NewCustomerPage() {
   const router = useRouter()

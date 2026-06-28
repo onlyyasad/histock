@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Plus, Users } from 'lucide-react'
-import { useGetCustomersQuery } from './store/customersApi'
+import { useGetCustomersQuery } from '../api/customersApi'
 import { ExportButton } from '@/features/exports/ExportButton'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
