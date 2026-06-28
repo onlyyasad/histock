@@ -9,7 +9,7 @@ import {
   useSendTeamInviteMutation,
   useUpdateMemberRoleMutation,
   useRemoveTeamMemberMutation,
-} from './store/teamApi'
+} from '../api/teamApi'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { ListSkeleton } from '@/components/shared/TableSkeleton'
