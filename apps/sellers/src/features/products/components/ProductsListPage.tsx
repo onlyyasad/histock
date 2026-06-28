@@ -3,7 +3,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
 import { Package, Plus } from 'lucide-react'
 import { useGetProductsQuery } from '../api/productsApi'
 import { StockBadge } from './StockBadge'
@@ -28,15 +27,17 @@ import { cn, fmtMoney } from '@/lib/utils'
 function ProductsListInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [search, setSearch] = useState('')
-
+  const search = searchParams.get('search') ?? ''
   const lowStockOnly = searchParams.get('lowStock') === 'true'
-  const setLowStockOnly = (on: boolean) => {
+
+  const updateParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString())
-    if (on) params.set('lowStock', 'true')
-    else params.delete('lowStock')
+    if (value) params.set(key, value)
+    else params.delete(key)
     router.replace(`/products${params.size ? `?${params}` : ''}`)
   }
+  const setSearch = (value: string) => updateParam('search', value)
+  const setLowStockOnly = (on: boolean) => updateParam('lowStock', on ? 'true' : null)
 
   const { data: products, isLoading } = useGetProductsQuery({
     search: search || undefined,
