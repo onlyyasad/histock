@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { useGetAiUsageQuery, useGenerateAiMutation, useGetAiResultQuery } from '@/store/aiApi'
+import { useGetAiUsageQuery, useGenerateAiMutation, useGetAiResultQuery } from '@/features/ai/api/aiApi'
 import { getErrorMessage, getErrorCode } from '@/lib/apiError'
 
 interface Props {

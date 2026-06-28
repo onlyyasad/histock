@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock the axios instance the base query depends on.
-vi.mock('@/lib/axiosInstance', () => ({
+vi.mock('./axiosInstance', () => ({
   axiosInstance: vi.fn(),
 }))
 
-import { axiosInstance } from '@/lib/axiosInstance'
+import { axiosInstance } from './axiosInstance'
 import { axiosBaseQuery } from './axiosBaseQuery'
 
 const mockAxios = axiosInstance as unknown as ReturnType<typeof vi.fn>

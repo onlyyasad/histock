@@ -1,4 +1,4 @@
-import { apiSlice } from '@/store/apiSlice'
+import { apiSlice } from '@/core/store/apiSlice'
 import type { OrderResponse, CreateOrderInput } from '@histock/shared'
 
 export const ordersApi = apiSlice.injectEndpoints({

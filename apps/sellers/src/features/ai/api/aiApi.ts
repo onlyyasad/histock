@@ -1,4 +1,4 @@
-import { apiSlice } from './apiSlice'
+import { apiSlice } from '@/core/store/apiSlice'
 
 export interface AiUsage {
   used: number

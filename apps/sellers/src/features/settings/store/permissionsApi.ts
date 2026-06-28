@@ -1,4 +1,4 @@
-import { apiSlice } from '@/store/apiSlice'
+import { apiSlice } from '@/core/store/apiSlice'
 
 export type PermissionMap = Record<string, Record<string, boolean>>
 

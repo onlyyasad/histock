@@ -1,4 +1,4 @@
-import { apiSlice } from '@/store/apiSlice'
+import { apiSlice } from '@/core/store/apiSlice'
 import type { ProductResponse } from '@histock/shared'
 
 export interface CostEntry {

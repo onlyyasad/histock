@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useAppSelector } from '@/store/hooks'
+import { useAppSelector } from '@/core/store/hooks'
 import {
   Sidebar,
   SidebarContent,
@@ -28,7 +28,7 @@ import {
   Banknote,
   LogOut,
 } from 'lucide-react'
-import { useLogoutMutation } from '@/store/authApi'
+import { useLogoutMutation } from '@/features/auth/api/authApi'
 import { toast } from 'sonner'
 
 const PRIMARY_NAV = [

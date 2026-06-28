@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useGetDashboardQuery } from './store/dashboardApi'
 import { useGetOrdersQuery } from '@/features/orders/store/ordersApi'
-import { useGetMeQuery } from '@/store/authApi'
+import { useGetMeQuery } from '@/features/auth/api/authApi'
 import { OrderStatusBadge } from '@/features/orders/components/OrderStatusBadge'
 import { formatOrderNumber, formatDate, PAYMENT_METHOD_LABELS } from '@/lib/format'
 import { StatCard } from './components/StatCard'

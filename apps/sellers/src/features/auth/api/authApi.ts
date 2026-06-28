@@ -1,5 +1,5 @@
-import { apiSlice } from './apiSlice'
-import type { AuthUser } from '../features/auth/store/authSlice'
+import { apiSlice } from '@/core/store/apiSlice'
+import type { AuthUser } from '../store/authSlice'
 
 export const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({

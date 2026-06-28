@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { useGetPermissionsQuery, useUpdatePermissionMutation } from './store/permissionsApi'
-import { useAppSelector } from '@/store/hooks'
+import { useAppSelector } from '@/core/store/hooks'
 
 const PERMISSIONS: Array<{ key: string; label: string; description: string }> = [
   {

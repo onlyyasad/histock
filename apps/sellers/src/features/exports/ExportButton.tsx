@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Download } from 'lucide-react'
-import { axiosInstance } from '@/lib/axiosInstance'
+import { axiosInstance } from '@/core/api/axiosInstance'
 
 interface Props {
   endpoint: string

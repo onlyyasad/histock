@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { useEndImpersonationMutation } from '@/store/authApi'
+import { useEndImpersonationMutation } from '@/features/auth/api/authApi'
 
 function useCountdown(expiresAt: string) {
   const [remaining, setRemaining] = useState(() => {
