@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
 import { PageHeader } from '@/components/shared/PageHeader'
-import { useGetPermissionsQuery, useUpdatePermissionMutation } from './store/permissionsApi'
+import { useGetPermissionsQuery, useUpdatePermissionMutation } from '../api/permissionsApi'
 import { useAppSelector } from '@/core/store/hooks'
 
 const PERMISSIONS: Array<{ key: string; label: string; description: string }> = [

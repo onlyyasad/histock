@@ -1,4 +1,4 @@
-import { PermissionsSettingsPage } from '@/features/settings/PermissionsSettingsPage'
+import { PermissionsSettingsPage } from '@/features/settings/components/PermissionsSettingsPage'
 
 export default function Page() {
   return <PermissionsSettingsPage />
