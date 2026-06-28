@@ -35,7 +35,7 @@ export interface AdminBusiness {
     status: string
     currentPeriodEnd: string | null
     plan: { id: string; name: string }
-  }
+  } | null
   _count: { users: number; orders: number }
 }
 
