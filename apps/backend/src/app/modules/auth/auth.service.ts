@@ -127,9 +127,27 @@ const consumeImpersonationToken = async (token: string) => {
   return { owner, record }
 }
 
+const createImpersonationToken = async (adminId: string, businessId: string) => {
+  const business = await prismaAdmin.business.findUnique({
+    where: { id: businessId },
+    select: { id: true },
+  })
+  if (!business) return null
+
+  const rawToken = crypto.randomBytes(32).toString('hex')
+  const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
+  const expiresAt = new Date(Date.now() + 30 * 60 * 1000)
+
+  await prismaAdmin.impersonationToken.create({
+    data: { token: tokenHash, adminId, businessId: business.id, expiresAt },
+  })
+  return { token: rawToken, expiresAt }
+}
+
 export const AuthService = {
   registerBusiness,
   requestPasswordReset,
   resetPassword,
   consumeImpersonationToken,
+  createImpersonationToken,
 }

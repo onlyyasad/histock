@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { loginRateLimit, forgotPasswordRateLimit } from '../../middlewares/bruteForce'
-import { requireSeller } from '../../middlewares/auth'
+import { requireSeller, requireAdmin } from '../../middlewares/auth'
 import validateRequest from '../../middlewares/validateRequest'
 import { AuthController } from './auth.controller'
 import { AuthValidation } from './auth.validation'
@@ -25,7 +25,8 @@ seller.post(
 seller.post('/impersonate', validateRequest(AuthValidation.impersonate), AuthController.impersonate)
 seller.post('/impersonate/end', requireSeller, AuthController.endImpersonation)
 
-// Auth has no admin audience split.
 const admin = Router()
+admin.get('/me', requireAdmin, AuthController.adminMe)
+admin.post('/impersonate/:businessId', requireAdmin, AuthController.adminImpersonate)
 
 export const authRoutes = { seller, admin }

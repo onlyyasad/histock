@@ -1,6 +1,6 @@
 import type { RequestHandler, Response } from 'express'
 import { Prisma } from '@prisma/client'
-import { prismaAdmin } from '../prisma/client'
+import { prismaAdmin } from '../../../prisma/client'
 
 const LOGGED_METHODS = ['POST', 'PATCH', 'DELETE']
 
@@ -14,7 +14,6 @@ export const auditMiddleware: RequestHandler = async (req, res, next) => {
 
   const originalJson = (res as Response).json.bind(res)
   let responseBody: unknown
-
   ;(res as Response).json = (body: unknown) => {
     responseBody = body
     return originalJson(body)

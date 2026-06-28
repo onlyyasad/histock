@@ -6,7 +6,7 @@ import config from './config'
 import { sessionMiddleware } from './app/middlewares/session'
 import { passport } from './app/modules/auth/passport'
 import router from './app/routes'
-import { adminRoutes } from './admin/admin.routes'
+import adminRouter from './app/routes/admin'
 import { stripeWebhookRoutes } from './webhooks/stripe.routes'
 import globalErrorHandler from './app/middlewares/globalErrorHandler'
 import notFound from './app/middlewares/notFound'
@@ -35,7 +35,7 @@ app.get('/health', (_req, res) => {
 })
 
 app.use('/api/v1', router)
-app.use('/api/v1/admin', adminRoutes)
+app.use('/api/v1/admin', adminRouter)
 
 app.use(notFound)
 app.use(globalErrorHandler)

@@ -128,11 +128,11 @@ export const adminApi = createApi({
   endpoints: (builder) => ({
 
     // Auth
-    adminLogin: builder.mutation<{ ok: boolean }, { email: string; password: string }>({
+    adminLogin: builder.mutation<void, { email: string; password: string }>({
       query: (body) => ({ url: '/auth/login', method: 'POST', body }),
       invalidatesTags: ['Me'],
     }),
-    adminLogout: builder.mutation<{ ok: boolean }, void>({
+    adminLogout: builder.mutation<void, void>({
       query: () => ({ url: '/auth/logout', method: 'POST' }),
       invalidatesTags: ['Me'],
     }),
