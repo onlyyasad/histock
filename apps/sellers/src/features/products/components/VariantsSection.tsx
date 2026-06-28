@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useCreateVariantMutation } from '../store/productsApi'
-import type { Variant } from '../store/productsApi'
+import { useCreateVariantMutation } from '../api/productsApi'
+import type { Variant } from '../api/productsApi'
 import { StockBadge } from './StockBadge'
 import { fmtMoney } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
