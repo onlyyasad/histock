@@ -4,14 +4,14 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { CheckCircle2, Check } from 'lucide-react'
-import { parseFile, type ParsedRow } from './utils/parseFile'
+import { parseFile, type ParsedRow } from '../services/parseFile'
 import {
   guessColumnMapping,
   matchRowsToOrders,
   type ColumnMapping,
   type MatchResult,
   type UnmatchedRow,
-} from './utils/matchOrders'
+} from '../services/matchOrders'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,8 +26,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { PageHeader } from '@/components/shared/PageHeader'
-import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
-import { useCreateRemittanceImportMutation } from '@/features/analytics/store/analyticsApi'
+import { useGetCouriersQuery } from '@/features/financials/api/financialsApi'
+import { useCreateRemittanceImportMutation } from '@/features/analytics/api/analyticsApi'
 import { useLazyGetOrdersQuery } from '@/features/orders/api/ordersApi'
 import { cn } from '@/lib/utils'
 

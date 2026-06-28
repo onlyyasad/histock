@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { DateRangePicker } from './components/DateRangePicker'
-import { PnlSummary } from './components/PnlSummary'
-import { StatusBreakdown } from './components/StatusBreakdown'
-import { useGetPnlQuery } from './store/analyticsApi'
+import { DateRangePicker } from './DateRangePicker'
+import { PnlSummary } from './PnlSummary'
+import { StatusBreakdown } from './StatusBreakdown'
+import { useGetPnlQuery } from '../api/analyticsApi'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { formatDate } from '@/lib/format'
 

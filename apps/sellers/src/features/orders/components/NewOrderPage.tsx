@@ -10,7 +10,7 @@ import { newOrderFormSchema, type NewOrderFormValues } from '../schemas/newOrder
 import { useCreateOrderMutation } from '../api/ordersApi'
 import { fmtMoney } from '@/lib/utils'
 import { useGetProductsQuery } from '@/features/products/api/productsApi'
-import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
+import { useGetCouriersQuery } from '@/features/financials/api/financialsApi'
 import { useLazyLookupCustomerQuery } from '@/features/customers/api/customersApi'
 import { InlineCreateCustomer } from '@/features/customers/components/InlineCreateCustomer'
 import { ProductCombobox } from './ProductCombobox'

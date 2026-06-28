@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useGetOrdersQuery } from '../api/ordersApi'
-import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
+import { useGetCouriersQuery } from '@/features/financials/api/financialsApi'
 import { OrderStatusBadge } from './OrderStatusBadge'
 import { SwipeableOrderCard } from './SwipeableOrderCard'
 import { formatOrderNumber, formatDate, PAYMENT_METHOD_LABELS } from '@/lib/format'

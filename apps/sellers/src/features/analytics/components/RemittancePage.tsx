@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Upload, Banknote } from 'lucide-react'
-import { useGetRemittancesQuery } from './store/analyticsApi'
+import { useGetRemittancesQuery } from '../api/analyticsApi'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { PageHeader } from '@/components/shared/PageHeader'

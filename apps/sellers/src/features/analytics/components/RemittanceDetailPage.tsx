@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useGetRemittanceQuery } from './store/analyticsApi'
+import { useGetRemittanceQuery } from '../api/analyticsApi'
 import { PageHeader } from '@/components/shared/PageHeader'
 import { RemittanceStatusBadge } from './RemittancePage'
 import { OrderStatusBadge } from '@/features/orders/components/OrderStatusBadge'
