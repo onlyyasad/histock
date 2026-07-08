@@ -2,7 +2,7 @@
 
 import { Provider } from 'react-redux'
 import { Toaster } from 'sonner'
-import { store } from '@/store/store'
+import { store } from '@/core/store/store'
 import { TooltipProvider } from '@/components/ui/tooltip'
 
 export function Providers({ children }: { children: React.ReactNode }) {

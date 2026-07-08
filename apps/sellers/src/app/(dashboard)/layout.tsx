@@ -3,12 +3,12 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useGetMeQuery } from '@/store/authApi'
-import { useAppDispatch } from '@/store/hooks'
+import { useGetMeQuery } from '@/features/auth/api/authApi'
+import { useAppDispatch } from '@/core/store/hooks'
 import { setUser, clearUser, setLoading } from '@/features/auth/store/authSlice'
 import { ImpersonationBanner } from '@/features/auth/components/ImpersonationBanner'
 import { ServiceWorkerRegistrar } from './components/ServiceWorkerRegistrar'
-import { AppSidebar } from '@/components/AppSidebar'
+import { AppSidebar } from '@/components/layout/AppSidebar'
 import { BreadcrumbEntityProvider, useBreadcrumbEntity } from '@/components/shared/BreadcrumbEntity'
 import {
   SidebarProvider,

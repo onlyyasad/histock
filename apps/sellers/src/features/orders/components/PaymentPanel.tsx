@@ -1,7 +1,7 @@
 'use client'
 
 import { toast } from 'sonner'
-import { useConfirmCodPaymentMutation } from '../store/ordersApi'
+import { useConfirmCodPaymentMutation } from '../api/ordersApi'
 import { PaymentMethodBadge } from '@/components/shared/PaymentMethodBadge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
