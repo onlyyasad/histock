@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { useGetAiUsageQuery, useGenerateAiMutation, useGetAiResultQuery } from '@/store/aiApi'
+import { useGetAiUsageQuery, useGenerateAiMutation, useGetAiResultQuery } from '@/features/ai/api/aiApi'
 import { getErrorMessage } from '@/lib/apiError'
 
 interface Props {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useGetOrderCostBreakdownQuery } from '../store/ordersApi'
+import { useGetOrderCostBreakdownQuery } from '../api/ordersApi'
 import { fmtMoney } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'

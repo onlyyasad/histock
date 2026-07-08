@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { useStartImpersonationMutation } from '@/store/authApi'
+import { useStartImpersonationMutation } from '@/features/auth/api/authApi'
 
 function ImpersonateRunner() {
   const searchParams = useSearchParams()

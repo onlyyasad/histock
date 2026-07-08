@@ -1,4 +1,4 @@
-import type { CostEntry } from '../store/productsApi'
+import type { CostEntry } from '../api/productsApi'
 import {
   Table,
   TableBody,

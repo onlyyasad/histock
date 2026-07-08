@@ -6,8 +6,8 @@ import {
   useAddAddressMutation,
   useUpdateAddressMutation,
   useDeleteAddressMutation,
-} from '../store/customersApi'
-import type { CustomerAddress } from '../store/customersApi'
+} from '../api/customersApi'
+import type { CustomerAddress } from '../api/customersApi'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'

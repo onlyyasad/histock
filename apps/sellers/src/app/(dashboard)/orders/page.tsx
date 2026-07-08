@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { OrdersListPage } from '@/features/orders/OrdersListPage'
+import { OrdersListPage } from '@/features/orders/components/OrdersListPage'
 
 export default function Page() {
   return (

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useAddOrderNoteMutation } from '../store/ordersApi'
+import { useAddOrderNoteMutation } from '../api/ordersApi'
 import type { OrderResponse } from '@histock/shared'
 import { formatDateTime } from '@/lib/format'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'

@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useUpdateOrderMetadataMutation } from '../store/ordersApi'
-import { useGetCouriersQuery } from '@/features/financials/store/financialsApi'
+import { useUpdateOrderMetadataMutation } from '../api/ordersApi'
+import { useGetCouriersQuery } from '@/features/financials/api/financialsApi'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

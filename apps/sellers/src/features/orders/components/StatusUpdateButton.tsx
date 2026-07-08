@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useUpdateOrderStatusMutation } from '../store/ordersApi'
+import { useUpdateOrderStatusMutation } from '../api/ordersApi'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { getErrorMessage } from '@/lib/apiError'
